@@ -1,37 +1,36 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+# OS 별 임시 파일
+.DS_Store
+Thumbs.db
 
-### STS ###
-.apt_generated
+# Gradle
+.gradle/
+build/
+
+# STS (Spring Tool Suite)
+.apt_generated/
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IntelliJ IDEA
+.idea/
 *.iml
 *.ipr
+*.iws
 out/
-!**/src/main/**/out/
-!**/src/test/**/out/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
+# VS Code
 .vscode/
+
+# 로그, 임시 파일
+*.log
+*.tmp
+
+# Application 설정 (민감 정보)
+application.yml
+application.properties
+
+# 테스트 출력물
+test-output/
