@@ -34,3 +34,6 @@ application.properties
 
 # 테스트 출력물
 test-output/
+
+# .gitignore
+.env.properties

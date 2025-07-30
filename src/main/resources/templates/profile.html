@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>사용자 정보</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+<h1>로그인한 사용자 정보</h1>
+<ul>
+    <li><strong>이름:</strong> <span th:text="${user.name}"></span></li>
+    <li><strong>이메일:</strong> <span th:text="${user.email}"></span></li>
+    <li><strong>OAuth 제공자:</strong> <span th:text="${user.oauthProvider}"></span></li>
+    <li><strong>OAuth ID:</strong> <span th:text="${user.oauthId}"></span></li>
+    <li><strong>성별:</strong> <span th:text="${user.gender}"></span></li>
+    <li><strong>출생연도:</strong> <span th:text="${user.birthYear}"></span></li>
+    <li><strong>가입일시:</strong> <span th:text="${user.createdAt}"></span></li>
+</ul>
+
+<a href="/">홈으로</a>
+</body>
+</html>

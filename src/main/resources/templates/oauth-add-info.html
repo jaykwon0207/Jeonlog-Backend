@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>추가 정보 입력</title>
+</head>
+<body>
+<h2>추가 정보 입력</h2>
+
+<form action="/oauth/add-info" method="post">
+    <!-- 성별 선택 -->
+    <label for="gender">성별:</label>
+    <select id="gender" name="gender" required>
+        <option value="">선택하세요</option>
+        <option value="MALE">남성</option>
+        <option value="FEMALE">여성</option>
+    </select>
+
+    <br><br>
+
+    <!-- 출생연도 선택 -->
+    <label for="birthYear">출생연도:</label>
+    <select id="birthYear" name="birthYear" required>
+        <option value="">출생연도 선택</option>
+        <!-- 자바스크립트로 연도 자동 생성 -->
+    </select>
+
+    <br><br>
+
+    <button type="submit">제출</button>
+</form>
+
+<script>
+    // 출생연도 옵션 자동 생성 (2025 ~ 1900)
+    const birthYearSelect = document.getElementById("birthYear");
+    for (let year = 2025; year >= 1900; year--) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+        birthYearSelect.appendChild(option);
+    }
+</script>
+</body>
+</html>
