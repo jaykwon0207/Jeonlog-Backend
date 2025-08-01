@@ -1,5 +1,6 @@
-package com.jeonlog.exhibition_recommender.domain;
+package com.jeonlog.exhibition_recommender.domain.genre;
 
+import com.jeonlog.exhibition_recommender.domain.user.Gender;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,6 +16,7 @@ public class Genre {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 50, unique = true) // 같은 이름의 장르 중복 X
-    private String name;
+    @Column(nullable = false, length = 50)
+    @Enumerated(EnumType.STRING)
+    private GenreType genreType;
 }
