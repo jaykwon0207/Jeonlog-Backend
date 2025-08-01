@@ -1,6 +1,6 @@
 package com.jeonlog.exhibition_recommender.domain;
 
-import com.jeonlog.exhibition_recommender.domain.enums.PreferenceSource;
+import com.jeonlog.exhibition_recommender.domain.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,9 +20,13 @@ public class UserGenre {
     @Column(nullable = false)
     private Float preferenceScore;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
-    private PreferenceSource source;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
+    private UserLike userLike;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
+    private UserBookmark userBookmark;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

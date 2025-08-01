@@ -1,6 +1,5 @@
-package com.jeonlog.exhibition_recommender.domain;
+package com.jeonlog.exhibition_recommender.domain.exhibition;
 
-import com.jeonlog.exhibition_recommender.domain.enums.ExhibitionMood;
 import jakarta.persistence.*;
 import lombok.*;
 
