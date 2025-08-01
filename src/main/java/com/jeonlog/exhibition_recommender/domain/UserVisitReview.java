@@ -30,6 +30,9 @@ public class UserVisitReview {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    private boolean lock;  // 전시 기록 공개 여부
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private UserVisit userVisit;
