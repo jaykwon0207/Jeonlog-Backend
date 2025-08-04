@@ -1,8 +1,8 @@
 package com.jeonlog.exhibition_recommender.config;
 
 
-import com.jeonlog.exhibition_recommender.oauth.CustomOAuth2UserService;
-import com.jeonlog.exhibition_recommender.oauth.OAuth2AuthenticationFailureHandler;
+import com.jeonlog.exhibition_recommender.oauth.service.CustomOAuth2UserService;
+import com.jeonlog.exhibition_recommender.oauth.service.OAuth2AuthenticationFailureHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
