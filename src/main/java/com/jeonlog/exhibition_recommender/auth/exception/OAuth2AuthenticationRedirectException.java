@@ -1,4 +1,4 @@
-package com.jeonlog.exhibition_recommender.oauth.exception;
+package com.jeonlog.exhibition_recommender.auth.exception;
 
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 

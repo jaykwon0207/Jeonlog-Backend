@@ -1,10 +1,9 @@
-package com.jeonlog.exhibition_recommender.oauth.service;
+package com.jeonlog.exhibition_recommender.auth.service;
 
-import com.jeonlog.exhibition_recommender.oauth.exception.OAuth2AuthenticationRedirectException;
-import com.jeonlog.exhibition_recommender.oauth.dto.OAuthAttributes;
+import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
+import com.jeonlog.exhibition_recommender.auth.exception.OAuth2AuthenticationRedirectException;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -14,14 +13,16 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import jakarta.servlet.http.HttpSession;
 import java.util.Collections;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+
     private final UserRepository userRepository;
-    private final HttpSession httpSession;
+    private final HttpSession httpSession; // ❗신규 사용자 처리용으로만 유지
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -45,7 +46,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
             existingUser.update(attributes.getName());
-            httpSession.setAttribute("user", existingUser);
             return new DefaultOAuth2User(
                     Collections.singleton(new SimpleGrantedAuthority("USER")),
                     attributes.getAttributes(),
@@ -53,7 +53,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             );
         }
 
-        // 신규 사용자 - 성별과 출생연도 입력 필요
+        // 신규 사용자 - 성별, 출생연도 추가 입력을 위해 세션에 임시 저장
         httpSession.setAttribute("tempOAuthAttributes", attributes);
         throw new OAuth2AuthenticationRedirectException("/oauth/add-info");
     }

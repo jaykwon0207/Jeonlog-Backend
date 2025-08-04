@@ -1,4 +1,4 @@
-package com.jeonlog.exhibition_recommender.oauth.dto;
+package com.jeonlog.exhibition_recommender.auth.dto;
 
 import com.jeonlog.exhibition_recommender.user.domain.Gender;
 import com.jeonlog.exhibition_recommender.user.domain.OauthProvider;

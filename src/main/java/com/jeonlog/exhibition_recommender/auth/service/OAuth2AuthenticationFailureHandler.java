@@ -1,7 +1,7 @@
-package com.jeonlog.exhibition_recommender.oauth.service;
+package com.jeonlog.exhibition_recommender.auth.service;
 
 
-import com.jeonlog.exhibition_recommender.oauth.exception.OAuth2AuthenticationRedirectException;
+import com.jeonlog.exhibition_recommender.auth.exception.OAuth2AuthenticationRedirectException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

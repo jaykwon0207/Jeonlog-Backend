@@ -1,9 +1,9 @@
-package com.jeonlog.exhibition_recommender.oauth.controller;
+package com.jeonlog.exhibition_recommender.auth.controller;
 
 import com.jeonlog.exhibition_recommender.user.domain.Gender;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
-import com.jeonlog.exhibition_recommender.oauth.dto.OAuthAttributes;
+import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
