@@ -12,7 +12,6 @@ import java.util.Map;
 @Getter
 public class OAuthAttributes {
     private final Map<String, Object> attributes;
-    private final Map<String, Object> rawAttributes;  // ✅ 전체 JSON 저장
     private final String nameAttributeKey;
     private final String name;
     private final String email;
@@ -22,11 +21,9 @@ public class OAuthAttributes {
     private final String oauthId;
 
     @Builder
-    public OAuthAttributes(Map<String, Object> attributes, Map<String, Object> rawAttributes, String nameAttributeKey,
-                           String name, String email, Gender gender, Integer birthYear,
-                           OauthProvider oauthProvider, String oauthId) {
+    public OAuthAttributes(Map<String, Object> attributes, String nameAttributeKey, String name, String email,
+                           Gender gender, Integer birthYear, OauthProvider oauthProvider, String oauthId) {
         this.attributes = attributes;
-        this.rawAttributes = rawAttributes;
         this.nameAttributeKey = nameAttributeKey;
         this.name = name;
         this.email = email;
@@ -48,26 +45,14 @@ public class OAuthAttributes {
     private static OAuthAttributes ofNaver(String userNameAttributeName, Map<String, Object> attributes) {
         Map<String, Object> response = (Map<String, Object>) attributes.get("response");
 
-        String genderStr = (String) response.get("gender");
-        Gender gender = null;
-        if ("M".equalsIgnoreCase(genderStr)) {
-            gender = Gender.MALE;
-        } else if ("F".equalsIgnoreCase(genderStr)) {
-            gender = Gender.FEMALE;
-        }
-
-        String birthYearStr = (String) response.get("birthyear");
-        Integer birthYear = birthYearStr != null ? Integer.parseInt(birthYearStr) : 0;
-
         return OAuthAttributes.builder()
                 .name((String) response.get("name"))
                 .email((String) response.get("email"))
-                .gender(gender)
-                .birthYear(birthYear)
+                .gender(null) // 직접 입력
+                .birthYear(0) // 직접 입력
                 .oauthProvider(OauthProvider.NAVER)
-                .oauthId((String) response.get("id"))
-                .attributes(response)
-                .rawAttributes(attributes)
+                .oauthId((String) response.get("email"))
+                .attributes(attributes)
                 .nameAttributeKey(userNameAttributeName)
                 .build();
     }
@@ -76,12 +61,11 @@ public class OAuthAttributes {
         return OAuthAttributes.builder()
                 .name((String) attributes.get("name"))
                 .email((String) attributes.get("email"))
-                .gender(null)
-                .birthYear(0)
+                .gender(null) // 직접 입력
+                .birthYear(0) // 직접 입력
                 .oauthProvider(OauthProvider.GOOGLE)
                 .oauthId((String) attributes.get("email"))
                 .attributes(attributes)
-                .rawAttributes(attributes)           // ✅ 그대로
                 .nameAttributeKey(userNameAttributeName)
                 .build();
     }

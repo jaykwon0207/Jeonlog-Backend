@@ -1,44 +1,22 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
     <title>추가 정보 입력</title>
 </head>
 <body>
 <h2>추가 정보 입력</h2>
-
-<form action="/oauth/add-info" method="post">
-    <!-- 성별 선택 -->
+<form method="post" action="/oauth/add-info">
     <label for="gender">성별:</label>
-    <select id="gender" name="gender" required>
-        <option value="">선택하세요</option>
+    <select name="gender" id="gender" required>
+        <option value="">선택</option>
         <option value="MALE">남성</option>
         <option value="FEMALE">여성</option>
     </select>
-
     <br><br>
-
-    <!-- 출생연도 선택 -->
     <label for="birthYear">출생연도:</label>
-    <select id="birthYear" name="birthYear" required>
-        <option value="">출생연도 선택</option>
-        <!-- 자바스크립트로 연도 자동 생성 -->
-    </select>
-
+    <input type="number" name="birthYear" id="birthYear" min="1900" max="2025" required/>
     <br><br>
-
     <button type="submit">제출</button>
 </form>
-
-<script>
-    // 출생연도 옵션 자동 생성 (2025 ~ 1900)
-    const birthYearSelect = document.getElementById("birthYear");
-    for (let year = 2025; year >= 1900; year--) {
-        const option = document.createElement("option");
-        option.value = year;
-        option.textContent = year;
-        birthYearSelect.appendChild(option);
-    }
-</script>
 </body>
 </html>

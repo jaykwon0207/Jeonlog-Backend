@@ -1,7 +1,7 @@
 package com.jeonlog.exhibition_recommender.oauth;
 
 import com.jeonlog.exhibition_recommender.domain.user.User;
-import com.jeonlog.exhibition_recommender.domain.user.UserRepository;
+import com.jeonlog.exhibition_recommender.UserRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -13,7 +13,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -39,32 +38,21 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 oAuth2User.getAttributes()
         );
 
-        // Google 사용자의 경우 성별/출생연도 없으면 추가 입력 요청
-        if ("google".equals(registrationId)) {
-            Optional<User> existingUser = userRepository.findByEmail(attributes.getEmail());
-            if (existingUser.isEmpty()) {
-                httpSession.setAttribute("tempOAuthAttributes", attributes);
-                throw new OAuth2AuthenticationRedirectException("/oauth/add-info");
-            }
+        Optional<User> userOptional = userRepository.findByEmail(attributes.getEmail());
+
+        if (userOptional.isPresent()) {
+            User existingUser = userOptional.get();
+            existingUser.update(attributes.getName());
+            httpSession.setAttribute("user", existingUser);
+            return new DefaultOAuth2User(
+                    Collections.singleton(new SimpleGrantedAuthority("USER")),
+                    attributes.getAttributes(),
+                    attributes.getNameAttributeKey()
+            );
         }
 
-        // 사용자 저장 또는 업데이트
-        User user = saveOrUpdate(attributes);
-        httpSession.setAttribute("user", user);
-
-        return new DefaultOAuth2User(
-                Collections.singleton(() -> "USER"),
-                attributes.getRawAttributes(),
-                attributes.getNameAttributeKey()
-        );
-    }
-
-    private User saveOrUpdate(OAuthAttributes attributes) {
-        return userRepository.findByEmail(attributes.getEmail())
-                .map(user -> {
-                    user.update(attributes.getName());
-                    return user;
-                })
-                .orElseGet(() -> userRepository.save(attributes.toEntity()));
+        // 신규 사용자 - 성별과 출생연도 입력 필요
+        httpSession.setAttribute("tempOAuthAttributes", attributes);
+        throw new OAuth2AuthenticationRedirectException("/oauth/add-info");
     }
 }

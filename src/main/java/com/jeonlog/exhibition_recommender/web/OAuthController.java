@@ -2,7 +2,7 @@ package com.jeonlog.exhibition_recommender.web;
 
 import com.jeonlog.exhibition_recommender.domain.user.Gender;
 import com.jeonlog.exhibition_recommender.domain.user.User;
-import com.jeonlog.exhibition_recommender.domain.user.UserRepository;
+import com.jeonlog.exhibition_recommender.UserRepository;
 import com.jeonlog.exhibition_recommender.oauth.OAuthAttributes;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/oauth")
-public class GoogleOAuthController {
+public class OAuthController {
 
     private final UserRepository userRepository;
 
@@ -32,8 +32,7 @@ public class GoogleOAuthController {
                                 HttpSession session) {
 
         OAuthAttributes tempAttr = (OAuthAttributes) session.getAttribute("tempOAuthAttributes");
-        if (tempAttr == null)
-            return "redirect:/";
+        if (tempAttr == null) return "redirect:/";
 
         User user = User.builder()
                 .name(tempAttr.getName())

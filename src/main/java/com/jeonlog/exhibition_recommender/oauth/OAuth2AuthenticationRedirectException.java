@@ -7,7 +7,7 @@ public class OAuth2AuthenticationRedirectException extends OAuth2AuthenticationE
     private final String redirectUrl;
 
     public OAuth2AuthenticationRedirectException(String redirectUrl) {
-        super("리디렉션 필요: " + redirectUrl);
+        super("Redirect for additional OAuth2 info");
         this.redirectUrl = redirectUrl;
     }
 
