@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>전시회 추천 서비스</title>
+</head>
+<body>
+
+<h1>전시회 추천 플랫폼</h1>
+
+<!-- 로그인된 사용자일 경우 -->
+<div th:if="${session.user != null}">
+    <p th:text="'환영합니다, ' + ${session.user.name} + '님!'"></p>
+    <p th:text="'이메일: ' + ${session.user.email}"></p>
+
+    <form th:action="@{/logout}" method="post">
+        <button type="submit">로그아웃</button>
+    </form>
+</div>
+
+<!-- 로그인되지 않은 사용자일 경우 -->
+<div th:unless="${session.user != null}">
+    <a href="/login">
+        <button>로그인</button>
+    </a>
+</div>
+
+</body>
+</html>

@@ -35,10 +35,21 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
     private Gender gender;
 
     @Column(nullable = false)
     private Integer birthYear;
+
+    public User update(String name){
+        this.name = name;
+        return this;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
+
 }
