@@ -1,7 +1,6 @@
 package com.jeonlog.exhibition_recommender.auth.service;
 
 import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
-import com.jeonlog.exhibition_recommender.auth.exception.OAuth2AuthenticationRedirectException;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -53,8 +52,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             );
         }
 
-        // 신규 사용자 - 성별, 출생연도 추가 입력을 위해 세션에 임시 저장
+        // ✅ 신규 사용자: 세션에 임시 정보 저장
         httpSession.setAttribute("tempOAuthAttributes", attributes);
-        throw new OAuth2AuthenticationRedirectException("/oauth/add-info");
+
+        // ✅ 강제로 OAuth2 인증 실패 예외 발생 (Spring Security의 실패 핸들러로 이동)
+        return new DefaultOAuth2User(
+                Collections.singleton(new SimpleGrantedAuthority("NEW_USER")),
+                attributes.getAttributes(),
+                attributes.getNameAttributeKey()
+        );
     }
 }

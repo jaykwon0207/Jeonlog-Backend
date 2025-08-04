@@ -4,7 +4,6 @@ import com.jeonlog.exhibition_recommender.auth.config.JwtAuthenticationFilter;
 import com.jeonlog.exhibition_recommender.auth.config.JwtTokenProvider;
 import com.jeonlog.exhibition_recommender.auth.handler.OAuth2JwtSuccessHandler;
 import com.jeonlog.exhibition_recommender.auth.service.CustomOAuth2UserService;
-import com.jeonlog.exhibition_recommender.auth.service.OAuth2AuthenticationFailureHandler;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +18,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final OAuth2JwtSuccessHandler oAuth2JwtSuccessHandler;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
@@ -39,7 +37,6 @@ public class SecurityConfig {
                 .oauth2Login(oauth -> oauth
                         .userInfoEndpoint(info -> info.userService(customOAuth2UserService))
                         .successHandler(oAuth2JwtSuccessHandler)
-                        .failureHandler(oAuth2AuthenticationFailureHandler)
                 )
                 .logout(logout -> logout.logoutSuccessUrl("/"));
 
