@@ -13,15 +13,14 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import jakarta.servlet.http.HttpSession;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
-    private final HttpSession httpSession; // ❗신규 사용자 처리용으로만 유지
+    private final HttpSession httpSession; // 신규 사용자 처리용
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -42,12 +41,18 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         Optional<User> userOptional = userRepository.findByEmail(attributes.getEmail());
 
+        // 🔽 email 등 필요한 값만 뽑아서 attributes에 직접 넣음 (구글/네이버 모두 통일)
+        Map<String, Object> customAttributes = new HashMap<>(attributes.getAttributes());
+        customAttributes.put("email", attributes.getEmail());  // ✅ 반드시 email 포함시킴
+        customAttributes.put("name", attributes.getName());    // ✅ 이름도 넣어두면 편함
+
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
             existingUser.update(attributes.getName());
+
             return new DefaultOAuth2User(
                     Collections.singleton(new SimpleGrantedAuthority("USER")),
-                    attributes.getAttributes(),
+                    customAttributes,
                     attributes.getNameAttributeKey()
             );
         }
@@ -55,10 +60,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // ✅ 신규 사용자: 세션에 임시 정보 저장
         httpSession.setAttribute("tempOAuthAttributes", attributes);
 
-        // ✅ 강제로 OAuth2 인증 실패 예외 발생 (Spring Security의 실패 핸들러로 이동)
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("NEW_USER")),
-                attributes.getAttributes(),
+                customAttributes,
                 attributes.getNameAttributeKey()
         );
     }

@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Map;
 
 @Getter
@@ -45,14 +46,20 @@ public class OAuthAttributes {
     private static OAuthAttributes ofNaver(String userNameAttributeName, Map<String, Object> attributes) {
         Map<String, Object> response = (Map<String, Object>) attributes.get("response");
 
+        if (response == null) {
+            throw new IllegalArgumentException("Naver OAuth response is null.");
+        }
+
+
+
         return OAuthAttributes.builder()
                 .name((String) response.get("name"))
                 .email((String) response.get("email"))
-                .gender(null) // 직접 입력
-                .birthYear(0) // 직접 입력
+                .gender(null) // 직접 입력 or null
+                .birthYear(0) // 직접 입력 or 0
                 .oauthProvider(OauthProvider.NAVER)
-                .oauthId((String) response.get("email"))
-                .attributes(attributes)
+                .oauthId((String) response.get("id"))
+                .attributes(Collections.singletonMap("response", response)) // ✅ 핵심: 다시 감싸기
                 .nameAttributeKey(userNameAttributeName)
                 .build();
     }

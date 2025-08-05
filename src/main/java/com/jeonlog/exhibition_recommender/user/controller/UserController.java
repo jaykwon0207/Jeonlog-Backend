@@ -1,37 +1,38 @@
 package com.jeonlog.exhibition_recommender.user.controller;
 
-import com.jeonlog.exhibition_recommender.user.domain.User;
-import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
-import jakarta.servlet.http.HttpSession;
+import com.jeonlog.exhibition_recommender.user.dto.UserDto;
+import com.jeonlog.exhibition_recommender.user.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+import jakarta.servlet.http.HttpServletRequest;
+
+@RestController
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
-    private final HttpSession session;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    @GetMapping("/profile")
-    public String userProfile(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return "redirect:/login";
-        }
+    // ✅ 1. 내 정보 조회
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getMyInfo(@AuthenticationPrincipal String email) {
+        return ResponseEntity.ok(userService.getMyInfo(email));
+    }
 
-        String email = authentication.getName(); // JwtAuthenticationFilter에서 설정된 Principal
-        User user = userRepository.findByEmail(email).orElse(null);
+    // ✅ 2. 로그아웃
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        userService.logout(request);
+        return ResponseEntity.ok().build();
+    }
 
-        if (user == null) {
-            return "redirect:/login";
-        }
-
-        model.addAttribute("user", user);
-        return "profile";
+    // ✅ 3. 회원탈퇴
+    @DeleteMapping
+    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal String email) {
+        userService.deleteUser(email);
+        return ResponseEntity.noContent().build();
     }
 }
