@@ -34,6 +34,13 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        })
+                )
                 .oauth2Login(oauth -> oauth
                         .userInfoEndpoint(info -> info.userService(customOAuth2UserService))
                         .successHandler(oAuth2JwtSuccessHandler)
