@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "exhibitions")
@@ -52,4 +54,17 @@ public class Exhibition {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private ExhibitionMood exhibitionMood;
+
+    @ManyToMany
+    @JoinTable(
+            name = "exhibition_artists",
+            joinColumns = @JoinColumn(name = "exhibition_id"),
+            inverseJoinColumns = @JoinColumn(name = "artist_id")
+    )
+    private List<Artist> artists = new ArrayList<>();
+
+    @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ExhibitionGenre> exhibitionGenres = new ArrayList<>();
+
+
 }
