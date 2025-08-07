@@ -1,10 +1,16 @@
 package com.jeonlog.exhibition_recommender.user.controller;
 
+import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.UserDto;
+import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,23 +22,35 @@ public class UserController {
 
     private final UserService userService;
 
-    // ✅ 1. 내 정보 조회
+    private final UserRepository userRepository;
+
     @GetMapping("/me")
-    public ResponseEntity<UserDto> getMyInfo(@AuthenticationPrincipal String email) {
-        return ResponseEntity.ok(userService.getMyInfo(email));
+    public ResponseEntity<UserDto> getMyInfo(@AuthenticationPrincipal OAuth2User oAuth2User) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).build(); // Unauthorized
+        }
+
+        String email = (String) authentication.getPrincipal();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("❌ 사용자를 찾을 수 없습니다."));
+
+        return ResponseEntity.ok(UserDto.from(user));
     }
 
-    // ✅ 2. 로그아웃
+
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request) {
-        userService.logout(request);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+
+        return ResponseEntity.ok().body("✅ 로그아웃 처리 완료 (클라이언트 토큰 삭제 필요)");
     }
 
-    // ✅ 3. 회원탈퇴
+
     @DeleteMapping
-    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal String email) {
-        userService.deleteUser(email);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteUser(Authentication authentication) {
+        userService.deleteCurrentUser(authentication);
+        return ResponseEntity.ok().body("✅ 회원 탈퇴 완료");
     }
 }
