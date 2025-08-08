@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -24,7 +24,7 @@ public class UserController {
 
     private final UserRepository userRepository;
 
-    @GetMapping("/me")
+    @GetMapping("/users/me")
     public ResponseEntity<UserDto> getMyInfo(@AuthenticationPrincipal OAuth2User oAuth2User) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -41,7 +41,7 @@ public class UserController {
     }
 
 
-    @PostMapping("/logout")
+    @PostMapping("/users/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
 
         return ResponseEntity.ok().body("✅ 로그아웃 처리 완료 (클라이언트 토큰 삭제 필요)");
