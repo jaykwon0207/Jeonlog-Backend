@@ -38,7 +38,7 @@ public class OAuth2JwtSuccessHandler implements AuthenticationSuccessHandler {
         log.info("🔐 로그인한 사용자 이메일: {}", email);
 
         String token = jwtTokenProvider.createToken(email);
-        String redirectUrl = "http://localhost:3000/oauth2/redirect?token=" + token;
+        String redirectUrl = "http://localhost:8081/oauth2/redirect?token=" + token;
         log.info("➡️ 프론트엔드 리디렉트 URL: {}", redirectUrl);
 
         response.sendRedirect(redirectUrl);
