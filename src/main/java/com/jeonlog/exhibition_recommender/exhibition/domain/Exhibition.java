@@ -3,13 +3,18 @@ package com.jeonlog.exhibition_recommender.exhibition.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "exhibitions")
+@Table(
+        name = "exhibitions",
+        indexes = {
+                @Index(name = "idx_exhibition_start_date", columnList = "startDate"),
+                @Index(name = "idx_exhibition_end_date", columnList = "endDate")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -23,10 +28,11 @@ public class Exhibition {
     @Column(nullable = false)
     private String title;
 
-    @Lob  //TEXT 타입 매핑
+    @Lob
     @Column(nullable = false)
     private String description;
 
+    // 전시가 열리는 세부 전시실/관 이름 (주소/위도/경도는 Venue에서 관리)
     @Column(nullable = false)
     private String location;
 
@@ -39,32 +45,35 @@ public class Exhibition {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    @Column(precision = 10, scale = 7)  // 전체 자릿수(정수부+소수부) 10, 소수점 아래 최대 7자리
-    private BigDecimal latitude;   // 위도
-
-    @Column(precision = 10, scale = 7)
-    private BigDecimal longitude;  // 경도
-
     @Column(nullable = false)
     private int price;
 
-    @Column(nullable = false)
+    @Column(name = "is_free", nullable = false)
     private boolean isFree;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private ExhibitionMood exhibitionMood;
 
+    @Builder.Default
     @ManyToMany
     @JoinTable(
             name = "exhibition_artists",
             joinColumns = @JoinColumn(name = "exhibition_id"),
-            inverseJoinColumns = @JoinColumn(name = "artist_id")
+            inverseJoinColumns = @JoinColumn(name = "artist_id"),
+            uniqueConstraints = @UniqueConstraint(
+                    name = "uk_exhibition_artist",
+                    columnNames = {"exhibition_id", "artist_id"}
+            )
     )
     private List<Artist> artists = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExhibitionGenre> exhibitionGenres = new ArrayList<>();
 
-
+    // 장소(미술관/박물관) 참조 – 세부 전시실명은 location에 별도 저장
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "venue_id", nullable = false)
+    private Venue venue;
 }

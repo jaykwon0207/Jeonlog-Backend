@@ -1,6 +1,5 @@
 package com.jeonlog.exhibition_recommender.exhibition.service;
 
-
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
@@ -66,8 +65,11 @@ public class ExhibitionService {
                                                     .anyMatch(k -> g.getGenre().getGenreType().name().toLowerCase().contains(k.toLowerCase())))) match = true;
                                     break;
                                 case "location":
-                                    if (keywords.stream().anyMatch(k ->
-                                            e.getLocation().toLowerCase().contains(k.toLowerCase()))) match = true;
+                                    // venue.name + location 같이 검색
+                                    if (e.getVenue() != null && keywords.stream().anyMatch(k ->
+                                            (e.getVenue().getName() + " " + e.getLocation())
+                                                    .toLowerCase()
+                                                    .contains(k.toLowerCase()))) match = true;
                                     break;
                                 default:
                                     throw new IllegalArgumentException("유효하지 않은 filter 값입니다: " + f);
@@ -79,7 +81,7 @@ public class ExhibitionService {
                         // filter가 없으면 전체 필드에서 검색
                         boolean match = keywords.stream().anyMatch(k ->
                                 e.getTitle().toLowerCase().contains(k.toLowerCase()) ||
-                                        e.getLocation().toLowerCase().contains(k.toLowerCase()) ||
+                                        (e.getVenue() != null && (e.getVenue().getName() + " " + e.getLocation()).toLowerCase().contains(k.toLowerCase())) ||
                                         (e.getArtists() != null && e.getArtists().stream()
                                                 .anyMatch(a -> a.getName().toLowerCase().contains(k.toLowerCase()))) ||
                                         (e.getExhibitionGenres() != null && e.getExhibitionGenres().stream()
@@ -95,7 +97,7 @@ public class ExhibitionService {
                         .id(e.getId())
                         .title(e.getTitle())
                         .artist(e.getArtists() != null && !e.getArtists().isEmpty() ? e.getArtists().get(0).getName() : null)
-                        .location(e.getLocation())
+                        .location(e.getVenue() != null ? e.getVenue().getName() + " " + e.getLocation() : e.getLocation()) // 응답에도 venue + location
                         .startDate(e.getStartDate())
                         .endDate(e.getEndDate())
                         .posterUrl(e.getPosterUrl())
