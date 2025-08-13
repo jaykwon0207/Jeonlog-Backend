@@ -9,4 +9,6 @@ import lombok.Setter;
 public class AddInfoRequestDto {
     private Gender gender;
     private Integer birthYear;
+    private String nickname;
+
 }
