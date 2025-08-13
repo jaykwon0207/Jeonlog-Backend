@@ -42,6 +42,12 @@ public class User {
     @Column(nullable = false)
     private Integer birthYear;
 
+    @Column(length = 1000)
+    private String introduction;
+
+    @Column
+    private String profileImageUrl;
+
     public User update(String name){
         this.name = name;
         return this;
