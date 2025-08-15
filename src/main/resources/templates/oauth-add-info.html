@@ -5,18 +5,22 @@
 </head>
 <body>
 <h2>추가 정보 입력</h2>
-<form method="post" action="/oauth/add-info">
-    <label for="gender">성별:</label>
-    <select name="gender" id="gender" required>
-        <option value="">선택</option>
+<form action="/oauth/add-info" method="post">
+    <label>성별:</label>
+    <select name="gender">
         <option value="MALE">남성</option>
         <option value="FEMALE">여성</option>
     </select>
-    <br><br>
-    <label for="birthYear">출생연도:</label>
-    <input type="number" name="birthYear" id="birthYear" min="1900" max="2025" required/>
-    <br><br>
+
+    <label>출생연도:</label>
+    <input type="number" name="birthYear" required />
+
+    <label>닉네임:</label>
+    <input type="text" name="nickname" required />
+
     <button type="submit">제출</button>
+
+    <p th:if="${errorMessage}" th:text="${errorMessage}" style="color:red;"></p>
 </form>
 </body>
 </html>

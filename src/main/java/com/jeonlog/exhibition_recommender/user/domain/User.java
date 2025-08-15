@@ -32,6 +32,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String oauthId;
 
+    @Column(nullable = false, unique = true, length = 30)
+    private String nickname;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -42,6 +45,12 @@ public class User {
     @Column(nullable = false)
     private Integer birthYear;
 
+    @Column(length = 1000)
+    private String introduction;
+
+    @Column
+    private String profileImageUrl;
+
     public User update(String name){
         this.name = name;
         return this;
@@ -50,6 +59,18 @@ public class User {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void updateIntroduction(String introduction) {
+        this.introduction = introduction;
+    }
+
+    public void updateProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
     }
 
 }

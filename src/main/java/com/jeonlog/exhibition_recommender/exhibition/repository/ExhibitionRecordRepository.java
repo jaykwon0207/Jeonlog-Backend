@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface ExhibitionRecordRepository extends JpaRepository<ExhibitionRecord, Long> {
     List<ExhibitionRecord> findAllByUserOrderByCreatedAtDesc(User user);
+    int countByUser(User user);
+
 }

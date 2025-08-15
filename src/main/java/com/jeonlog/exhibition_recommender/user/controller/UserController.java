@@ -2,6 +2,7 @@ package com.jeonlog.exhibition_recommender.user.controller;
 
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.UserDto;
+import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -25,15 +26,7 @@ public class UserController {
     private final UserRepository userRepository;
 
     @GetMapping("/me")
-    public ResponseEntity<UserDto> getMyInfo(@AuthenticationPrincipal OAuth2User oAuth2User) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).build(); // Unauthorized
-        }
-
-        String email = (String) authentication.getPrincipal();
-
+    public ResponseEntity<UserDto> getMyInfo(@AuthenticationPrincipal String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("❌ 사용자를 찾을 수 없습니다."));
 
@@ -52,5 +45,20 @@ public class UserController {
     public ResponseEntity<?> deleteUser(Authentication authentication) {
         userService.deleteCurrentUser(authentication);
         return ResponseEntity.ok().body("✅ 회원 탈퇴 완료");
+    }
+
+    // 회원정보 수정
+    @PutMapping("/me")
+    public ResponseEntity<UserDto> updateMyInfo(
+            @AuthenticationPrincipal String email,
+            @RequestBody UserUpdateRequest request) {
+        return ResponseEntity.ok(userService.updateUserInfo(email, request));
+    }
+
+    // 닉네임 중복체크
+    @GetMapping("/check-nickname")
+    public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {
+        boolean isDuplicate = userRepository.existsByNickname(nickname);
+        return ResponseEntity.ok(isDuplicate);
     }
 }
