@@ -1,6 +1,7 @@
 package com.jeonlog.exhibition_recommender.user.domain;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Genre;
+import com.jeonlog.exhibition_recommender.like.UserLike;
 import jakarta.persistence.*;
 import lombok.*;
 

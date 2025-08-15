@@ -1,7 +1,7 @@
 package com.jeonlog.exhibition_recommender.exhibition.controller;
 
-import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionBookmarkCountResponseDto;
-import com.jeonlog.exhibition_recommender.exhibition.service.ExhibitionBookmarkService;
+import com.jeonlog.exhibition_recommender.bookmark.dto.ExhibitionBookmarkCountResponseDto;
+import com.jeonlog.exhibition_recommender.bookmark.service.ExhibitionBookmarkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

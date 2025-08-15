@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.exhibition.domain;
 
+import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import jakarta.persistence.*;
 import lombok.*;
 

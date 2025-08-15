@@ -1,6 +1,6 @@
 package com.jeonlog.exhibition_recommender.user.service;
 
-import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRecordRepository;
+import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.user.domain.Follow;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.SimpleUserProfileDto;
