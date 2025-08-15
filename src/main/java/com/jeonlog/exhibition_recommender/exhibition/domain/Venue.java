@@ -4,6 +4,7 @@ package com.jeonlog.exhibition_recommender.exhibition.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,10 +47,10 @@ public class Venue {
     private String openingHours;
 
     @Column(precision = 10, scale =6)
-    private Double latitude;
+    private BigDecimal latitude;
 
     @Column(precision = 10, scale =6)
-    private Double longitude;
+    private BigDecimal longitude;
 
     @Builder.Default
     @OneToMany(mappedBy = "venue")
