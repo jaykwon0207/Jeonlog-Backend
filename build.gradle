@@ -44,6 +44,12 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // Jackson 기반 파서
 
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'   // WebClient
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'     // (선택) 캐시
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'           // (선택) Caffeine
+
+
 }
 
 tasks.named('test') {
