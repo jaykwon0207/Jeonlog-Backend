@@ -54,8 +54,6 @@ public class ExhibitionDetailResponseDto {
                 .posterUrl(exhibition.getPosterUrl())
                 .startDate(exhibition.getStartDate())
                 .endDate(exhibition.getEndDate())
-                .latitude(exhibition.getLatitude())
-                .longitude(exhibition.getLongitude())
                 .price(exhibition.getPrice())
                 .isFree(exhibition.isFree())
                 .exhibitionMood(exhibition.getExhibitionMood())
