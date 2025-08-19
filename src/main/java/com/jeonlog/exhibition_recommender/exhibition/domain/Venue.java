@@ -1,6 +1,7 @@
 package com.jeonlog.exhibition_recommender.exhibition.domain;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 

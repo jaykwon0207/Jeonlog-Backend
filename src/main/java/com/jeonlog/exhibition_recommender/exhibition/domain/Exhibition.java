@@ -74,6 +74,8 @@ public class Exhibition {
 
     // 장소(미술관/박물관) 참조 – 세부 전시실명은 location에 별도 저장
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "venue_id", nullable = false)
+    @JoinColumn(name = "venue_id", nullable = true)
     private Venue venue;
+
+
 }

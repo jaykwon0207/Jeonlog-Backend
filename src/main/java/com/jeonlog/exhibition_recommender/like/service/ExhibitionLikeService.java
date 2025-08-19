@@ -3,6 +3,7 @@ package com.jeonlog.exhibition_recommender.like.service;
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.like.domain.ExhibitionLike;
+import com.jeonlog.exhibition_recommender.like.dto.LikeResponse;
 import com.jeonlog.exhibition_recommender.like.dto.LikeUserDto;
 import com.jeonlog.exhibition_recommender.like.repository.ExhibitionLikeRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
@@ -23,47 +24,51 @@ public class ExhibitionLikeService {
 
     // 좋아요 추가
     @Transactional
-    public void like(Long exhibitionId, String email) {
+    public LikeResponse like(Long exhibitionId, String email) {
         User me = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
         Exhibition ex = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("전시 없음"));
 
-        // 이미 눌렀으면 중복 방지
-        if (likeRepository.existsByUserIdAndExhibitionId(me.getId(), ex.getId())) return;
+        if (!likeRepository.existsByUserIdAndExhibitionId(me.getId(), ex.getId())) {
+            likeRepository.save(ExhibitionLike.builder()
+                    .user(me)
+                    .exhibition(ex)
+                    .build());
+        }
 
-        likeRepository.save(ExhibitionLike.builder()
-                .user(me)
-                .exhibition(ex)
-                .build());
-
-        // (선택) 전시 엔티티에 likeCount 필드 두고 증가 처리 가능
+        long count = likeRepository.countByExhibitionId(exhibitionId);
+        return LikeResponse.of(ex, true, count);
     }
 
     // 좋아요 취소
     @Transactional
-    public void unlike(Long exhibitionId, String email) {
+    public LikeResponse unlike(Long exhibitionId, String email) {
         User me = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+        Exhibition ex = exhibitionRepository.findById(exhibitionId)
+                .orElseThrow(() -> new IllegalArgumentException("전시 없음"));
+
         likeRepository.deleteByUserIdAndExhibitionId(me.getId(), exhibitionId);
 
-        // (선택) 전시 엔티티에 likeCount 필드 두고 감소 처리 가능
+        long count = likeRepository.countByExhibitionId(exhibitionId);
+        return LikeResponse.of(ex, false, count);
     }
 
-    // 좋아요 수 조회
+    // 전시 좋아요 수
     @Transactional(readOnly = true)
     public long count(Long exhibitionId) {
         return likeRepository.countByExhibitionId(exhibitionId);
     }
 
-    // 전시에 좋아요 누른 유저 목록 조회
+    // 전시에 좋아요한 유저 목록
     @Transactional(readOnly = true)
     public Page<LikeUserDto> listUsers(Long exhibitionId, Pageable pageable) {
         return likeRepository.findByExhibitionId(exhibitionId, pageable)
                 .map(like -> LikeUserDto.from(like.getUser()));
     }
 
-    // 내가 좋아요한 전시 목록 조회
+    // 내가 좋아요한 전시 목록
     @Transactional(readOnly = true)
     public Page<Exhibition> listMyLikedExhibitions(String email, Pageable pageable) {
         User me = userRepository.findByEmail(email)
