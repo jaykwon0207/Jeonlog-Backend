@@ -1,9 +1,9 @@
 package com.jeonlog.exhibition_recommender.record.controller;
 
 import com.jeonlog.exhibition_recommender.user.domain.User;
-import com.jeonlog.exhibition_recommender.like.RecordLikeDto;
+import com.jeonlog.exhibition_recommender.like.dto.RecordLikeDto;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
-import com.jeonlog.exhibition_recommender.like.RecordLikeService;
+import com.jeonlog.exhibition_recommender.like.service.RecordLikeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

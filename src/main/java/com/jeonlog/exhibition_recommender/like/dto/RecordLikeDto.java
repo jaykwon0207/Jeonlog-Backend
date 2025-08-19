@@ -1,4 +1,4 @@
-package com.jeonlog.exhibition_recommender.like;
+package com.jeonlog.exhibition_recommender.like.dto;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.MediaType;
 import lombok.*;
