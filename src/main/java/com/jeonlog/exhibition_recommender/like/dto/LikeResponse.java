@@ -22,7 +22,7 @@ public class LikeResponse {
     public static LikeResponse of(Exhibition exhibition, boolean liked, long likeCount) {
         return LikeResponse.builder()
                 .exhibitionId(exhibition.getId())
-                .exhibitionTitle(exhibition.getTitle()) // Exhibition 엔티티에 title 있다고 가정
+                .exhibitionTitle(exhibition.getTitle())
                 .liked(liked)
                 .likeCount(likeCount)
                 .build();
