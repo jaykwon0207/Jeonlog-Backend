@@ -1,4 +1,4 @@
-package com.jeonlog.exhibition_recommender.like;
+package com.jeonlog.exhibition_recommender.like.domain;
 
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.user.domain.User;
