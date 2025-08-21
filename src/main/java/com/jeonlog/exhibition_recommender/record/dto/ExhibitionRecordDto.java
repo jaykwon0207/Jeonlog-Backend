@@ -44,6 +44,8 @@ public class ExhibitionRecordDto {
         private Long likeCount;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+        private Long venueId;
+        private String venueName;
         private List<MediaItem> media;
 
         @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

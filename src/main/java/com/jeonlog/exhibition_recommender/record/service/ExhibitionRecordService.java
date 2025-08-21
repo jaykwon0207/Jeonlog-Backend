@@ -105,25 +105,30 @@ public class ExhibitionRecordService {
         List<ExhibitionRecord> records =
                 exhibitionRecordRepository.findAllByUserOrderByCreatedAtDesc(user);
 
-        return records.stream().map(r ->
-                ExhibitionRecordDto.MyRecordSummary.builder()
-                        .id(r.getId())
-                        .exhibitionId(r.getExhibition().getId())
-                        .content(trim(r.getContent(), 200))  // 본문 일부:200자
-                        .likeCount(r.getLikeCount())
-                        .createdAt(r.getCreatedAt())
-                        .updatedAt(r.getUpdateAt())
-                        .media(r.getMediaList().stream().map(m ->
-                                ExhibitionRecordDto.MyRecordSummary.MediaItem.builder()
-                                        .id(m.getId())
-                                        .type(m.getMediaType())
-                                        .fileUrl(m.getFileUrl())
-                                        .thumbnailUrl(m.getThumbnailUrl())
-                                        .durationSeconds(m.getDurationSeconds())
-                                        .build()
-                        ).toList())
-                        .build()
-        ).toList();
+        return records.stream().map(r -> {
+            var exhibition = r.getExhibition();
+            var venue = exhibition != null ? exhibition.getVenue() : null;
+
+            return ExhibitionRecordDto.MyRecordSummary.builder()
+                    .id(r.getId())
+                    .exhibitionId(exhibition != null ? exhibition.getId() : null)
+                    .content(trim(r.getContent(), 200))
+                    .likeCount(r.getLikeCount())
+                    .createdAt(r.getCreatedAt())
+                    .updatedAt(r.getUpdateAt())
+                    .venueId(venue != null ? venue.getId() : null)
+                    .venueName(venue != null ? venue.getName() : null)
+                    .media(r.getMediaList().stream().map(m ->
+                            ExhibitionRecordDto.MyRecordSummary.MediaItem.builder()
+                                    .id(m.getId())
+                                    .type(m.getMediaType())
+                                    .fileUrl(m.getFileUrl())
+                                    .thumbnailUrl(m.getThumbnailUrl())
+                                    .durationSeconds(m.getDurationSeconds())
+                                    .build()
+                    ).toList())
+                    .build();
+        }).toList();
     }
 
     private String trim(String s, int max) {
