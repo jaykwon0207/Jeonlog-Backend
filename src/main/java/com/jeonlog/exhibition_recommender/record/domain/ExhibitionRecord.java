@@ -77,4 +77,8 @@ public class ExhibitionRecord {
             this.likeCount--;
         }
     }
+
+    public void setContentForUpdate(String content) {
+        this.content = content;
+    }
 }

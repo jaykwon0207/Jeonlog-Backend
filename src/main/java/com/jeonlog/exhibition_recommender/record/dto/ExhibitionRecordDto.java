@@ -57,4 +57,15 @@ public class ExhibitionRecordDto {
             private Integer durationSeconds; // PHOTO일 땐 null
         }
     }
+
+    @Getter @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class UpdateRequest {
+        @Size(max = 3000, message = "content는 최대 3000자입니다")
+        private String content;
+
+        private List<String> photoUrls;
+        private String videoUrl;
+        private Integer videoDurationSeconds;
+        private String videoThumbnailUrl;
+    }
 }
