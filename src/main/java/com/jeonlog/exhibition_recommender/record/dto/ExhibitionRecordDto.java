@@ -22,8 +22,6 @@ public class ExhibitionRecordDto {
         private String videoUrl;
         private Integer videoDurationSeconds;
         private String videoThumbnailUrl;
-
-        private Boolean draft;
     }
 
     @Getter
@@ -43,7 +41,6 @@ public class ExhibitionRecordDto {
         private Long id;
         private Long exhibitionId;
         private String content;
-        private Boolean draft;
         private Long likeCount;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
@@ -58,5 +55,4 @@ public class ExhibitionRecordDto {
             private Integer durationSeconds; // PHOTO일 땐 null
         }
     }
-
 }

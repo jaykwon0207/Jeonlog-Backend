@@ -31,10 +31,6 @@ public class ExhibitionRecord {
 
     @Builder.Default
     @Column(nullable = false)
-    private Boolean draft = true;   // 임시저장 기본 true
-
-    @Builder.Default
-    @Column(nullable = false)
     private Long likeCount = 0L;    // 좋아요 수 기본 0
 
     @CreatedDate
@@ -63,7 +59,6 @@ public class ExhibitionRecord {
         LocalDateTime now = LocalDateTime.now();
         if (createdAt == null) createdAt = now;
         if (updateAt == null) updateAt = now;
-        if (draft == null) draft = true;
         if (likeCount == null) likeCount = 0L;
     }
 

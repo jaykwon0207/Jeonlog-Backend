@@ -28,8 +28,6 @@ public class ExhibitionRecordService {
         Exhibition exhibition = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 전시가 존재하지 않습니다."));
 
-        boolean draft = req.getDraft() == null ? true : req.getDraft();
-
         if (req.getContent() != null && req.getContent().length() > 3000) {
             throw new IllegalArgumentException("content는 최대 3000자입니다.");
         }
@@ -52,7 +50,6 @@ public class ExhibitionRecordService {
 
         ExhibitionRecord record = ExhibitionRecord.builder()
                 .content(req.getContent())
-                .draft(draft)
                 .likeCount(0L)
                 .exhibition(exhibition)
                 .user(user)
@@ -113,7 +110,6 @@ public class ExhibitionRecordService {
                         .id(r.getId())
                         .exhibitionId(r.getExhibition().getId())
                         .content(trim(r.getContent(), 200))  // 본문 일부:200자
-                        .draft(r.getDraft())
                         .likeCount(r.getLikeCount())
                         .createdAt(r.getCreatedAt())
                         .updatedAt(r.getUpdateAt())
