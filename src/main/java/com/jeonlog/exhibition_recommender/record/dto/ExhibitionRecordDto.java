@@ -22,8 +22,6 @@ public class ExhibitionRecordDto {
         private String videoUrl;
         private Integer videoDurationSeconds;
         private String videoThumbnailUrl;
-
-        private Boolean draft;
     }
 
     @Getter
@@ -43,10 +41,11 @@ public class ExhibitionRecordDto {
         private Long id;
         private Long exhibitionId;
         private String content;
-        private Boolean draft;
         private Long likeCount;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+        private Long venueId;
+        private String venueName;
         private List<MediaItem> media;
 
         @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -59,4 +58,14 @@ public class ExhibitionRecordDto {
         }
     }
 
+    @Getter @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class UpdateRequest {
+        @Size(max = 3000, message = "content는 최대 3000자입니다")
+        private String content;
+
+        private List<String> photoUrls;
+        private String videoUrl;
+        private Integer videoDurationSeconds;
+        private String videoThumbnailUrl;
+    }
 }

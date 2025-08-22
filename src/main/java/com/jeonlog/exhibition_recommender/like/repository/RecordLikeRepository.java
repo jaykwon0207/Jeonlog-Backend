@@ -1,5 +1,6 @@
-package com.jeonlog.exhibition_recommender.like;
+package com.jeonlog.exhibition_recommender.like.repository;
 
+import com.jeonlog.exhibition_recommender.like.domain.RecordLike;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import org.springframework.data.jpa.repository.JpaRepository;

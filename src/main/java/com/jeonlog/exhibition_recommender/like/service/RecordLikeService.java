@@ -1,5 +1,8 @@
-package com.jeonlog.exhibition_recommender.like;
+package com.jeonlog.exhibition_recommender.like.service;
 
+import com.jeonlog.exhibition_recommender.like.domain.RecordLike;
+import com.jeonlog.exhibition_recommender.like.dto.RecordLikeDto;
+import com.jeonlog.exhibition_recommender.like.repository.RecordLikeRepository;
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
@@ -58,7 +61,6 @@ public class RecordLikeService {
                     .exhibitionId(r.getExhibition().getId())
                     .content(trim(r.getContent(), 200))
                     .likeCount(r.getLikeCount())
-                    .draft(r.getDraft())
                     .createdAt(r.getCreatedAt())
                     .updatedAt(r.getUpdateAt())
                     .likedAt(l.getLikedAt())

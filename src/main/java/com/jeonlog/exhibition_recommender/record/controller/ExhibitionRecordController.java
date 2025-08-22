@@ -66,4 +66,24 @@ public class ExhibitionRecordController {
         List<ExhibitionRecordDto.MyRecordSummary> response = exhibitionRecordService.getMyRecords(user);
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/exhibitions/{exhibitionId}/records/{recordId}")
+    public ResponseEntity<Map<String, Object>> updateRecord(
+            @PathVariable Long exhibitionId,
+            @PathVariable Long recordId,
+            @AuthenticationPrincipal String email,
+            @RequestBody @Validated ExhibitionRecordDto.UpdateRequest request
+    ) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        Long updatedId = exhibitionRecordService.updateRecord(exhibitionId, recordId, user, request);
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "전시기록이 수정되었습니다.",
+                        "recordId", updatedId
+                )
+        );
+    }
 }
