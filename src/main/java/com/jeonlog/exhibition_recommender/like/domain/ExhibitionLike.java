@@ -1,4 +1,4 @@
-package com.jeonlog.exhibition_recommender.bookmark.domain;
+package com.jeonlog.exhibition_recommender.like.domain;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.user.domain.User;
@@ -11,18 +11,16 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(
-        name = "bookmarks",
+@Table(name = "exhibition_likes",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_bookmark_user_exhibition",
+                name = "uk_exhibition_like_user_exhibition",
                 columnNames = {"user_id", "exhibition_id"}
         ),
         indexes = {
-                @Index(name = "idx_bookmark_exhibition", columnList = "exhibition_id"),
-                @Index(name = "idx_bookmark_user", columnList = "user_id")
-        }
-)
-public class Bookmark {
+                @Index(name = "idx_exhibition_like_exhibition", columnList = "exhibition_id"),
+                @Index(name = "idx_exhibition_like_user", columnList = "user_id")
+        })
+public class ExhibitionLike {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,21 +33,12 @@ public class Bookmark {
     @JoinColumn(name = "exhibition_id", nullable = false)
     private Exhibition exhibition;
 
-    // 알림 여부 (전시 시작/변경 등 푸시 알림용)
-    @Column(nullable = false)
-    private boolean notifyEnabled = false;
-
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Builder
-    public Bookmark(User user, Exhibition exhibition, boolean notifyEnabled) {
+    public ExhibitionLike(User user, Exhibition exhibition) {
         this.user = user;
         this.exhibition = exhibition;
-        this.notifyEnabled = notifyEnabled;
-    }
-
-    public void updateNotify(boolean enabled) {
-        this.notifyEnabled = enabled;
     }
 }
