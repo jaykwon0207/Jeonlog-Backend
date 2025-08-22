@@ -20,7 +20,6 @@ public class UserGenre {
     @Column(nullable = false)
     private Float preferenceScore;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private UserBookmark userBookmark;

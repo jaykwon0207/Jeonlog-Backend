@@ -61,7 +61,6 @@ public class RecordLikeService {
                     .exhibitionId(r.getExhibition().getId())
                     .content(trim(r.getContent(), 200))
                     .likeCount(r.getLikeCount())
-                    .draft(r.getDraft())
                     .createdAt(r.getCreatedAt())
                     .updatedAt(r.getUpdateAt())
                     .likedAt(l.getLikedAt())
