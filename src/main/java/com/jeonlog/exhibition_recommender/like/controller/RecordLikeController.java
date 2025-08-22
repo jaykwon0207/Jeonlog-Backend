@@ -1,4 +1,4 @@
-package com.jeonlog.exhibition_recommender.record.controller;
+package com.jeonlog.exhibition_recommender.like.controller;
 
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.like.dto.RecordLikeDto;
