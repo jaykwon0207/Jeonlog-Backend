@@ -9,6 +9,11 @@ import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionReposi
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
+
+// ⬇️ 가중치 업데이트용 추가 import
+import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
+import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +27,7 @@ public class ExhibitionRecordService {
 
     private final ExhibitionRepository exhibitionRepository;
     private final ExhibitionRecordRepository exhibitionRecordRepository;
+    private final UserGenreRepository userGenreRepository;
 
     @Transactional
     public Long addRecord(Long exhibitionId, User user, CreateRequest req) {
@@ -79,7 +85,19 @@ public class ExhibitionRecordService {
 
         record.getMediaList().addAll(mediaList);
 
+        // 저장
         ExhibitionRecord saved = exhibitionRecordRepository.save(record);
+
+        //전시기록 작성 가중치 +0.03
+        UserGenre ug = userGenreRepository.findByUserId(user.getId())
+                .orElseGet(() -> userGenreRepository.save(
+                        UserGenre.builder().userId(user.getId()).build()
+                ));
+        ug.addFromExhibitionRecord(
+                exhibition.getGenre(),
+                exhibition.getExhibitionMood()
+        );
+
         return saved.getId();
     }
 
@@ -96,7 +114,11 @@ public class ExhibitionRecordService {
             throw new IllegalArgumentException("본인이 작성한 전시기록만 삭제할 수 있습니다.");
         }
 
-        // 자식(mediaList)은 엔티티 매핑로 함께 제거
+        var exhibition = record.getExhibition();
+        userGenreRepository.findByUserId(user.getId()).ifPresent(ug -> {
+            ug.revertExhibitionRecord(exhibition.getGenre(), exhibition.getExhibitionMood()); // −0.03
+        });
+
         exhibitionRecordRepository.delete(record);
     }
 
@@ -155,7 +177,7 @@ public class ExhibitionRecordService {
         if (req.getContent() != null && req.getContent().length() > 3000) {
             throw new IllegalArgumentException("content는 최대 3000자입니다.");
         }
-        record.setContentForUpdate(req.getContent()); // 아래 엔티티에 setter 추가 (변경 감지)
+        record.setContentForUpdate(req.getContent());
 
         // 미디어 검증
         List<String> photos = req.getPhotoUrls() == null ? List.of() : req.getPhotoUrls();
@@ -204,5 +226,3 @@ public class ExhibitionRecordService {
         return saved.getId();
     }
 }
-
-
