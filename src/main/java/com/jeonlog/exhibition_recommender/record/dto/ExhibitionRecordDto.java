@@ -1,6 +1,6 @@
 package com.jeonlog.exhibition_recommender.record.dto;
 
-import com.jeonlog.exhibition_recommender.exhibition.domain.MediaType;
+import com.jeonlog.exhibition_recommender.record.domain.MediaType;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 

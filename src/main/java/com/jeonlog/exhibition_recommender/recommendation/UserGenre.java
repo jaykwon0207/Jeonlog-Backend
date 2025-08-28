@@ -1,6 +1,8 @@
-package com.jeonlog.exhibition_recommender.user.domain;
+package com.jeonlog.exhibition_recommender.recommendation;
 
+import com.jeonlog.exhibition_recommender.bookmark.domain.Bookmark;
 import com.jeonlog.exhibition_recommender.exhibition.domain.Genre;
+import com.jeonlog.exhibition_recommender.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,7 +24,7 @@ public class UserGenre {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
-    private UserBookmark userBookmark;
+    private Bookmark userBookmark;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

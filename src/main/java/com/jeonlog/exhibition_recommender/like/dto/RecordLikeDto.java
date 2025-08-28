@@ -1,6 +1,6 @@
 package com.jeonlog.exhibition_recommender.like.dto;
 
-import com.jeonlog.exhibition_recommender.exhibition.domain.MediaType;
+import com.jeonlog.exhibition_recommender.record.domain.MediaType;
 import lombok.*;
 
 import java.time.LocalDateTime;

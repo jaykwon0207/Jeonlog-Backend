@@ -1,8 +1,8 @@
 package com.jeonlog.exhibition_recommender.record.service;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
-import com.jeonlog.exhibition_recommender.exhibition.domain.MediaType;
-import com.jeonlog.exhibition_recommender.exhibition.domain.RecordMedia;
+import com.jeonlog.exhibition_recommender.record.domain.MediaType;
+import com.jeonlog.exhibition_recommender.record.domain.RecordMedia;
 import com.jeonlog.exhibition_recommender.record.dto.ExhibitionRecordDto;
 import com.jeonlog.exhibition_recommender.record.dto.ExhibitionRecordDto.CreateRequest;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
