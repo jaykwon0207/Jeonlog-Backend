@@ -55,6 +55,10 @@ public class Exhibition {
     @Column(nullable = false, length = 50)
     private ExhibitionMood exhibitionMood;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private GenreType genre;
+
     @Builder.Default
     @ManyToMany
     @JoinTable(

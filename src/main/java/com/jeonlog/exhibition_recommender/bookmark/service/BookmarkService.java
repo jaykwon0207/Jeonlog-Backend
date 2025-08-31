@@ -10,6 +10,11 @@ import com.jeonlog.exhibition_recommender.exhibition.domain.Venue;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
+
+// ✅ 추가: 가중치 업데이트용
+import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
+import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +28,7 @@ public class BookmarkService {
     private final BookmarkRepository bookmarkRepository;
     private final ExhibitionRepository exhibitionRepository;
     private final UserRepository userRepository;
+    private final UserGenreRepository userGenreRepository;
 
     // 북마크 추가 (notifyEnabled 포함)
     @Transactional
@@ -34,15 +40,26 @@ public class BookmarkService {
 
         boolean notify = req != null && req.isNotifyEnabled();
 
-        // 이미 있으면 알림 상태만 최신화
+        // 이미 있으면 알림 상태만 최신화 (가중치 변경 없음)
         Bookmark bm = bookmarkRepository.findByUserIdAndExhibitionId(me.getId(), ex.getId())
                 .map(existing -> {
                     existing.updateNotify(notify);
                     return existing;
                 })
-                .orElseGet(() -> bookmarkRepository.save(
-                        Bookmark.builder().user(me).exhibition(ex).notifyEnabled(notify).build()
-                ));
+                .orElseGet(() -> {
+                    // 신규 생성 시에만 가중치 +0.02
+                    Bookmark created = bookmarkRepository.save(
+                            Bookmark.builder().user(me).exhibition(ex).notifyEnabled(notify).build()
+                    );
+
+                    UserGenre ug = userGenreRepository.findByUserId(me.getId())
+                            .orElseGet(() -> userGenreRepository.save(
+                                    UserGenre.builder().userId(me.getId()).build()
+                            ));
+                    ug.addFromBookmark(ex.getGenre(), ex.getExhibitionMood()); // +0.02
+
+                    return created;
+                });
 
         long count = bookmarkRepository.countByExhibitionId(exhibitionId);
         return BookmarkResponse.of(ex, true, bm.isNotifyEnabled(), count);
@@ -72,7 +89,15 @@ public class BookmarkService {
         Exhibition ex = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("전시 없음"));
 
-        bookmarkRepository.deleteByUserIdAndExhibitionId(me.getId(), exhibitionId);
+        // 존재하면 삭제 + 가중치 −0.02
+        bookmarkRepository.findByUserIdAndExhibitionId(me.getId(), exhibitionId).ifPresent(bm -> {
+            bookmarkRepository.delete(bm);
+
+            userGenreRepository.findByUserId(me.getId()).ifPresent(ug ->
+                    ug.revertBookmark(ex.getGenre(), ex.getExhibitionMood()) // −0.02
+            );
+        });
+
         long count = bookmarkRepository.countByExhibitionId(exhibitionId);
         return BookmarkResponse.of(ex, false, false, count);
     }
@@ -81,7 +106,6 @@ public class BookmarkService {
     public Long count(Long exhibitionId) {
         return bookmarkRepository.countByExhibitionId(exhibitionId);
     }
-
 
     // 내가 북마크한 전시 목록 (DTO 변환)
     @Transactional(readOnly = true)

@@ -3,6 +3,8 @@ package com.jeonlog.exhibition_recommender.like.service;
 import com.jeonlog.exhibition_recommender.like.domain.RecordLike;
 import com.jeonlog.exhibition_recommender.like.dto.RecordLikeDto;
 import com.jeonlog.exhibition_recommender.like.repository.RecordLikeRepository;
+import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
+import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
@@ -18,7 +20,9 @@ public class RecordLikeService {
 
     private final RecordLikeRepository recordLikeRepository;
     private final ExhibitionRecordRepository recordRepository;
+    private final UserGenreRepository userGenreRepository;
 
+    //좋아요 생성, 가중치 +0.01
     @Transactional
     public void like(Long recordId, User user) {
         ExhibitionRecord record = recordRepository.findById(recordId)
@@ -28,15 +32,25 @@ public class RecordLikeService {
             throw new IllegalArgumentException("이미 좋아요한 전시기록입니다.");
         }
 
-        RecordLike like = RecordLike.builder()
+        recordLikeRepository.save(RecordLike.builder()
                 .user(user)
                 .record(record)
-                .build();
-        recordLikeRepository.save(like);
+                .build());
 
         record.increaseLikeCount();
+
+        UserGenre ug = userGenreRepository.findByUserId(user.getId())
+                .orElseGet(() -> userGenreRepository.save(
+                        UserGenre.builder().userId(user.getId()).build()
+                ));
+
+        ug.addFromRecordLike(
+                record.getExhibition().getGenre(),
+                record.getExhibition().getExhibitionMood()
+        );
     }
 
+    //좋아요 취소, 가중치 -0.01
     @Transactional
     public void unlike(Long recordId, User user) {
         ExhibitionRecord record = recordRepository.findById(recordId)
@@ -47,8 +61,15 @@ public class RecordLikeService {
 
         recordLikeRepository.delete(like);
 
-        long current = record.getLikeCount() == null ? 0L : record.getLikeCount();
         record.decreaseLikeCount();
+
+        //가중치 감소 (−0.01)
+        userGenreRepository.findByUserId(user.getId()).ifPresent(ug ->
+                ug.revertRecordLike(
+                        record.getExhibition().getGenre(),
+                        record.getExhibition().getExhibitionMood()
+                )
+        );
     }
 
     @Transactional(readOnly = true)
