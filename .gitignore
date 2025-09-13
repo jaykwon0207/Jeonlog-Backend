@@ -36,4 +36,9 @@ application.properties
 test-output/
 
 
-.env.properties
+# 환경 변수 파일 (절대 깃에 올리지 말 것)
+.env.local.properties
+.env.prod.properties
+
+# 혹시 실수로 다른 이름으로 만들 경우까지 커버
+.env.*.propertiesperties

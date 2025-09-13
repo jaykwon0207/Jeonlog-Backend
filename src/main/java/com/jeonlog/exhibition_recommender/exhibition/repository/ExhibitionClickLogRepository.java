@@ -17,23 +17,27 @@ public interface ExhibitionClickLogRepository extends JpaRepository<ExhibitionCl
 
 
 
-   // 특정 전시회의 연령대별 클릭 수
-    @Query("SELECT " +
-            "CASE " +
-            "  WHEN (YEAR(CURRENT_DATE) - u.birthYear) < 20 THEN '10대' " +
-            "  WHEN (YEAR(CURRENT_DATE) - u.birthYear) < 30 THEN '20대' " +
-            "  WHEN (YEAR(CURRENT_DATE) - u.birthYear) < 40 THEN '30대' " +
-            "  WHEN (YEAR(CURRENT_DATE) - u.birthYear) < 50 THEN '40대' " +
-            "  ELSE '50대 이상' " +
-            "END as ageGroup, " +
-            "COUNT(ecl) as clickCount " +
-            "FROM ExhibitionClickLog ecl " +
-            "JOIN ecl.exhibition e " +
-            "JOIN ecl.user u " +
-            "WHERE e.id = :exhibitionId " +
-            "GROUP BY ageGroup " +
-            "ORDER BY clickCount DESC")
+    // 특정 전시회의 연령대별 클릭 수 (라벨: 10s/…/60s+)
+    @Query("""
+       SELECT 
+         CASE 
+           WHEN (EXTRACT(YEAR FROM CURRENT_DATE) - u.birthYear) < 20 THEN '10s'
+           WHEN (EXTRACT(YEAR FROM CURRENT_DATE) - u.birthYear) < 30 THEN '20s'
+           WHEN (EXTRACT(YEAR FROM CURRENT_DATE) - u.birthYear) < 40 THEN '30s'
+           WHEN (EXTRACT(YEAR FROM CURRENT_DATE) - u.birthYear) < 50 THEN '40s'
+           WHEN (EXTRACT(YEAR FROM CURRENT_DATE) - u.birthYear) < 60 THEN '50s'
+           ELSE '60s+'
+         END AS ageKey,
+         COUNT(ecl) AS clickCount
+       FROM ExhibitionClickLog ecl
+       JOIN ecl.user u
+       WHERE ecl.exhibition.id = :exhibitionId
+         AND u.birthYear IS NOT NULL
+       GROUP BY ageKey
+       """)
     List<Object[]> findClickStatsByAgeGroupForExhibition(@Param("exhibitionId") Long exhibitionId);
+
+
 
 
     // 특정 전시회의 성별별 클릭 수
