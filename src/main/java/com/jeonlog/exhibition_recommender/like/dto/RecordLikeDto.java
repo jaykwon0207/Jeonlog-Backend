@@ -10,12 +10,10 @@ import java.util.List;
 public class RecordLikeDto {
     private Long recordId;
     private Long exhibitionId;
-    private String content;         // 일부만 잘라서
+    private String exhibitionTitle;
+    private String contentPreview;
     private Long likeCount;
-    private Boolean draft;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private LocalDateTime likedAt;  // 내가 좋아요한 시각
+    private LocalDateTime likedAt;
     private List<MediaItem> media;
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

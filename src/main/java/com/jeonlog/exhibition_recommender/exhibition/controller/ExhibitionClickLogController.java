@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.exhibition.controller;
 
+import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.exhibition.dto.CategoryCountDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ClickLogCreateResponse;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionClickLogDto;
@@ -26,7 +27,7 @@ public class ExhibitionClickLogController {
 
     @PostMapping("/{id}/click")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ClickLogCreateResponse> saveClickLog(
+    public ResponseEntity<ApiResponse<ClickLogCreateResponse>> saveClickLog(
             @PathVariable("id") Long exhibitionId,
             @RequestBody(required = false) ExhibitionClickLogDto requestDto
     ) {
@@ -42,23 +43,23 @@ public class ExhibitionClickLogController {
 
         return ResponseEntity
                 .created(URI.create("/api/exhibitions/" + exhibitionId + "/click-logs/" + body.getLogId()))
-                .body(body);
+                .body(ApiResponse.ok(body));
     }
 
     @GetMapping("/{id}/click-stats/age-group")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<CategoryCountDto>> getClickStatsByAgeGroupForExhibition(
+    public ResponseEntity<ApiResponse<List<CategoryCountDto>>> getClickStatsByAgeGroupForExhibition(
             @PathVariable("id") Long exhibitionId) {
         List<CategoryCountDto> stats = clickLogService.getClickStatsByAgeGroupForExhibition(exhibitionId);
-        return ResponseEntity.ok(stats);
+        return ResponseEntity.ok(ApiResponse.ok(stats));
     }
 
     @GetMapping("/{id}/click-stats/gender")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<CategoryCountDto>> getClickStatsByGenderForExhibition(
+    public ResponseEntity<ApiResponse<List<CategoryCountDto>>> getClickStatsByGenderForExhibition(
             @PathVariable("id") Long exhibitionId) {
         List<CategoryCountDto> stats = clickLogService.getClickStatsByGenderForExhibition(exhibitionId);
-        return ResponseEntity.ok(stats);
+        return ResponseEntity.ok(ApiResponse.ok(stats));
     }
 
     private User getCurrentUserOrThrow() {
