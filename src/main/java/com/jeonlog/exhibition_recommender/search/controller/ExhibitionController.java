@@ -1,6 +1,6 @@
 package com.jeonlog.exhibition_recommender.search.controller;
 
-
+import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
@@ -17,25 +17,24 @@ public class ExhibitionController {
 
     private final ExhibitionService exhibitionService;
 
-    //전체 전시 목록 조회
+    // 전체 전시 목록 조회
     @GetMapping
-    public List<ExhibitionResponseDto> getAllExhibitions() {
-        return exhibitionService.getAllExhibitions();
+    public ApiResponse<List<ExhibitionResponseDto>> getAllExhibitions() {
+        return ApiResponse.ok(exhibitionService.getAllExhibitions());
     }
 
-    //특정 전시 상세 조회
+    // 특정 전시 상세 조회
     @GetMapping("/{id}")
-    public ExhibitionDetailResponseDto getExhibitionById(@PathVariable Long id) {
-        return exhibitionService.getExhibitionDetailById(id);
+    public ApiResponse<ExhibitionDetailResponseDto> getExhibitionById(@PathVariable Long id) {
+        return ApiResponse.ok(exhibitionService.getExhibitionDetailById(id));
     }
 
-    // 전시 검색 (제목, 작가, 장르, 장소등 필터링)
+    // 전시 검색
     @GetMapping("/search")
-    public List<ExhibitionSearchResponseDto> searchExhibitions(
+    public ApiResponse<List<ExhibitionSearchResponseDto>> searchExhibitions(
             @RequestParam String query,
             @RequestParam(required = false) List<String> filter
-
     ) {
-        return exhibitionService.searchExhibitions(query, filter);
+        return ApiResponse.ok(exhibitionService.searchExhibitions(query, filter));
     }
 }

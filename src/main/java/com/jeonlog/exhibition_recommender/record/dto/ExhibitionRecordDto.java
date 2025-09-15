@@ -9,6 +9,10 @@ import java.util.List;
 
 public class ExhibitionRecordDto {
 
+    // -------------------
+    // 요청 DTO
+    // -------------------
+
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
@@ -18,7 +22,6 @@ public class ExhibitionRecordDto {
         private String content;
 
         private List<String> photoUrls;
-
         private String videoUrl;
         private Integer videoDurationSeconds;
         private String videoThumbnailUrl;
@@ -28,7 +31,43 @@ public class ExhibitionRecordDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    public static class UpdateRequest {
+        @Size(max = 3000, message = "content는 최대 3000자입니다")
+        private String content;
+
+        private List<String> photoUrls;
+        private String videoUrl;
+        private Integer videoDurationSeconds;
+        private String videoThumbnailUrl;
+    }
+
+    // -------------------
+    // 응답 DTO
+    // -------------------
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class CreateResponse {
+        private String message;
+        private Long recordId;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class UpdateResponse {
+        private String message;
+        private Long recordId;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class DeleteResponse {
         private String message;
         private Long recordId;
     }
@@ -48,7 +87,11 @@ public class ExhibitionRecordDto {
         private String venueName;
         private List<MediaItem> media;
 
-        @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+        @Getter
+        @Setter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @Builder
         public static class MediaItem {
             private Long id;
             private MediaType type;
@@ -56,16 +99,5 @@ public class ExhibitionRecordDto {
             private String thumbnailUrl;     // PHOTO일 땐 null
             private Integer durationSeconds; // PHOTO일 땐 null
         }
-    }
-
-    @Getter @NoArgsConstructor @AllArgsConstructor @Builder
-    public static class UpdateRequest {
-        @Size(max = 3000, message = "content는 최대 3000자입니다")
-        private String content;
-
-        private List<String> photoUrls;
-        private String videoUrl;
-        private Integer videoDurationSeconds;
-        private String videoThumbnailUrl;
     }
 }

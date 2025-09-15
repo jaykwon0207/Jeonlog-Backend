@@ -24,7 +24,8 @@ import java.time.LocalDateTime;
 )
 public class Bookmark {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -39,8 +40,17 @@ public class Bookmark {
     @Column(nullable = false)
     private boolean notifyEnabled = false;
 
-    @CreationTimestamp
+    // 생성 시각 (DB 기본값 + 애플리케이션 보장)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    // ✅ 엔티티가 처음 저장되기 전에 createdAt 자동 세팅
+    @PrePersist
+    public void prePersist() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+    }
 
     @Builder
     public Bookmark(User user, Exhibition exhibition, boolean notifyEnabled) {

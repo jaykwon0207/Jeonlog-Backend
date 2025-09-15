@@ -9,36 +9,33 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
 
+    // 🔹 내 정보 조회
     public UserDto getMyInfo(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         return UserDto.from(user);
     }
 
-
-
+    // 🔹 회원 탈퇴
     @Transactional
     public void deleteCurrentUser(Authentication authentication) {
         String email = (String) authentication.getPrincipal();
         userRepository.deleteByEmail(email);
     }
 
-
-    // 회원 정보 update
+    // 🔹 회원 정보 수정
     @Transactional
     public UserDto updateUserInfo(String email, UserUpdateRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("❌ 사용자를 찾을 수 없습니다."));
 
-        // 닉네임 중복 검사 (현재 사용자 제외하고 검사)
+        // 닉네임 중복 검사
         if (request.getNickname() != null && !request.getNickname().equals(user.getNickname())) {
             if (userRepository.existsByNickname(request.getNickname())) {
                 throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");

@@ -1,12 +1,12 @@
 package com.jeonlog.exhibition_recommender.recommendation.controller;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
-import com.jeonlog.exhibition_recommender.recommendation.service.RecommendationService;
 import com.jeonlog.exhibition_recommender.recommendation.dto.RecommendationDto;
+import com.jeonlog.exhibition_recommender.recommendation.service.RecommendationService;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
+import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +21,7 @@ public class RecommendationController {
     private final UserRepository userRepository;
 
     @GetMapping("/recommendations")
-    public ResponseEntity<List<RecommendationDto>> getRecommendations(
+    public ApiResponse<List<RecommendationDto>> getRecommendations(
             @AuthenticationPrincipal String email
     ) {
         User user = userRepository.findByEmail(email)
@@ -33,6 +33,6 @@ public class RecommendationController {
                 .map(RecommendationDto::from)
                 .toList();
 
-        return ResponseEntity.ok(body);
+        return ApiResponse.ok(body);
     }
 }

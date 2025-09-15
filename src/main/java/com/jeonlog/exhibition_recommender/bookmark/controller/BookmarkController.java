@@ -1,4 +1,3 @@
-// bookmark/controller/BookmarkController.java
 package com.jeonlog.exhibition_recommender.bookmark.controller;
 
 import com.jeonlog.exhibition_recommender.bookmark.dto.BookmarkRequest;
@@ -9,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequiredArgsConstructor
