@@ -6,6 +6,7 @@ import com.jeonlog.exhibition_recommender.exhibition.domain.GenreType;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
 import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
+import com.jeonlog.exhibition_recommender.user.domain.Gender;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class RecommendationService {
 
         var ranking = ug.rankingForRecommendation();
         List<GenreType> topGenres = ranking.getTopGenres4();
-        List<ExhibitionTheme> topMoods = ranking.getTopMoods4();
+        List<ExhibitionTheme> topThemes = ranking.getTopThemes4();
         int[] pickCounts = ranking.getPickCounts(); // [4,3,2,1]
 
         List<Exhibition> result = new ArrayList<>(TARGET);
@@ -60,7 +61,7 @@ public class RecommendationService {
         for (int i = 0; i < pickCounts.length && result.size() < TARGET; i++) {
             int need = pickCounts[i];
             GenreType g = (i < topGenres.size()) ? topGenres.get(i) : null;
-            ExhibitionTheme m = (i < topMoods.size()) ? topMoods.get(i) : null;
+            ExhibitionTheme m = (i < topThemes.size()) ? topThemes.get(i) : null;
             if (need <= 0 || g == null) continue;
 
             // 1) 교집합
@@ -118,4 +119,55 @@ public class RecommendationService {
     private static Collection<Long> emptySafe(Set<Long> ids) {
         return (ids == null || ids.isEmpty()) ? List.of(-1L) : ids;
     }
+
+    //특정 연령대 전시 추천
+    private static final int AGE_LIMIT = 20;
+    private static final int AGE_DAYS  = 30;
+
+    @Transactional(readOnly = true)
+    public List<Exhibition> recommendByAgeId(int ageId) {
+        int[] band = toAgeBand(ageId); // [minAge, maxAge)
+        LocalDate today = LocalDate.now();
+        LocalDate from  = today.minusDays(AGE_DAYS);
+        LocalDate to    = today;
+
+        int currentYear   = today.getYear();
+        int minAge        = band[0];
+        int maxAge        = band[1];
+        int minBirthYear  = currentYear - maxAge + 1;
+        int maxBirthYear  = currentYear - minAge;
+
+        return exhibitionRepository.findPopularByAgeBand(
+                today, from, to, minBirthYear, maxBirthYear,
+                PageRequest.of(0, AGE_LIMIT)
+        );
+    }
+
+    private static int[] toAgeBand(int ageId) {
+        return switch (ageId) {
+            case 10 -> new int[]{10, 20};
+            case 20 -> new int[]{20, 30};
+            case 30 -> new int[]{30, 40};
+            case 40 -> new int[]{40, 50};
+            case 50 -> new int[]{50, 200}; // 50+
+            default -> throw new IllegalArgumentException("연령대 id는 10/20/30/40/50만 허용");
+        };
+    }
+
+    //성별 별 전시 추천
+    private static final int GENDER_LIMIT = 20;   // 최대 반환 개수
+    private static final int GENDER_DAYS  = 30;   // 최근 30일 집계
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public List<Exhibition> recommendByGender(Gender gender) {
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate from = today.minusDays(GENDER_DAYS);
+        java.time.LocalDate to = today;
+
+        return exhibitionRepository.findPopularByGender(
+                today, from, to, gender,
+                PageRequest.of(0, GENDER_LIMIT)
+        );
+    }
+
 }

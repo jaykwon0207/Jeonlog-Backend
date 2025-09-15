@@ -207,7 +207,7 @@ public class UserGenre {
     @AllArgsConstructor
     public static class RecommendationRanking {
         private final List<GenreType> topGenres4;        // 1~4등
-        private final List<ExhibitionTheme> topMoods4;    // 1~4등
+        private final List<ExhibitionTheme> topThemes4;    // 1~4등
         private final int[] pickCounts;                  // [4,3,2,1]
     }
 }
