@@ -46,7 +46,7 @@ public class RecordLikeService {
 
         ug.addFromRecordLike(
                 record.getExhibition().getGenre(),
-                record.getExhibition().getExhibitionMood()
+                record.getExhibition().getExhibitionTheme()
         );
     }
 
@@ -67,7 +67,7 @@ public class RecordLikeService {
         userGenreRepository.findByUserId(user.getId()).ifPresent(ug ->
                 ug.revertRecordLike(
                         record.getExhibition().getGenre(),
-                        record.getExhibition().getExhibitionMood()
+                        record.getExhibition().getExhibitionTheme()
                 )
         );
     }

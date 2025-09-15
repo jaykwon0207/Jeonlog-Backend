@@ -1,7 +1,7 @@
 package com.jeonlog.exhibition_recommender.exhibition.repository;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
-import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionMood;
+import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionTheme;
 import com.jeonlog.exhibition_recommender.exhibition.domain.GenreType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,13 +30,13 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
         SELECT e FROM Exhibition e
         WHERE e.startDate <= :today AND e.endDate >= :today
           AND e.genre IN :genres
-          AND e.exhibitionMood IN :moods
+          AND e.exhibitionTheme IN :moods
           AND e.id NOT IN :excludeIds
         """)
     List<Exhibition> findActiveByGenreInAndMoodInExcluding(
             @Param("today") LocalDate today,
             @Param("genres") Collection<GenreType> genres,
-            @Param("moods") Collection<ExhibitionMood> moods,
+            @Param("moods") Collection<ExhibitionTheme> moods,
             @Param("excludeIds") Collection<Long> excludeIds,
             Pageable pageable
     );
