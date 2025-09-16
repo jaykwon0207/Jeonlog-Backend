@@ -1,18 +1,18 @@
-// src/main/java/com/jeonlog/exhibition_recommender/exhibition/controller/VenueController.java
 package com.jeonlog.exhibition_recommender.exhibition.controller;
 
+import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
+import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionStatus;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.VenueDetailResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.VenuePhotoDto;
-import com.jeonlog.exhibition_recommender.exhibition.exception.VenueNotFoundException;
 import com.jeonlog.exhibition_recommender.exhibition.service.VenueService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/venues")
@@ -21,47 +21,28 @@ public class VenueController {
 
     private final VenueService venueService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getVenue(@PathVariable Long id) {
-        try {
-            VenueDetailResponseDto venue = venueService.getVenueDetail(id);
-            return ResponseEntity.ok(venue);
-        } catch (VenueNotFoundException e) {
-            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "전시장 조회 중 오류가 발생했습니다."));
-        }
+    @GetMapping("/{id}") // 전시회 조회
+    public ResponseEntity<ApiResponse<VenueDetailResponseDto>> getVenue(@PathVariable Long id) {
+        VenueDetailResponseDto venue = venueService.getVenueDetail(id);
+        return ResponseEntity.ok(ApiResponse.ok(venue));
     }
 
     @GetMapping("/{id}/photos")
-    public ResponseEntity<?> getVenuePhotos(@PathVariable Long id) {
-        try {
-            List<VenuePhotoDto> photos = venueService.getVenuePhotos(id);
-            return ResponseEntity.ok(photos);
-        } catch (VenueNotFoundException e) {
-            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "전시장 사진 조회 중 오류가 발생했습니다."));
-        }
+    public ResponseEntity<ApiResponse<List<VenuePhotoDto>>> getVenuePhotos(@PathVariable Long id) {
+        List<VenuePhotoDto> photos = venueService.getVenuePhotos(id);
+        return ResponseEntity.ok(ApiResponse.ok(photos));
     }
 
-    // ★ 상태별 전시 목록 (현재/예정/과거)
-    @GetMapping("/{id}/exhibitions")
-    public ResponseEntity<?> getVenueExhibitions(
+    @GetMapping("/{id}/exhibitions") // 상태별 전시 목록
+    public ResponseEntity<ApiResponse<Page<ExhibitionResponseDto>>> getVenueExhibitions(
             @PathVariable Long id,
-            @RequestParam(defaultValue = "current") String status, // current|upcoming|past
+            @RequestParam(defaultValue = "current") String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        try {
-            Page<ExhibitionResponseDto> exhibitions = venueService.getVenueExhibitions(id, status, page, size);
-            return ResponseEntity.ok(exhibitions);
-        } catch (VenueNotFoundException e) {
-            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "전시 목록 조회 중 오류가 발생했습니다."));
-        }
+        ExhibitionStatus resolvedStatus = ExhibitionStatus.valueOf(status.toUpperCase());
+        Page<ExhibitionResponseDto> exhibitions =
+                venueService.getVenueExhibitions(id, resolvedStatus, PageRequest.of(page, size));
+        return ResponseEntity.ok(ApiResponse.ok(exhibitions));
     }
 }

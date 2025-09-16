@@ -15,7 +15,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @Service
 @RequiredArgsConstructor
 public class UserVisitService {
@@ -24,13 +23,14 @@ public class UserVisitService {
     private final ExhibitionRepository exhibitionRepository;
     private final UserVisitRepository userVisitRepository;
 
+    // 방문 기록 저장
     public void recordVisit(Long exhibitionId, String email, VisitRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
         Exhibition exhibition = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("전시를 찾을 수 없습니다."));
 
-        LocalDate visitedAt = request != null && request.getVisitedAt() != null
+        LocalDate visitedAt = (request != null && request.getVisitedAt() != null)
                 ? request.getVisitedAt()
                 : LocalDate.now();
 
@@ -43,7 +43,7 @@ public class UserVisitService {
         userVisitRepository.save(visit);
     }
 
-
+    // 내가 방문한 전시 목록 조회
     public List<VisitedExhibitionDto> getVisitedExhibitions(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
@@ -57,14 +57,11 @@ public class UserVisitService {
                             .id(e.getId())
                             .title(e.getTitle())
                             .location(e.getLocation())
-                            .startDate(e.getStartDate().toString())
-                            .endDate(e.getEndDate().toString())
+                            .startDate(e.getStartDate() != null ? e.getStartDate().toString() : null)
+                            .endDate(e.getEndDate() != null ? e.getEndDate().toString() : null)
                             .posterUrl(e.getPosterUrl())
                             .build();
                 })
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()); // ✅ Java 11 호환
     }
-
-
-
 }

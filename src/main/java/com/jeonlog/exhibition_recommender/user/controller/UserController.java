@@ -1,12 +1,12 @@
 package com.jeonlog.exhibition_recommender.user.controller;
 
+import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.UserDto;
 import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.user.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -19,43 +19,42 @@ import jakarta.servlet.http.HttpServletRequest;
 public class UserController {
 
     private final UserService userService;
-
     private final UserRepository userRepository;
 
+    // 🔹 내 정보 조회
     @GetMapping("/me")
-    public ResponseEntity<UserDto> getMyInfo(@AuthenticationPrincipal String email) {
+    public ApiResponse<UserDto> getMyInfo(@AuthenticationPrincipal String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("❌ 사용자를 찾을 수 없습니다."));
-
-        return ResponseEntity.ok(UserDto.from(user));
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        return ApiResponse.ok(UserDto.from(user));
     }
 
-
+    // 🔹 로그아웃
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
-
-        return ResponseEntity.ok().body("✅ 로그아웃 처리 완료 (클라이언트 토큰 삭제 필요)");
+    public ApiResponse<String> logout(HttpServletRequest request) {
+        // 실제 토큰 무효화 로직은 없고, 클라이언트에서 삭제 필요
+        return ApiResponse.ok("✅ 로그아웃 처리 완료 (클라이언트 토큰 삭제 필요)");
     }
 
-
+    // 🔹 회원 탈퇴
     @DeleteMapping
-    public ResponseEntity<?> deleteUser(Authentication authentication) {
+    public ApiResponse<String> deleteUser(Authentication authentication) {
         userService.deleteCurrentUser(authentication);
-        return ResponseEntity.ok().body("✅ 회원 탈퇴 완료");
+        return ApiResponse.ok("✅ 회원 탈퇴 완료");
     }
 
-    // 회원정보 수정
+    // 🔹 회원정보 수정
     @PutMapping("/me")
-    public ResponseEntity<UserDto> updateMyInfo(
+    public ApiResponse<UserDto> updateMyInfo(
             @AuthenticationPrincipal String email,
             @RequestBody UserUpdateRequest request) {
-        return ResponseEntity.ok(userService.updateUserInfo(email, request));
+        return ApiResponse.ok(userService.updateUserInfo(email, request));
     }
 
-    // 닉네임 중복체크
+    // 🔹 닉네임 중복체크
     @GetMapping("/check-nickname")
-    public ResponseEntity<Boolean> checkNickname(@RequestParam String nickname) {
+    public ApiResponse<Boolean> checkNickname(@RequestParam String nickname) {
         boolean isDuplicate = userRepository.existsByNickname(nickname);
-        return ResponseEntity.ok(isDuplicate);
+        return ApiResponse.ok(isDuplicate);
     }
 }

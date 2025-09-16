@@ -18,7 +18,7 @@ public class UserDto {
     private final String nickname;
 
     @Builder
-    public UserDto(String name, String email, Gender gender, Integer birthYear,
+    private UserDto(String name, String email, Gender gender, Integer birthYear,
                    OauthProvider oauthProvider, String introduction, String profileImageUrl, String nickname) {
         this.name = name;
         this.email = email;

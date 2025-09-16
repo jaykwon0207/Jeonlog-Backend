@@ -1,7 +1,7 @@
-// src/main/java/com/jeonlog/exhibition_recommender/exhibition/service/VenueService.java
 package com.jeonlog.exhibition_recommender.exhibition.service;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
+import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionStatus;
 import com.jeonlog.exhibition_recommender.exhibition.domain.Venue;
 import com.jeonlog.exhibition_recommender.exhibition.domain.VenuePhoto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
@@ -16,6 +16,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -31,14 +32,14 @@ public class VenueService {
     private final ExhibitionRepository exhibitionRepository;
 
     public VenueDetailResponseDto getVenueDetail(Long id) {
-        Venue v = venueRepository.findById(id)
+        Venue venue = venueRepository.findById(id)
                 .orElseThrow(() -> new VenueNotFoundException("Venue not found with id: " + id));
 
-        String coverUrl = Optional.ofNullable(
-                venuePhotoRepository.findFirstByVenue_IdAndIsCoverTrueOrderBySortOrderAscIdAsc(id)
-        ).map(VenuePhoto::getImageUrl).orElse(null);
+        Optional<VenuePhoto> cover = venuePhotoRepository
+                .findFirstByVenue_IdAndIsCoverTrueOrderBySortOrderAscIdAsc(id);
 
-        return VenueDetailResponseDto.of(v, coverUrl);
+        String coverUrl = cover.map(VenuePhoto::getImageUrl).orElse(null);
+        return VenueDetailResponseDto.of(venue, coverUrl);
     }
 
     public List<VenuePhotoDto> getVenuePhotos(Long id) {
@@ -47,31 +48,44 @@ public class VenueService {
         }
         return venuePhotoRepository
                 .findTop20ByVenue_IdOrderBySortOrderAscIdAsc(id)
-                .stream().map(VenuePhotoDto::from).toList();
+                .stream().map(VenuePhotoDto::from)
+                .toList();
     }
 
-    // 상태별 전시 목록
-    public Page<ExhibitionResponseDto> getVenueExhibitions(Long venueId, String status, int page, int size) {
+    public Page<ExhibitionResponseDto> getVenueExhibitions(Long venueId,
+                                                           ExhibitionStatus status,
+                                                           Pageable pageable) {
         if (!venueRepository.existsById(venueId)) {
             throw new VenueNotFoundException("Venue not found with id: " + venueId);
         }
 
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        Pageable pageable = switch (status.toLowerCase()) {
-            case "past"     -> PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "endDate"));
-            case "current"  -> PageRequest.of(page, size, Sort.by(Sort.Direction.ASC,  "endDate"));
-            case "upcoming" -> PageRequest.of(page, size, Sort.by(Sort.Direction.ASC,  "startDate"));
-            default -> throw new IllegalArgumentException("status must be one of past|current|upcoming");
+
+        Pageable resolved = applyDefaultSortIfAbsent(pageable, status);
+
+        Page<Exhibition> page = switch (status) {
+            case PAST ->
+                    exhibitionRepository.findByVenue_IdAndEndDateBefore(venueId, today, resolved);
+            case CURRENT ->
+                    exhibitionRepository.findByVenue_IdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                            venueId, today, today, resolved);
+            case UPCOMING ->
+                    exhibitionRepository.findByVenue_IdAndStartDateAfter(venueId, today, resolved);
         };
 
-        Page<Exhibition> result = switch (status.toLowerCase()) {
-            case "past" -> exhibitionRepository.findByVenue_IdAndEndDateBefore(venueId, today, pageable);
-            case "current" -> exhibitionRepository
-                    .findByVenue_IdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(venueId, today, today, pageable);
-            case "upcoming" -> exhibitionRepository.findByVenue_IdAndStartDateAfter(venueId, today, pageable);
-            default -> Page.empty(pageable);
-        };
+        return page.map(ExhibitionResponseDto::from);
+    }
 
-        return result.map(ExhibitionResponseDto::from);
+    /** 클라이언트가 정렬을 주지 않았을 때만 상태별 기본 정렬을 적용 */
+    private Pageable applyDefaultSortIfAbsent(Pageable pageable, ExhibitionStatus status) {
+        if (pageable.getSort() != null && pageable.getSort().isSorted()) {
+            return pageable;
+        }
+        Sort sort = switch (status) {
+            case PAST     -> Sort.by(Sort.Direction.DESC, "endDate");
+            case CURRENT  -> Sort.by(Sort.Direction.ASC,  "endDate");
+            case UPCOMING -> Sort.by(Sort.Direction.ASC,  "startDate");
+        };
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
     }
 }

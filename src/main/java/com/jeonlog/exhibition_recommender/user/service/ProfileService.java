@@ -4,6 +4,7 @@ import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepo
 import com.jeonlog.exhibition_recommender.user.domain.Follow;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.SimpleUserProfileDto;
+import com.jeonlog.exhibition_recommender.user.exception.UserNotFoundException;
 import com.jeonlog.exhibition_recommender.user.repository.FollowRepository;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class ProfileService {
     // 🔹 팔로잉 목록
     public List<SimpleUserProfileDto> getFollowings(String myEmail) {
         User me = userRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
 
         List<Follow> followings = followRepository.findByFollower(me);
 
@@ -41,7 +42,7 @@ public class ProfileService {
     // 🔹 팔로워 목록
     public List<SimpleUserProfileDto> getFollowers(String myEmail) {
         User me = userRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
 
         List<Follow> followers = followRepository.findByFollowing(me);
 
@@ -60,10 +61,10 @@ public class ProfileService {
     // 🔹 팔로우
     public void follow(String email, Long targetId) {
         User me = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("로그인 유저 없음"));
+                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
 
         User target = userRepository.findById(targetId)
-                .orElseThrow(() -> new IllegalArgumentException("팔로우 대상 유저 없음"));
+                .orElseThrow(() -> new UserNotFoundException("팔로우 대상 유저 없음"));
 
         if (me.equals(target)) {
             throw new IllegalArgumentException("자기 자신은 팔로우할 수 없습니다.");
@@ -77,10 +78,10 @@ public class ProfileService {
     // 🔹 언팔로우
     public void unfollow(String email, Long targetId) {
         User me = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("로그인 유저 없음"));
+                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
 
         User target = userRepository.findById(targetId)
-                .orElseThrow(() -> new IllegalArgumentException("언팔 대상 유저 없음"));
+                .orElseThrow(() -> new UserNotFoundException("언팔 대상 유저 없음"));
 
         followRepository.deleteByFollowerAndFollowing(me, target);
     }
@@ -88,15 +89,15 @@ public class ProfileService {
     // 🔹 다른 유저 프로필 조회
     public SimpleUserProfileDto getUserProfile(String myEmail, Long targetUserId) {
         User me = userRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new IllegalArgumentException("로그인 유저 없음"));
+                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
 
         User target = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new IllegalArgumentException("대상 유저 없음"));
+                .orElseThrow(() -> new UserNotFoundException("대상 유저 없음"));
 
         boolean isFollowing = followRepository.existsByFollowerAndFollowing(me, target);
         int postCount = exhibitionRecordRepository.countByUser(target);
         int followerCount = followRepository.countByFollowing(target);
-        int followingCount = followRepository.countByFollower(target); // 추가
+        int followingCount = followRepository.countByFollower(target);
 
         return SimpleUserProfileDto.from(target, isFollowing, postCount, followerCount, followingCount);
     }
