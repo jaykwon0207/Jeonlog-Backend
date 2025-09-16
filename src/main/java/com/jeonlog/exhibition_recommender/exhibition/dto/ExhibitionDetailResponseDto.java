@@ -1,7 +1,7 @@
 package com.jeonlog.exhibition_recommender.exhibition.dto;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
-import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionMood;
+import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionTheme;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,7 +29,7 @@ public class ExhibitionDetailResponseDto {
     private BigDecimal longitude;
     private int price;
     private boolean isFree;
-    private ExhibitionMood exhibitionMood;
+    private ExhibitionTheme exhibitionTheme;
     private List<String> artists;
     private List<String> genres;
 
@@ -56,7 +56,7 @@ public class ExhibitionDetailResponseDto {
                 .endDate(exhibition.getEndDate())
                 .price(exhibition.getPrice())
                 .isFree(exhibition.isFree())
-                .exhibitionMood(exhibition.getExhibitionMood())
+                .exhibitionTheme(exhibition.getExhibitionTheme())
                 .artists(artistNames)
                 .genres(genreNames)
                 .build();

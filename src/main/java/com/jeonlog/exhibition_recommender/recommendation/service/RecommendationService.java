@@ -1,7 +1,7 @@
 package com.jeonlog.exhibition_recommender.recommendation.service;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
-import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionMood;
+import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionTheme;
 import com.jeonlog.exhibition_recommender.exhibition.domain.GenreType;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
@@ -50,7 +50,7 @@ public class RecommendationService {
 
         var ranking = ug.rankingForRecommendation();
         List<GenreType> topGenres = ranking.getTopGenres4();
-        List<ExhibitionMood> topMoods = ranking.getTopMoods4();
+        List<ExhibitionTheme> topMoods = ranking.getTopMoods4();
         int[] pickCounts = ranking.getPickCounts(); // [4,3,2,1]
 
         List<Exhibition> result = new ArrayList<>(TARGET);
@@ -60,7 +60,7 @@ public class RecommendationService {
         for (int i = 0; i < pickCounts.length && result.size() < TARGET; i++) {
             int need = pickCounts[i];
             GenreType g = (i < topGenres.size()) ? topGenres.get(i) : null;
-            ExhibitionMood m = (i < topMoods.size()) ? topMoods.get(i) : null;
+            ExhibitionTheme m = (i < topMoods.size()) ? topMoods.get(i) : null;
             if (need <= 0 || g == null) continue;
 
             // 1) 교집합

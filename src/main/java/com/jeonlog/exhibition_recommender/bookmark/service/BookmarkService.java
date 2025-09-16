@@ -52,7 +52,7 @@ public class BookmarkService {
                             .orElseGet(() -> userGenreRepository.save(
                                     UserGenre.builder().userId(me.getId()).build()
                             ));
-                    ug.addFromBookmark(ex.getGenre(), ex.getExhibitionMood());
+                    ug.addFromBookmark(ex.getGenre(), ex.getExhibitionTheme());
                     return created;
                 });
 
@@ -88,7 +88,7 @@ public class BookmarkService {
             bookmarkRepository.delete(bm);
 
             userGenreRepository.findByUserId(me.getId()).ifPresent(ug ->
-                    ug.revertBookmark(ex.getGenre(), ex.getExhibitionMood())
+                    ug.revertBookmark(ex.getGenre(), ex.getExhibitionTheme())
             );
         });
 
@@ -138,7 +138,7 @@ public class BookmarkService {
                 .startDate(ex.getStartDate() != null ? ex.getStartDate().toString() : null)
                 .endDate(ex.getEndDate() != null ? ex.getEndDate().toString() : null)
                 .price(ex.getPrice())
-                .exhibitionMood(ex.getExhibitionMood() != null ? ex.getExhibitionMood().name() : null)
+                .exhibitionMood(ex.getExhibitionTheme() != null ? ex.getExhibitionTheme().name() : null)
                 .venue(v == null ? null : ExhibitionDto.VenueDto.builder()
                         .id(v.getId())
                         .name(v.getName())
