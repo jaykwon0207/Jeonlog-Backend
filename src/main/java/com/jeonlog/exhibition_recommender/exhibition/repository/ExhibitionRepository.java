@@ -1,7 +1,7 @@
 package com.jeonlog.exhibition_recommender.exhibition.repository;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
-import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionMood;
+import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionTheme;
 import com.jeonlog.exhibition_recommender.exhibition.domain.GenreType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +36,7 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
     List<Exhibition> findActiveByGenreInAndMoodInExcluding(
             @Param("today") LocalDate today,
             @Param("genres") Collection<GenreType> genres,
-            @Param("moods") Collection<ExhibitionMood> moods,
+            @Param("moods") Collection<ExhibitionTheme> moods,
             @Param("excludeIds") Collection<Long> excludeIds,
             Pageable pageable
     );

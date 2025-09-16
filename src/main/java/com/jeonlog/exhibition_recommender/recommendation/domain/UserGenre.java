@@ -1,6 +1,6 @@
 package com.jeonlog.exhibition_recommender.recommendation.domain;
 
-import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionMood;
+import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionTheme;
 import com.jeonlog.exhibition_recommender.exhibition.domain.GenreType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -52,31 +52,31 @@ public class UserGenre {
     @MapKeyEnumerated(EnumType.STRING)
     @Column(name = "weight", nullable = false)
     @Builder.Default
-    private Map<ExhibitionMood, Double> moodWeights = new EnumMap<>(ExhibitionMood.class);
+    private Map<ExhibitionTheme, Double> moodWeights = new EnumMap<>(ExhibitionTheme.class);
 
     //생성 시 전체 키 0.0으로 초기 세팅
     @PrePersist
     void onCreate() {
         if (genreWeights == null) genreWeights = new EnumMap<>(GenreType.class);
-        if (moodWeights == null)  moodWeights  = new EnumMap<>(ExhibitionMood.class);
+        if (moodWeights == null)  moodWeights  = new EnumMap<>(ExhibitionTheme.class);
         for (GenreType g : GenreType.values()) genreWeights.putIfAbsent(g, 0.0);
-        for (ExhibitionMood m : ExhibitionMood.values()) moodWeights.putIfAbsent(m, 0.0);
+        for (ExhibitionTheme m : ExhibitionTheme.values()) moodWeights.putIfAbsent(m, 0.0);
     }
 
-    public void addFromBookmark(GenreType genre, ExhibitionMood mood) {
+    public void addFromBookmark(GenreType genre, ExhibitionTheme mood) {
         bump(genre, mood, DELTA_BOOKMARK);
     }
 
-    public void addFromRecordLike(GenreType genre, ExhibitionMood mood) {
+    public void addFromRecordLike(GenreType genre, ExhibitionTheme mood) {
         bump(genre, mood, DELTA_RECORD_LIKE);
     }
 
-    public void addFromExhibitionRecord(GenreType genre, ExhibitionMood mood) {
+    public void addFromExhibitionRecord(GenreType genre, ExhibitionTheme mood) {
         bump(genre, mood, DELTA_EXHIBITION_RECORD);
     }
 
     //가중치 증가 로직
-    private void bump(GenreType genre, ExhibitionMood mood, double delta) {
+    private void bump(GenreType genre, ExhibitionTheme mood, double delta) {
         genreWeights.put(genre, Math.max(0.0, genreWeights.getOrDefault(genre, 0.0) + delta));
         moodWeights.put(mood,   Math.max(0.0, moodWeights.getOrDefault(mood, 0.0) + delta));
 
@@ -117,20 +117,20 @@ public class UserGenre {
         }
     }
 
-    public void revertExhibitionRecord(GenreType genre, ExhibitionMood mood) {
+    public void revertExhibitionRecord(GenreType genre, ExhibitionTheme mood) {
         bumpNegative(genre, mood, DELTA_EXHIBITION_RECORD); // 0.03 감소
     }
 
-    public void revertRecordLike(GenreType genre, ExhibitionMood mood) {
+    public void revertRecordLike(GenreType genre, ExhibitionTheme mood) {
         bumpNegative(genre, mood, DELTA_RECORD_LIKE); // 0.01 감소
     }
 
-    public void revertBookmark(GenreType genre, ExhibitionMood mood) {
+    public void revertBookmark(GenreType genre, ExhibitionTheme mood) {
         bumpNegative(genre, mood, DELTA_BOOKMARK); // 0.02 감소
     }
 
     // 가중치 감소 로직
-    private void bumpNegative(GenreType genre, ExhibitionMood mood, double delta) {
+    private void bumpNegative(GenreType genre, ExhibitionTheme mood, double delta) {
         double g = Math.max(0.0, genreWeights.getOrDefault(genre, 0.0) - delta);
         double m = Math.max(0.0, moodWeights.getOrDefault(mood, 0.0) - delta);
         genreWeights.put(genre, g);
@@ -152,13 +152,13 @@ public class UserGenre {
 
     // 분위기: 랭킹에 따라 RESET_BASE 분포로 재배치
     private void applyBaseByRankingForMoods(double[] base) {
-        List<ExhibitionMood> order = topMoods(); // 내림차순 전체
-        Map<ExhibitionMood, Double> newMap = new EnumMap<>(ExhibitionMood.class);
+        List<ExhibitionTheme> order = topMoods(); // 내림차순 전체
+        Map<ExhibitionTheme, Double> newMap = new EnumMap<>(ExhibitionTheme.class);
         for (int i = 0; i < order.size(); i++) {
             double v = (i < base.length) ? base[i] : 0.0;
             newMap.put(order.get(i), v);
         }
-        for (ExhibitionMood m : ExhibitionMood.values()) newMap.putIfAbsent(m, 0.0);
+        for (ExhibitionTheme m : ExhibitionTheme.values()) newMap.putIfAbsent(m, 0.0);
         moodWeights = newMap;
     }
 
@@ -171,7 +171,7 @@ public class UserGenre {
     }
 
     // 분위기 전체 랭킹 (값 큰순)
-    public List<ExhibitionMood> topMoods() {
+    public List<ExhibitionTheme> topMoods() {
         return moodWeights.entrySet().stream()
                 .sorted((a,b) -> Double.compare(b.getValue(), a.getValue()))
                 .map(Map.Entry::getKey)
@@ -186,7 +186,7 @@ public class UserGenre {
                 .collect(Collectors.toList());
     }
 
-    public List<ExhibitionMood> topMoods(int n) {
+    public List<ExhibitionTheme> topMoods(int n) {
         return moodWeights.entrySet().stream()
                 .filter(e -> e.getValue() > 0)
                 .sorted((a,b) -> Double.compare(b.getValue(), a.getValue()))
@@ -207,7 +207,7 @@ public class UserGenre {
     @AllArgsConstructor
     public static class RecommendationRanking {
         private final List<GenreType> topGenres4;        // 1~4등
-        private final List<ExhibitionMood> topMoods4;    // 1~4등
+        private final List<ExhibitionTheme> topMoods4;    // 1~4등
         private final int[] pickCounts;                  // [4,3,2,1]
     }
 }

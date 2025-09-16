@@ -95,7 +95,7 @@ public class ExhibitionRecordService {
                 ));
         ug.addFromExhibitionRecord(
                 exhibition.getGenre(),
-                exhibition.getExhibitionMood()
+                exhibition.getExhibitionTheme()
         );
 
         return saved.getId();
@@ -116,7 +116,7 @@ public class ExhibitionRecordService {
 
         var exhibition = record.getExhibition();
         userGenreRepository.findByUserId(user.getId()).ifPresent(ug -> {
-            ug.revertExhibitionRecord(exhibition.getGenre(), exhibition.getExhibitionMood()); // −0.03
+            ug.revertExhibitionRecord(exhibition.getGenre(), exhibition.getExhibitionTheme()); // −0.03
         });
 
         exhibitionRecordRepository.delete(record);

@@ -53,7 +53,7 @@ public class Exhibition {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private ExhibitionMood exhibitionMood;
+    private ExhibitionTheme exhibitionTheme;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
