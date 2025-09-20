@@ -30,7 +30,7 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
         SELECT e FROM Exhibition e
         WHERE e.startDate <= :today AND e.endDate >= :today
           AND e.genre IN :genres
-          AND e.exhibitionMood IN :moods
+          AND e.exhibitionTheme IN :moods
           AND e.id NOT IN :excludeIds
         """)
     List<Exhibition> findActiveByGenreInAndMoodInExcluding(
