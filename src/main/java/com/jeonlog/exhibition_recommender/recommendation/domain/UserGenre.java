@@ -48,37 +48,37 @@ public class UserGenre {
 
     //전시분위기 가중치
     @ElementCollection
-    @CollectionTable(name = "user_mood_weights", joinColumns = @JoinColumn(name = "user_genre_id"))
+    @CollectionTable(name = "user_theme_weights", joinColumns = @JoinColumn(name = "user_genre_id"))
     @MapKeyEnumerated(EnumType.STRING)
     @Column(name = "weight", nullable = false)
     @Builder.Default
-    private Map<ExhibitionTheme, Double> moodWeights = new EnumMap<>(ExhibitionTheme.class);
+    private Map<ExhibitionTheme, Double> themeWeights = new EnumMap<>(ExhibitionTheme.class);
 
     //생성 시 전체 키 0.0으로 초기 세팅
     @PrePersist
     void onCreate() {
         if (genreWeights == null) genreWeights = new EnumMap<>(GenreType.class);
-        if (moodWeights == null)  moodWeights  = new EnumMap<>(ExhibitionTheme.class);
+        if (themeWeights == null)  themeWeights  = new EnumMap<>(ExhibitionTheme.class);
         for (GenreType g : GenreType.values()) genreWeights.putIfAbsent(g, 0.0);
-        for (ExhibitionTheme m : ExhibitionTheme.values()) moodWeights.putIfAbsent(m, 0.0);
+        for (ExhibitionTheme m : ExhibitionTheme.values()) themeWeights.putIfAbsent(m, 0.0);
     }
 
-    public void addFromBookmark(GenreType genre, ExhibitionTheme mood) {
-        bump(genre, mood, DELTA_BOOKMARK);
+    public void addFromBookmark(GenreType genre, ExhibitionTheme theme) {
+        bump(genre, theme, DELTA_BOOKMARK);
     }
 
-    public void addFromRecordLike(GenreType genre, ExhibitionTheme mood) {
-        bump(genre, mood, DELTA_RECORD_LIKE);
+    public void addFromRecordLike(GenreType genre, ExhibitionTheme theme) {
+        bump(genre, theme, DELTA_RECORD_LIKE);
     }
 
-    public void addFromExhibitionRecord(GenreType genre, ExhibitionTheme mood) {
-        bump(genre, mood, DELTA_EXHIBITION_RECORD);
+    public void addFromExhibitionRecord(GenreType genre, ExhibitionTheme theme) {
+        bump(genre, theme, DELTA_EXHIBITION_RECORD);
     }
 
     //가중치 증가 로직
-    private void bump(GenreType genre, ExhibitionTheme mood, double delta) {
+    private void bump(GenreType genre, ExhibitionTheme theme, double delta) {
         genreWeights.put(genre, Math.max(0.0, genreWeights.getOrDefault(genre, 0.0) + delta));
-        moodWeights.put(mood,   Math.max(0.0, moodWeights.getOrDefault(mood, 0.0) + delta));
+        themeWeights.put(theme,   Math.max(0.0, themeWeights.getOrDefault(theme, 0.0) + delta));
 
         //장르 가중치와 전시분위기 가중치 중 어느 한쪽이라도 1 초과면 초기화
         if (totalGenreWeight() > MAX_SUM || totalMoodWeight() > MAX_SUM) {
@@ -91,7 +91,7 @@ public class UserGenre {
         return genreWeights.values().stream().mapToDouble(Double::doubleValue).sum();
     }
     public double totalMoodWeight() {
-        return moodWeights.values().stream().mapToDouble(Double::doubleValue).sum();
+        return themeWeights.values().stream().mapToDouble(Double::doubleValue).sum();
     }
 
     /**
@@ -113,7 +113,7 @@ public class UserGenre {
         double mSum = totalMoodWeight();
         if (mSum > MAX_SUM && mSum > 0) {
             double scaleM = MAX_SUM / mSum;
-            moodWeights.replaceAll((k, v) -> v * scaleM);
+            themeWeights.replaceAll((k, v) -> v * scaleM);
         }
     }
 
@@ -132,9 +132,9 @@ public class UserGenre {
     // 가중치 감소 로직
     private void bumpNegative(GenreType genre, ExhibitionTheme mood, double delta) {
         double g = Math.max(0.0, genreWeights.getOrDefault(genre, 0.0) - delta);
-        double m = Math.max(0.0, moodWeights.getOrDefault(mood, 0.0) - delta);
+        double m = Math.max(0.0, themeWeights.getOrDefault(mood, 0.0) - delta);
         genreWeights.put(genre, g);
-        moodWeights.put(mood, m);
+        themeWeights.put(mood, m);
     }
 
 
@@ -159,7 +159,7 @@ public class UserGenre {
             newMap.put(order.get(i), v);
         }
         for (ExhibitionTheme m : ExhibitionTheme.values()) newMap.putIfAbsent(m, 0.0);
-        moodWeights = newMap;
+        themeWeights = newMap;
     }
 
     // 장르 전체 랭킹 (값 큰순)
@@ -172,7 +172,7 @@ public class UserGenre {
 
     // 분위기 전체 랭킹 (값 큰순)
     public List<ExhibitionTheme> topMoods() {
-        return moodWeights.entrySet().stream()
+        return themeWeights.entrySet().stream()
                 .sorted((a,b) -> Double.compare(b.getValue(), a.getValue()))
                 .map(Map.Entry::getKey)
                 .toList();
@@ -187,7 +187,7 @@ public class UserGenre {
     }
 
     public List<ExhibitionTheme> topMoods(int n) {
-        return moodWeights.entrySet().stream()
+        return themeWeights.entrySet().stream()
                 .filter(e -> e.getValue() > 0)
                 .sorted((a,b) -> Double.compare(b.getValue(), a.getValue()))
                 .limit(n).map(Map.Entry::getKey)

@@ -1,11 +1,13 @@
-package com.jeonlog.exhibition_recommender.exhibition.domain;
+package com.jeonlog.exhibition_recommender.recommendation.domain;
 
 
+import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionTheme;
+import com.jeonlog.exhibition_recommender.exhibition.domain.GenreType;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "initial_Exhibitions")
+@Table(name = "initial_exhibitions")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
