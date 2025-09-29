@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.user.service;
 
+import com.jeonlog.exhibition_recommender.auth.dto.AddInfoRequestDto;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.UserDto;
 import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
@@ -53,4 +54,20 @@ public class UserService {
 
         return UserDto.from(user);
     }
+
+    // 🔹 추가정보 업데이트
+    @Transactional
+    public void updateExtraInfo(String email, AddInfoRequestDto dto) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if (userRepository.existsByNickname(dto.getNickname())) {
+            throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
+        }
+
+        user.updateExtraInfo(dto.getGender(), dto.getBirthYear(), dto.getNickname());
+    }
+
+
+
 }

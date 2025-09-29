@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.user.controller;
 
+import com.jeonlog.exhibition_recommender.auth.dto.AddInfoRequestDto;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.UserDto;
@@ -7,6 +8,7 @@ import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -57,4 +59,24 @@ public class UserController {
         boolean isDuplicate = userRepository.existsByNickname(nickname);
         return ApiResponse.ok(isDuplicate);
     }
+
+    @PostMapping("/add-info")
+    public ResponseEntity<ApiResponse<?>> addInfo(
+            @RequestBody AddInfoRequestDto dto,
+            @RequestAttribute("email") String email) {
+
+        try {
+            userService.updateExtraInfo(email, dto);
+            return ResponseEntity.ok(ApiResponse.ok("추가 정보 저장 완료"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(
+                    ApiResponse.error("DUPLICATE_NICKNAME", e.getMessage())
+            );
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                    ApiResponse.error("USER_NOT_FOUND", e.getMessage())
+            );
+        }
+    }
+
 }

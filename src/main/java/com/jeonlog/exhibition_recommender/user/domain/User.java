@@ -73,4 +73,11 @@ public class User {
         this.nickname = nickname;
     }
 
+    public void updateExtraInfo(Gender gender, Integer birthYear, String nickname) {
+        this.gender = gender;
+        this.birthYear = birthYear;
+        this.nickname = nickname;
+    }
+
+
 }

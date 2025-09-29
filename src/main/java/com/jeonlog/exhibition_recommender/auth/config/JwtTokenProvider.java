@@ -1,5 +1,4 @@
 package com.jeonlog.exhibition_recommender.auth.config;
-
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -17,34 +16,38 @@ public class JwtTokenProvider {
     @Value("${JWT_SECRET}")
     private String secretKey;
 
-    private final long expirationMs = 3600_000; // 1시간
+    private final long accessTokenValidityMs = 15 * 60 * 1000;   // 15분
+    private final long refreshTokenValidityMs = 14 * 24 * 60 * 60 * 1000; // 14일
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String createToken(String email) {
-        String token = Jwts.builder()
+    public String createAccessToken(String email) {
+        return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenValidityMs))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
 
-        log.info("🔐 JWT 발급 완료: {}", token);
-        return token;
+    public String createRefreshToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenValidityMs))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     public String getEmailFromToken(String token) {
-        String email = Jwts.parserBuilder()
+        return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
-
-        log.info("📨 JWT에서 추출된 이메일: {}", email);
-        return email;
     }
 
     public boolean validateToken(String token) {
@@ -53,7 +56,6 @@ public class JwtTokenProvider {
                     .setSigningKey(getSigningKey())
                     .build()
                     .parseClaimsJws(token);
-            log.info("✅ JWT 유효성 검증 성공");
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             log.warn("❌ JWT 유효성 검증 실패: {}", e.getMessage());
