@@ -21,6 +21,7 @@ public class OAuthAttributes {
     private final OauthProvider oauthProvider;
     private final String oauthId;
 
+
     @Builder
     public OAuthAttributes(Map<String, Object> attributes, String nameAttributeKey, String name, String email,
                            Gender gender, Integer birthYear, OauthProvider oauthProvider, String oauthId) {
@@ -49,7 +50,6 @@ public class OAuthAttributes {
         if (response == null) {
             throw new IllegalArgumentException("Naver OAuth response is null.");
         }
-
 
 
         return OAuthAttributes.builder()
@@ -88,4 +88,5 @@ public class OAuthAttributes {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+
 }
