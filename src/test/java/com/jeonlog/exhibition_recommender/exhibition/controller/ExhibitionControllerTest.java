@@ -28,7 +28,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ExhibitionController.class)
-@ContextConfiguration(classes = {ExhibitionController.class})
 @WithMockUser
 class ExhibitionControllerTest {
 

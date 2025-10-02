@@ -52,6 +52,7 @@ dependencies {
 	implementation "software.amazon.awssdk:s3"
 	implementation "software.amazon.awssdk:auth"
 	implementation "software.amazon.awssdk:regions"
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
 }
 

@@ -1,6 +1,7 @@
 package com.jeonlog.exhibition_recommender.common.api;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,8 @@ public class ApiResponse<T> {
     private T data;
     private String code;
     private String message;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", timezone = "Asia/Seoul")
     private Instant timestamp;
 
     public static <T> ApiResponse<T> ok(T data) {
