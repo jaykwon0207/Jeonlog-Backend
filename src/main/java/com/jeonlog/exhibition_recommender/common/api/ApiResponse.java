@@ -22,7 +22,10 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> ok(T data) {
         return ApiResponse.<T>builder()
-                .success(true).data(data).timestamp(Instant.now()).build();
+                .success(true)
+                .data(data)
+                .timestamp(Instant.now())
+                .build();
     }
 
     public static <T> ApiResponse<T> error(String code, String message) {

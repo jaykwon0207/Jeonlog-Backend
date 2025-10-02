@@ -22,42 +22,50 @@ import java.util.List;
 public class Exhibition {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY) //id
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false) // 전시 이름
     private String title;
 
     @Lob
-    @Column(nullable = false)
+    @Column(nullable = false) // 전시 요약
     private String description;
 
-    // 전시가 열리는 세부 전시실/관 이름 (주소/위도/경도는 Venue에서 관리)
-    @Column(nullable = false)
+    @Column(nullable = false) // 전시 위치
     private String location;
 
-    @Column(nullable = false, length = 500)
+    @Column(nullable = false, length = 500) // 포스터 url
     private String posterUrl;
 
-    @Column(nullable = false)
+    @Column(nullable = false) // 시작 날짜
     private LocalDate startDate;
 
-    @Column(nullable = false)
+    @Column(nullable = false) // 끝나는 날짜
     private LocalDate endDate;
 
-    @Column(nullable = false)
+    @Column(nullable = false) // 관람료
     private int price;
 
-    @Column(name = "is_free", nullable = false)
+    @Column(name = "is_free", nullable = false) // 무료 여부
     private boolean isFree;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING) // 테마
     @Column(nullable = false, length = 50)
     private ExhibitionTheme exhibitionTheme;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING) // 장르
     @Column(nullable = false, length = 50)
     private GenreType genre;
+
+    @Column(length = 100, nullable = false) // 문의
+    private String contact;
+
+    @Column(length = 500, nullable = false) // 사이트 url
+    private String website;
+
+    @Column(length = 200, nullable = false) // 관람시간
+    private String viewingTime;
 
     @Builder.Default
     @ManyToMany
@@ -70,14 +78,15 @@ public class Exhibition {
                     columnNames = {"exhibition_id", "artist_id"}
             )
     )
+
     private List<Artist> artists = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExhibitionGenre> exhibitionGenres = new ArrayList<>();
 
-    // 장소(미술관/박물관) 참조 – 세부 전시실명은 location에 별도 저장
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "venue_id", nullable = false)
     private Venue venue;
+
 }

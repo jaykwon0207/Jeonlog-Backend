@@ -23,6 +23,7 @@ public class Artist {
     private String name;
 
     @ManyToMany(mappedBy = "artists")
+    @Builder.Default
     private List<Exhibition> exhibitions = new ArrayList<>();
 
 }

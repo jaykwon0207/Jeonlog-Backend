@@ -52,12 +52,19 @@ public class Venue {
     @Column(precision = 10, scale =6)
     private BigDecimal longitude;
 
+    @Column(length = 500, nullable = true)
+    private String logoImageUrl;     // 로고 이미지 (S3 URL)
+
+    @Column(length = 500, nullable = true)
+    private String backgroundImageUrl; // 배경 이미지 (S3 URL)
+
     @Builder.Default
     @OneToMany(mappedBy = "venue")
     private List<Exhibition> exhibitions = new ArrayList<>();
 
     @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sortOrder ASC, id ASC")
+    @Builder.Default
     private List<VenuePhoto> photos = new ArrayList<>();
 
 

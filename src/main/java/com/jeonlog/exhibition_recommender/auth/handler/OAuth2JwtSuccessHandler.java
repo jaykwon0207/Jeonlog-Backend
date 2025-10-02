@@ -1,6 +1,8 @@
 package com.jeonlog.exhibition_recommender.auth.handler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jeonlog.exhibition_recommender.auth.config.JwtTokenProvider;
+import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -20,19 +24,26 @@ import java.time.Duration;
 public class OAuth2JwtSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtTokenProvider jwtTokenProvider;
-
-    private static final String FRONT_BASE_URL = "http://localhost:8081"; // React 개발 주소
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
 
+        response.setContentType("application/json");
+
+        // 신규 회원 → 추가정보 페이지로 안내
         if (request.getSession().getAttribute("tempOAuthAttributes") != null) {
-            // 신규 사용자 → React 추가정보 페이지
-            response.sendRedirect(FRONT_BASE_URL + "/signup/add-info");
+            Map<String, Object> data = new HashMap<>();
+            data.put("newUser", true);
+            data.put("redirectTo", "/signup/add-info");
+
+            ApiResponse<Map<String, Object>> apiResponse = ApiResponse.ok(data);
+            response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
             return;
         }
 
+        // 기존 회원 → JWT 발급
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
 
@@ -47,9 +58,14 @@ public class OAuth2JwtSuccessHandler implements AuthenticationSuccessHandler {
                 .path("/")
                 .maxAge(Duration.ofDays(14))
                 .build();
-        response.setHeader("Set-Cookie", cookie.toString());
+        response.addHeader("Set-Cookie", cookie.toString());
 
-        // 프론트 메인으로 리다이렉트
-        response.sendRedirect(FRONT_BASE_URL + "/oauth/callback?success=true");
+        // JSON 응답
+        Map<String, Object> data = new HashMap<>();
+        data.put("newUser", false);
+        data.put("accessToken", accessToken);
+
+        ApiResponse<Map<String, Object>> apiResponse = ApiResponse.ok(data);
+        response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -45,6 +46,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleRecordNotFound(RecordNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error("RECORD_NOT_FOUND", e.getMessage()));
+    }
+
+    @ExceptionHandler(AwsServiceException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAwsException(AwsServiceException e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error("AWS_ERROR", "S3 Presigned URL 생성 실패: " + e.getMessage()));
     }
 
     // 그 외 모든 예외

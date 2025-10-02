@@ -20,6 +20,10 @@ public class ExhibitionResponseDto {
     private LocalDate startDate;
     private LocalDate endDate;
     private int price;
+    private String description;
+    private String contact;
+    private String website;
+    private String viewingTime;
 
     public static ExhibitionResponseDto from(Exhibition exhibition) {
         return ExhibitionResponseDto.builder()
@@ -30,6 +34,10 @@ public class ExhibitionResponseDto {
                 .startDate(exhibition.getStartDate())
                 .endDate(exhibition.getEndDate())
                 .price(exhibition.getPrice())
+                .description(exhibition.getDescription())
+                .contact(exhibition.getContact())
+                .website(exhibition.getWebsite())
+                .viewingTime(exhibition.getViewingTime())
                 .build();
     }
 }
