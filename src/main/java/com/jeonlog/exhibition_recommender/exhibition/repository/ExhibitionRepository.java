@@ -98,4 +98,7 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
             @Param("excludeIds") Collection<Long> excludeIds,
             @Param("limit") int limit
     );
+
+    boolean existsByTitleIgnoreCase(String title);
+    boolean existsByTitleContainingIgnoreCase(String titlePart);
 }

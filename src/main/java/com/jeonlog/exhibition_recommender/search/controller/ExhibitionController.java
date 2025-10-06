@@ -5,6 +5,10 @@ import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailRespons
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
 import com.jeonlog.exhibition_recommender.search.service.ExhibitionService;
+import com.jeonlog.exhibition_recommender.search.service.SearchService;
+import com.jeonlog.exhibition_recommender.search.dto.KeywordRankDto;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.jeonlog.exhibition_recommender.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +20,7 @@ import java.util.List;
 public class ExhibitionController {
 
     private final ExhibitionService exhibitionService;
+    private final SearchService searchService;
 
     // 전체 전시 목록 조회
     @GetMapping
@@ -35,6 +40,35 @@ public class ExhibitionController {
             @RequestParam String query,
             @RequestParam(required = false) List<String> filter
     ) {
-        return ApiResponse.ok(exhibitionService.searchExhibitions(query, filter));
+        // 검색 수행
+        List<ExhibitionSearchResponseDto> results = exhibitionService.searchExhibitions(query, filter);
+        return ApiResponse.ok(results);
+    }
+
+    // 검색 기록 (키워드만 기록, 인증된 사용자 기준)
+    @PostMapping("/search/log")
+    public ApiResponse<String> logSearch(
+            @AuthenticationPrincipal User user,
+            @RequestParam String query
+    ) {
+        if (user == null) {
+            return ApiResponse.error("UNAUTHORIZED", "로그인이 필요합니다.");
+        }
+
+        searchService.recordSearch(user.getEmail(), query);
+        return ApiResponse.ok("검색 로그가 저장되었습니다.");
+    }
+
+
+    // 인기 검색어 랭킹 조회
+    @GetMapping("/search/rank")
+    public ApiResponse<List<KeywordRankDto>> getSearchRank(
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to,
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        java.time.LocalDateTime fromDt = from == null || from.isBlank() ? null : java.time.LocalDateTime.parse(from);
+        java.time.LocalDateTime toDt = to == null || to.isBlank() ? null : java.time.LocalDateTime.parse(to);
+        return ApiResponse.ok(searchService.getTopKeywords(fromDt, toDt, limit));
     }
 }
