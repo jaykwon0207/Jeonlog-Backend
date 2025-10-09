@@ -18,7 +18,6 @@ public record InitialExhibitionDto(
         return InitialExhibitionDto.builder()
                 .id(e.getId())
                 .name(e.getName())
-                .description(e.getDescription())
                 .posterUrl(e.getPosterUrl())
                 .genre(e.getGenre())
                 .exhibitionTheme(e.getExhibitionTheme())
