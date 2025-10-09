@@ -1,8 +1,8 @@
 package com.jeonlog.exhibition_recommender.recommendation.controller;
 
-import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.recommendation.dto.RecommendationDto;
 import com.jeonlog.exhibition_recommender.recommendation.service.PopularByAgeRecommendationService;
+import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,20 +10,24 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/recommendations/age")
 public class PopularByAgeRecommendationController {
 
-    private final PopularByAgeRecommendationService service;
+    private final PopularByAgeRecommendationService popularByAgeRecommendationService;
 
-
-    //id = 10,20,30,40,50,60 (60은 60대 이상)
-    @GetMapping("/recommendations/age/{id}")
-    public ApiResponse<List<RecommendationDto>> getPopularByAgeDecade(
-            @PathVariable("id") int decade,
-            @RequestParam(name = "days", defaultValue = "30") int days,
-            @RequestParam(name = "clickWeight", defaultValue = "1.0") double clickWeight,
-            @RequestParam(name = "bookmarkWeight", defaultValue = "1.0") double bookmarkWeight
+    //ageGroup 1=유아청소년, 2=20-30대, 3=40-50대, 4=60대 이상
+    @GetMapping("/{ageGroup}")
+    public ApiResponse<List<RecommendationDto>> getPopularByAge(
+            @PathVariable int ageGroup
     ) {
-        return ApiResponse.ok(service.getPopularByAgeDecade(decade, days, clickWeight, bookmarkWeight));
+        // 최근 30일간의 클릭/북마크 데이터 기준으로 계산
+        int days = 30;
+        double clickWeight = 1.0;
+        double bookmarkWeight = 1.0;
+
+        List<RecommendationDto> recommendations =
+                popularByAgeRecommendationService.getPopularByAgeGroup(ageGroup, days, clickWeight, bookmarkWeight);
+
+        return ApiResponse.ok(recommendations);
     }
 }
