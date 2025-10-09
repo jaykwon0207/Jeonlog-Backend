@@ -3,6 +3,7 @@ package com.jeonlog.exhibition_recommender.exhibition.service;
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
+import com.jeonlog.exhibition_recommender.search.dto.ExhibitionImageResponseDto;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.search.service.ExhibitionService;
@@ -55,12 +56,11 @@ class ExhibitionServiceTest {
         when(exhibitionRepository.findAll()).thenReturn(exhibitions);
 
         // When
-        List<ExhibitionResponseDto> result = exhibitionService.getAllExhibitions();
+        List<ExhibitionImageResponseDto> result = exhibitionService.getAllExhibitions();
 
         // Then
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals(testExhibition.getTitle(), result.get(0).getTitle());
         verify(exhibitionRepository, times(1)).findAll();
     }
 
