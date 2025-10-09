@@ -1,6 +1,7 @@
 package com.jeonlog.exhibition_recommender.recommendation.controller;
 
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
+import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.recommendation.dto.InitialChoiceRequest;
 import com.jeonlog.exhibition_recommender.recommendation.dto.InitialExhibitionDto;
 import com.jeonlog.exhibition_recommender.recommendation.service.InitialRecommendationService;
@@ -29,11 +30,10 @@ public class InitialRecommendationController {
     //사용자가 선택 완료 시 호출
     @PostMapping("/choices")
     public ApiResponse<String> chooseInitial(
-            @AuthenticationPrincipal String email,
+            @AuthenticationPrincipal User user,
             @Valid @RequestBody InitialChoiceRequest request
     ) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        System.out.println("인증된 사용자 이메일: " + user.getEmail());
 
         initialService.applyUserInitialChoices(user.getId(), request);
         return ApiResponse.ok("초기 선호 반영이 완료되었습니다.");

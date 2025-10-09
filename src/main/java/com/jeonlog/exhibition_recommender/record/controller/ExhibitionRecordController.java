@@ -37,11 +37,9 @@ public class ExhibitionRecordController {
     @PostMapping("/exhibitions/{id}/records")
     public ApiResponse<ExhibitionRecordDto.CreateResponse> createRecord(
             @PathVariable("id") Long exhibitionId,
-            @AuthenticationPrincipal String email,
+            @AuthenticationPrincipal User user,
             @RequestBody @Validated CreateRequest request
     ) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         Long recordId = exhibitionRecordService.addRecord(exhibitionId, user, request);
 
@@ -58,11 +56,8 @@ public class ExhibitionRecordController {
     public ApiResponse<ExhibitionRecordDto.DeleteResponse> deleteRecord(
             @PathVariable("exhibitionId") Long exhibitionId,
             @PathVariable("recordId") Long recordId,
-            @AuthenticationPrincipal String email
+            @AuthenticationPrincipal User user
     ) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
         exhibitionRecordService.deleteRecord(exhibitionId, recordId, user);
 
         return ApiResponse.ok(
@@ -76,11 +71,8 @@ public class ExhibitionRecordController {
     // 내가 작성한 전시기록 목록
     @GetMapping("/users/records")
     public ApiResponse<List<ExhibitionRecordDto.MyRecordSummary>> getMyRecords(
-            @AuthenticationPrincipal String email
+            @AuthenticationPrincipal User user
     ) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
         return ApiResponse.ok(exhibitionRecordService.getMyRecords(user));
     }
 
@@ -89,11 +81,9 @@ public class ExhibitionRecordController {
     public ApiResponse<ExhibitionRecordDto.UpdateResponse> updateRecord(
             @PathVariable Long exhibitionId,
             @PathVariable Long recordId,
-            @AuthenticationPrincipal String email,
+            @AuthenticationPrincipal User user,
             @RequestBody @Validated ExhibitionRecordDto.UpdateRequest request
     ) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         Long updatedId = exhibitionRecordService.updateRecord(exhibitionId, recordId, user, request);
 
@@ -110,12 +100,9 @@ public class ExhibitionRecordController {
     public ApiResponse<Long> addMedia(
             @PathVariable Long exhibitionId,
             @PathVariable Long recordId,
-            @AuthenticationPrincipal String email,
+            @AuthenticationPrincipal User user,
             @RequestBody RecordMedia media
     ) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다."));
-
         ExhibitionRecord record = recordRepository.findById(recordId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 전시기록을 찾을 수 없습니다."));
 
