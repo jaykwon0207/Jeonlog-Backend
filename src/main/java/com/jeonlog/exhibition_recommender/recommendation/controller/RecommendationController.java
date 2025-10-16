@@ -1,10 +1,9 @@
 package com.jeonlog.exhibition_recommender.recommendation.controller;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
-import com.jeonlog.exhibition_recommender.recommendation.dto.RecommendationDto;
+import com.jeonlog.exhibition_recommender.recommendation.dto.RecommendationImageDto;
 import com.jeonlog.exhibition_recommender.recommendation.service.RecommendationService;
 import com.jeonlog.exhibition_recommender.user.domain.User;
-import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,19 +17,17 @@ import java.util.List;
 public class RecommendationController {
 
     private final RecommendationService recommendationService;
-    private final UserRepository userRepository;
 
     @GetMapping("/recommendations")
-    public ApiResponse<List<RecommendationDto>> getRecommendations(
-            @AuthenticationPrincipal String email
+    public ApiResponse<List<RecommendationImageDto>> getRecommendations(
+            @AuthenticationPrincipal User user
     ) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        System.out.println("인증된 사용자 이메일: " + user.getEmail());
 
         List<Exhibition> recs = recommendationService.recommend(user.getId());
 
-        List<RecommendationDto> body = recs.stream()
-                .map(RecommendationDto::from)
+        List<RecommendationImageDto> body = recs.stream()
+                .map(RecommendationImageDto::from)
                 .toList();
 
         return ApiResponse.ok(body);

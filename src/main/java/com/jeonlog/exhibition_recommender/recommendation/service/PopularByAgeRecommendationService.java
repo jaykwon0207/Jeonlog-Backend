@@ -21,8 +21,10 @@ public class PopularByAgeRecommendationService {
     private final PopularByAgeRecommendationRepository repo;
 
     @Transactional(readOnly = true)
-    public List<RecommendationDto> getPopularByAgeDecade(int decade, int days,
-                                                         double clickWeight, double bookmarkWeight) {
+    public List<RecommendationDto> getPopularByAgeGroup(
+            int ageGroup, int days,
+            double clickWeight, double bookmarkWeight
+    ) {
         LocalDate today = LocalDate.now();
         LocalDate fromDate = today.minusDays(days);
         LocalDate toDate = today;
@@ -31,13 +33,12 @@ public class PopularByAgeRecommendationService {
         LocalDateTime fromDt = now.minusDays(days);
         LocalDateTime toDt = now;
 
-        //출생연도 범위 (decade=10,20,30,40,50,60(이상))
         int currentYear = Year.now().getValue();
-        int[] yr = toBirthYearRangeFromDecade(decade, currentYear); // [min, max]
+        int[] yr = toBirthYearRangeFromGroup(ageGroup, currentYear);
         int minBirthYear = yr[0];
         int maxBirthYear = yr[1];
 
-        //Top10 조회
+        // 상위 10개 전시 조회
         var top10 = PageRequest.of(0, 10);
         List<Long> ids = repo.findTopPopularByAge(
                 fromDate, toDate, fromDt, toDt,
@@ -58,17 +59,18 @@ public class PopularByAgeRecommendationService {
         return ordered.stream().map(RecommendationDto::from).toList();
     }
 
-    private static int[] toBirthYearRangeFromDecade(int decade, int currentYear) {
-        switch (decade) {
-            case 10: return new int[]{ currentYear - 19, currentYear - 10 };
-            case 20: return new int[]{ currentYear - 29, currentYear - 20 };
-            case 30: return new int[]{ currentYear - 39, currentYear - 30 };
-            case 40: return new int[]{ currentYear - 49, currentYear - 40 };
-            case 50: return new int[]{ currentYear - 59, currentYear - 50 };
-            case 60: // 60대 이상
+    private static int[] toBirthYearRangeFromGroup(int ageGroup, int currentYear) {
+        switch (ageGroup) {
+            case 1: //유아청소년 (~19세)
+                return new int[]{ currentYear - 19, currentYear };
+            case 2: //20~39세 (2~30대)
+                return new int[]{ currentYear - 39, currentYear - 20 };
+            case 3: //40~59세 (4~50대)
+                return new int[]{ currentYear - 59, currentYear - 40 };
+            case 4: //60세 이상
                 return new int[]{ 0, currentYear - 60 };
             default:
-                throw new IllegalArgumentException("id는 10/20/30/40/50/60 중 하나여야 합니다.");
+                throw new IllegalArgumentException("ageGroup은 1(유아청소년), 2(20-30대), 3(40-50대), 4(60대 이상) 중 하나여야 합니다.");
         }
     }
 }

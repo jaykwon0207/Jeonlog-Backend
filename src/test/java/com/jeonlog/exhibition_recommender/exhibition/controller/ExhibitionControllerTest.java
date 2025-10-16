@@ -5,6 +5,7 @@ import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
 import com.jeonlog.exhibition_recommender.search.controller.ExhibitionController;
+import com.jeonlog.exhibition_recommender.search.dto.ExhibitionImageResponseDto;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
 import com.jeonlog.exhibition_recommender.search.service.ExhibitionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +45,7 @@ class ExhibitionControllerTest {
     private ExhibitionResponseDto testResponseDto;
     private ExhibitionDetailResponseDto testDetailResponseDto;
     private ExhibitionSearchResponseDto testSearchResponseDto;
+    private ExhibitionImageResponseDto testImageResponseDto;
 
     @BeforeEach
     void setUp() {
@@ -91,13 +93,18 @@ class ExhibitionControllerTest {
                 .posterUrl("http://example.com/poster.jpg")
                 .price(10000)
                 .build();
+
+        testImageResponseDto = ExhibitionImageResponseDto.builder()
+                .id(1L)
+                .posterUrl("http://example.com/poster.jpg")
+                .build();
     }
 
     @Test
     @WithMockUser
     void getAllExhibitions_ShouldReturnExhibitionList() throws Exception {
         // Given
-        List<ExhibitionResponseDto> exhibitions = Arrays.asList(testResponseDto);
+        List<ExhibitionImageResponseDto> exhibitions = Arrays.asList(testImageResponseDto);
         when(exhibitionService.getAllExhibitions()).thenReturn(exhibitions);
 
         // When & Then

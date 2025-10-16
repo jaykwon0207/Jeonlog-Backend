@@ -25,8 +25,10 @@ public class ExhibitionRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 3000)
-    private String content;  // 본문(최대 3000자)
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String content;  // 본문(가변 길이 텍스트)
+
 
     @Builder.Default
     @Column(nullable = false)

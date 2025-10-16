@@ -20,10 +20,6 @@ public class InitialExhibition {
     @Column(nullable = false, length = 150, unique = true)
     private String name;
 
-    @Lob
-    @Column(nullable = false)
-    private String description;
-
     @Column(nullable = false, length = 500)
     private String posterUrl;
 

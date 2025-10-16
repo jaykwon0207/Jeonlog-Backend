@@ -29,7 +29,7 @@ public class Exhibition {
     private String title;
 
     @Lob
-    @Column(nullable = false) // 전시 요약
+    @Column(nullable = false, length = 500) // 전시 요약
     private String description;
 
     @Column(nullable = false) // 전시 위치
