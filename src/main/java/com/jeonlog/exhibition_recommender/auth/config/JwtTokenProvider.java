@@ -62,4 +62,21 @@ public class JwtTokenProvider {
             return false;
         }
     }
+
+    public String refreshAccessToken(String refreshToken) {
+        try {
+            // Refresh Token 유효성 검증 (만료 X)
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(refreshToken);
+        } catch (ExpiredJwtException e) {
+            throw new JwtException("Refresh token expired");
+        } catch (JwtException e) {
+            throw new JwtException("Invalid refresh token");
+        }
+
+        String email = getEmailFromToken(refreshToken);
+        return createAccessToken(email);
+    }
 }

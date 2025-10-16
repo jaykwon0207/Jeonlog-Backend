@@ -25,25 +25,24 @@ public class ExhibitionDetailResponseDto {
     private String posterUrl;
     private LocalDate startDate;
     private LocalDate endDate;
-    private BigDecimal latitude;
-    private BigDecimal longitude;
     private int price;
     private boolean isFree;
     private ExhibitionTheme exhibitionTheme;
+    private Long venueId;
     private List<String> artists;
     private List<String> genres;
 
     public static ExhibitionDetailResponseDto from(Exhibition exhibition) {
-        List<String> artistNames = exhibition.getArtists() != null 
+        List<String> artistNames = exhibition.getArtists() != null
                 ? exhibition.getArtists().stream()
-                        .map(artist -> artist.getName())
-                        .collect(Collectors.toList())
+                .map(artist -> artist.getName())
+                .collect(Collectors.toList())
                 : List.of();
 
         List<String> genreNames = exhibition.getExhibitionGenres() != null
                 ? exhibition.getExhibitionGenres().stream()
-                        .map(exhibitionGenre -> exhibitionGenre.getGenre().getGenreType().name())
-                        .collect(Collectors.toList())
+                .map(exhibitionGenre -> exhibitionGenre.getGenre().getGenreType().name())
+                .collect(Collectors.toList())
                 : List.of();
 
         return ExhibitionDetailResponseDto.builder()
@@ -57,6 +56,7 @@ public class ExhibitionDetailResponseDto {
                 .price(exhibition.getPrice())
                 .isFree(exhibition.isFree())
                 .exhibitionTheme(exhibition.getExhibitionTheme())
+                .venueId(exhibition.getVenue() != null ? exhibition.getVenue().getId() : null)
                 .artists(artistNames)
                 .genres(genreNames)
                 .build();

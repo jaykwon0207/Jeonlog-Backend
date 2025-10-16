@@ -24,6 +24,8 @@ public class ExhibitionResponseDto {
     private String contact;
     private String website;
     private String viewingTime;
+    private String exhibitionTheme;
+    private String genre;
 
     public static ExhibitionResponseDto from(Exhibition exhibition) {
         return ExhibitionResponseDto.builder()
@@ -38,6 +40,9 @@ public class ExhibitionResponseDto {
                 .contact(exhibition.getContact())
                 .website(exhibition.getWebsite())
                 .viewingTime(exhibition.getViewingTime())
+                .exhibitionTheme(exhibition.getExhibitionTheme().name())
+                .genre(exhibition.getExhibitionTheme().name())
+
                 .build();
     }
 }

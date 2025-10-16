@@ -2,11 +2,15 @@ package com.jeonlog.exhibition_recommender.auth.controller;
 
 import com.jeonlog.exhibition_recommender.auth.config.JwtTokenProvider;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -14,36 +18,41 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final Environment env;
 
     @PostMapping("/access-token")
     public ResponseEntity<ApiResponse<?>> issueAccessToken(
             @CookieValue(name = "refresh_token", required = false) String refreshToken) {
 
-        if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
-            return ResponseEntity.status(401).body(
-                    ApiResponse.error("INVALID_REFRESH", "리프레시 토큰이 유효하지 않습니다.")
-            );
+        if (refreshToken == null) {
+            return ResponseEntity.status(401)
+                    .body(ApiResponse.error("NO_REFRESH", "리프레시 토큰이 없습니다."));
         }
 
-        String email = jwtTokenProvider.getEmailFromToken(refreshToken);
-        String newAccess = jwtTokenProvider.createAccessToken(email);
+        try {
+            String newAccess = jwtTokenProvider.refreshAccessToken(refreshToken);
+            return ResponseEntity.ok(ApiResponse.ok(newAccess));
 
-        return ResponseEntity.ok(
-                ApiResponse.ok(newAccess)
-        );
+        } catch (JwtException e) {
+            return ResponseEntity.status(401)
+                    .body(ApiResponse.error("INVALID_REFRESH", "리프레시 토큰이 만료되었거나 유효하지 않습니다."));
+        }
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        // refresh 쿠키 삭제
+    public ResponseEntity<ApiResponse<?>> logout() {
+        boolean isProd = Arrays.asList(env.getActiveProfiles()).contains("prod");
+
+        // ✅ refresh_token 쿠키 삭제
         ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(isProd) // 로컬에서는 false, 운영은 true
                 .path("/")
                 .maxAge(0)
                 .build();
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body("logged out");
+                .body(ApiResponse.ok("로그아웃 완료"));
     }
 }
