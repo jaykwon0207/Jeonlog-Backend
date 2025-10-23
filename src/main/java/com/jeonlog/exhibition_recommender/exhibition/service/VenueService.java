@@ -6,6 +6,7 @@ import com.jeonlog.exhibition_recommender.exhibition.domain.Venue;
 import com.jeonlog.exhibition_recommender.exhibition.domain.VenuePhoto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.VenueDetailResponseDto;
+import com.jeonlog.exhibition_recommender.exhibition.dto.VenueListResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.VenuePhotoDto;
 import com.jeonlog.exhibition_recommender.exhibition.exception.VenueNotFoundException;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
@@ -16,7 +17,6 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -30,6 +30,17 @@ public class VenueService {
     private final VenueRepository venueRepository;
     private final VenuePhotoRepository venuePhotoRepository;
     private final ExhibitionRepository exhibitionRepository;
+
+    public Page<VenueListResponseDto> getAllVenues(Pageable pageable) {
+        Page<Venue> venues = venueRepository.findAll(pageable);
+        
+        return venues.map(venue -> {
+            Optional<VenuePhoto> cover = venuePhotoRepository
+                    .findFirstByVenue_IdAndIsCoverTrueOrderBySortOrderAscIdAsc(venue.getId());
+            String coverUrl = cover.map(VenuePhoto::getImageUrl).orElse(null);
+            return VenueListResponseDto.from(venue, coverUrl);
+        });
+    }
 
     public VenueDetailResponseDto getVenueDetail(Long id) {
         Venue venue = venueRepository.findById(id)

@@ -4,6 +4,7 @@ import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionStatus;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.VenueDetailResponseDto;
+import com.jeonlog.exhibition_recommender.exhibition.dto.VenueListResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.VenuePhotoDto;
 import com.jeonlog.exhibition_recommender.exhibition.service.VenueService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,15 @@ import java.util.List;
 public class VenueController {
 
     private final VenueService venueService;
+
+    @GetMapping // 전체 venue 조회
+    public ResponseEntity<ApiResponse<Page<VenueListResponseDto>>> getAllVenues(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        Page<VenueListResponseDto> venues = venueService.getAllVenues(PageRequest.of(page, size));
+        return ResponseEntity.ok(ApiResponse.ok(venues));
+    }
 
     @GetMapping("/{id}") // 전시회 조회
     public ResponseEntity<ApiResponse<VenueDetailResponseDto>> getVenue(@PathVariable Long id) {
