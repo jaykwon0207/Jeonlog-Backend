@@ -8,6 +8,7 @@ import lombok.Getter;
 
 @Getter
 public class UserDto {
+    private final Long id;
     private final String name;
     private final String email;
     private final Gender gender;
@@ -18,8 +19,9 @@ public class UserDto {
     private final String nickname;
 
     @Builder
-    private UserDto(String name, String email, Gender gender, Integer birthYear,
-                   OauthProvider oauthProvider, String introduction, String profileImageUrl, String nickname) {
+    private UserDto(Long id, String name, String email, Gender gender, Integer birthYear,
+                    OauthProvider oauthProvider, String introduction, String profileImageUrl, String nickname) {
+        this.id = id;
         this.name = name;
         this.email = email;
         this.gender = gender;
@@ -32,6 +34,7 @@ public class UserDto {
 
     public static UserDto from(User user) {
         return UserDto.builder()
+                .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .gender(user.getGender())
