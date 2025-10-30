@@ -1,6 +1,6 @@
 package com.jeonlog.exhibition_recommender.record.controller;
 
-import com.jeonlog.exhibition_recommender.auth.model.CustomUserDetails;
+import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.domain.RecordMedia;
@@ -11,7 +11,6 @@ import com.jeonlog.exhibition_recommender.record.repository.RecordMediaRepositor
 import com.jeonlog.exhibition_recommender.record.service.ExhibitionRecordService;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,7 +29,7 @@ public class ExhibitionRecordController {
     @PostMapping("/exhibitions/{id}/records")
     public ApiResponse<ExhibitionRecordDto.CreateResponse> createRecord(
             @PathVariable("id") Long exhibitionId,
-            @AuthenticationPrincipal(expression = "user") User user, // ✅ 변경
+            @CurrentUser User user,
             @RequestBody @Validated CreateRequest request
     ) {
         Long recordId = exhibitionRecordService.addRecord(exhibitionId, user, request);
@@ -48,7 +47,7 @@ public class ExhibitionRecordController {
     public ApiResponse<ExhibitionRecordDto.DeleteResponse> deleteRecord(
             @PathVariable("exhibitionId") Long exhibitionId,
             @PathVariable("recordId") Long recordId,
-            @AuthenticationPrincipal(expression = "user") User user // ✅ 변경
+            @CurrentUser User user
     ) {
         exhibitionRecordService.deleteRecord(exhibitionId, recordId, user);
 
@@ -63,7 +62,7 @@ public class ExhibitionRecordController {
     // 내가 작성한 전시기록 목록
     @GetMapping("/users/records")
     public ApiResponse<List<ExhibitionRecordDto.MyRecordSummary>> getMyRecords(
-            @AuthenticationPrincipal(expression = "user") User user // ✅ 변경
+            @CurrentUser User user
     ) {
         return ApiResponse.ok(exhibitionRecordService.getMyRecords(user));
     }
@@ -73,7 +72,7 @@ public class ExhibitionRecordController {
     public ApiResponse<ExhibitionRecordDto.UpdateResponse> updateRecord(
             @PathVariable Long exhibitionId,
             @PathVariable Long recordId,
-            @AuthenticationPrincipal(expression = "user") User user, // ✅ 변경
+            @CurrentUser User user,
             @RequestBody @Validated ExhibitionRecordDto.UpdateRequest request
     ) {
         Long updatedId = exhibitionRecordService.updateRecord(exhibitionId, recordId, user, request);
@@ -91,7 +90,7 @@ public class ExhibitionRecordController {
     public ApiResponse<Long> addMedia(
             @PathVariable Long exhibitionId,
             @PathVariable Long recordId,
-            @AuthenticationPrincipal(expression = "user") User user, // ✅ 변경
+            @CurrentUser User user,
             @RequestBody RecordMedia media
     ) {
         ExhibitionRecord record = recordRepository.findById(recordId)

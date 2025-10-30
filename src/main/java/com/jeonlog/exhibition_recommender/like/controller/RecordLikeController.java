@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.like.controller;
 
+import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.auth.model.CustomUserDetails;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.like.dto.RecordLikeDto;
@@ -18,30 +19,26 @@ import java.util.List;
 public class RecordLikeController {
 
     private final RecordLikeService recordLikeService;
-    private final UserRepository userRepository;
 
     @PostMapping("/records/{id}/like")
     public ApiResponse<RecordLikeDto> like(
             @PathVariable Long id,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @CurrentUser User user
     ) {
-        User user = userDetails.getUser();
         return ApiResponse.ok(recordLikeService.like(id, user));
     }
 
-
-    //전시기록 좋아요 취소
     @DeleteMapping("/records/{id}/like")
     public ApiResponse<RecordLikeDto> unlike(
             @PathVariable("id") Long id,
-            @AuthenticationPrincipal User user
+            @CurrentUser User user
     ) {
         return ApiResponse.ok(recordLikeService.unlike(id, user));
     }
 
     @GetMapping("/users/record-likes")
     public ApiResponse<List<RecordLikeDto>> myLikes(
-            @AuthenticationPrincipal User user
+            @CurrentUser User user
     ) {
         return ApiResponse.ok(recordLikeService.getMyLiked(user));
     }
