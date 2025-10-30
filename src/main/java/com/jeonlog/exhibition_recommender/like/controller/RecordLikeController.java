@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.like.controller;
 
+import com.jeonlog.exhibition_recommender.auth.model.CustomUserDetails;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.like.dto.RecordLikeDto;
 import com.jeonlog.exhibition_recommender.like.service.RecordLikeService;
@@ -21,9 +22,10 @@ public class RecordLikeController {
 
     @PostMapping("/records/{id}/like")
     public ApiResponse<RecordLikeDto> like(
-            @PathVariable("id") Long id,
-            @AuthenticationPrincipal User user
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        User user = userDetails.getUser();
         return ApiResponse.ok(recordLikeService.like(id, user));
     }
 

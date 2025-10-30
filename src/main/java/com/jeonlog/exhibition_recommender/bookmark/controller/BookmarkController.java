@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.bookmark.controller;
 
+import com.jeonlog.exhibition_recommender.auth.model.CustomUserDetails;
 import com.jeonlog.exhibition_recommender.bookmark.dto.BookmarkRequest;
 import com.jeonlog.exhibition_recommender.bookmark.dto.BookmarkResponse;
 import com.jeonlog.exhibition_recommender.bookmark.service.BookmarkService;
@@ -20,8 +21,9 @@ public class BookmarkController {
     @PostMapping
     public ApiResponse<BookmarkResponse> add(
             @PathVariable Long exhibitionId,
-            @AuthenticationPrincipal String email,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody(required = false) BookmarkRequest req) {
+        String email = userDetails.getUsername(); // 또는 userDetails.getUser().getEmail()
         return ApiResponse.ok(service.add(exhibitionId, email, req));
     }
 

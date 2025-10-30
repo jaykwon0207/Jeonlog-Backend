@@ -54,6 +54,7 @@ public class OAuth2JwtSuccessHandler implements AuthenticationSuccessHandler {
         if (email == null || email.isBlank()) {
             log.error("❌ OAuth2 email is null. attributes={}", oAuth2User.getAttributes());
             response.sendRedirect("/login?error=EMAIL_NULL");
+            
             return;
         }
 

@@ -45,11 +45,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        try {
-            chain.doFilter(request, response);
-        } finally {
-            // 요청 단위로 컨텍스트 정리 (선택이지만 깔끔)
-            SecurityContextHolder.clearContext();
-        }
+
+        chain.doFilter(request, response);
+
     }
 }
