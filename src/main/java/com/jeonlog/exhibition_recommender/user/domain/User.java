@@ -2,6 +2,7 @@ package com.jeonlog.exhibition_recommender.user.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 
 import java.time.LocalDateTime;
 
@@ -50,6 +51,14 @@ public class User {
 
     @Column
     private String profileImageUrl;
+
+    //팔로워 수 (나를 팔로우하는 유저 수)
+    @Formula("(SELECT COUNT(*) FROM follow f WHERE f.following_id = id)")
+    private int followerCount;
+
+    //팔로잉 수 (내가 팔로우하는 유저 수)
+    @Formula("(SELECT COUNT(*) FROM follow f WHERE f.follower_id = id)")
+    private int followingCount;
 
     public User update(String name){
         this.name = name;
