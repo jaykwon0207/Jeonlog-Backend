@@ -36,7 +36,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/", "/login/**", "/css/**", "/js/**", "/images/**",
-                                "/oauth/add-info", "/error", "/oauth2/**", "/oauth2/redirect/**", "api/health"
+                                "/oauth/add-info", "/error", "/oauth2/**", "/oauth2/redirect/**", "/api/health",
+                                //Swagger 관련 경로 허용
+                                "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**",
+                                "/swagger-ui.html", "/webjars/**"
                         ).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
