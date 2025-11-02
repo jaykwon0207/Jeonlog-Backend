@@ -101,4 +101,8 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
 
     boolean existsByTitleIgnoreCase(String title);
     boolean existsByTitleContainingIgnoreCase(String titlePart);
+
+    // 전시 정보 조회 시 venue 정보도 함께 조회
+    @Query("SELECT e FROM Exhibition e JOIN FETCH e.venue")
+    List<Exhibition> findAllWithVenue();
 }

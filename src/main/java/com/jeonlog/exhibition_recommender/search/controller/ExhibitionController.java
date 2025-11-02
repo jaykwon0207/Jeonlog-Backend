@@ -8,6 +8,7 @@ import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto
 import com.jeonlog.exhibition_recommender.search.service.ExhibitionService;
 import com.jeonlog.exhibition_recommender.search.service.SearchService;
 import com.jeonlog.exhibition_recommender.search.dto.KeywordRankDto;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,13 @@ public class ExhibitionController {
     @GetMapping
     public ApiResponse<List<ExhibitionImageResponseDto>> getAllExhibitions() {
         return ApiResponse.ok(exhibitionService.getAllExhibitions());
+    }
+
+    // 전체 전시 목록 상세 조회
+    @GetMapping("/detail")
+    public ResponseEntity<List<ExhibitionResponseDto>> getExhibitions() {
+        List<ExhibitionResponseDto> exhibitions = exhibitionService.getAllExhibitionsDetails();
+        return ResponseEntity.ok(exhibitions);
     }
 
 

@@ -17,10 +17,12 @@ public class UserDto {
     private final String introduction;
     private final String profileImageUrl;
     private final String nickname;
+    private final int followerCount;
+    private final int followingCount;
 
     @Builder
     private UserDto(Long id, String name, String email, Gender gender, Integer birthYear,
-                    OauthProvider oauthProvider, String introduction, String profileImageUrl, String nickname) {
+                    OauthProvider oauthProvider, String introduction, String profileImageUrl, String nickname, int followerCount, int followingCount) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -30,6 +32,8 @@ public class UserDto {
         this.introduction = introduction;
         this.profileImageUrl = profileImageUrl;
         this.nickname = nickname;
+        this.followerCount = followerCount;
+        this.followingCount = followingCount;
     }
 
     public static UserDto from(User user) {
@@ -43,6 +47,8 @@ public class UserDto {
                 .introduction(user.getIntroduction())
                 .profileImageUrl(user.getProfileImageUrl())
                 .nickname(user.getNickname())
+                .followerCount(user.getFollowerCount())
+                .followingCount(user.getFollowingCount())
                 .build();
     }
 }
