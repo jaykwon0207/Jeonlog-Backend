@@ -1,10 +1,11 @@
 package com.jeonlog.exhibition_recommender.user.controller;
 
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
+import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.SimpleUserProfileDto;
 import com.jeonlog.exhibition_recommender.user.service.ProfileService;
+import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,38 +19,38 @@ public class ProfileController {
 
     // 🔹 팔로잉 목록
     @GetMapping("/followings")
-    public ApiResponse<List<SimpleUserProfileDto>> getFollowings(@AuthenticationPrincipal String email) {
-        return ApiResponse.ok(profileService.getFollowings(email));
+    public ApiResponse<List<SimpleUserProfileDto>> getFollowings(@CurrentUser User user) {
+        return ApiResponse.ok(profileService.getFollowings(user.getEmail()));
     }
 
     // 🔹 팔로워 목록
     @GetMapping("/followers")
-    public ApiResponse<List<SimpleUserProfileDto>> getFollowers(@AuthenticationPrincipal String email) {
-        return ApiResponse.ok(profileService.getFollowers(email));
+    public ApiResponse<List<SimpleUserProfileDto>> getFollowers(@CurrentUser User user) {
+        return ApiResponse.ok(profileService.getFollowers(user.getEmail()));
     }
 
     // 🔹 팔로우
     @PostMapping("/{targetId}/follow")
-    public ApiResponse<String> follow(@AuthenticationPrincipal String email,
+    public ApiResponse<String> follow(@CurrentUser User user,
                                       @PathVariable Long targetId) {
-        profileService.follow(email, targetId);
+        profileService.follow(user.getEmail(), targetId);
         return ApiResponse.ok("팔로우 했습니다.");
     }
 
     // 🔹 언팔로우
     @DeleteMapping("/{targetId}/unfollow")
-    public ApiResponse<String> unfollow(@AuthenticationPrincipal String email,
+    public ApiResponse<String> unfollow(@CurrentUser User user,
                                         @PathVariable Long targetId) {
-        profileService.unfollow(email, targetId);
+        profileService.unfollow(user.getEmail(), targetId);
         return ApiResponse.ok("언팔로우 했습니다.");
     }
 
     // 🔹 다른 사람 프로필 조회
     @GetMapping("/{userId}/profile")
     public ApiResponse<SimpleUserProfileDto> getUserProfile(
-            @AuthenticationPrincipal String myEmail,
+            @CurrentUser User user,
             @PathVariable Long userId
     ) {
-        return ApiResponse.ok(profileService.getUserProfile(myEmail, userId));
+        return ApiResponse.ok(profileService.getUserProfile(user.getEmail(), userId));
     }
 }
