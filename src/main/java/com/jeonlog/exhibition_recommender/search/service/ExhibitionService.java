@@ -28,6 +28,13 @@ public class ExhibitionService {
                 .collect(Collectors.toList());
     }
 
+    // 전체 전시 목록 상세 조회
+    public List<ExhibitionResponseDto> getAllExhibitionsDetails() {
+        return exhibitionRepository.findAllWithVenue()
+                .stream()
+                .map(ExhibitionResponseDto::from)
+                .collect(Collectors.toList());
+    }
 
     // 전시 상세 조회
     public ExhibitionDetailResponseDto getExhibitionDetailById(Long id) {
