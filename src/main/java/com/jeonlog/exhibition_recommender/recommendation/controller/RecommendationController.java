@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.recommendation.controller;
 
+import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.recommendation.dto.RecommendationImageDto;
 import com.jeonlog.exhibition_recommender.recommendation.service.RecommendationService;
@@ -20,7 +21,7 @@ public class RecommendationController {
 
     @GetMapping("/recommendations")
     public ApiResponse<List<RecommendationImageDto>> getRecommendations(
-            @AuthenticationPrincipal User user
+            @CurrentUser User user
     ) {
         System.out.println("인증된 사용자 이메일: " + user.getEmail());
 

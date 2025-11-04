@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.recommendation.controller;
 
+import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.recommendation.dto.InitialChoiceRequest;
@@ -30,7 +31,7 @@ public class InitialRecommendationController {
     //사용자가 선택 완료 시 호출
     @PostMapping("/choices")
     public ApiResponse<String> chooseInitial(
-            @AuthenticationPrincipal User user,
+            @CurrentUser User user,
             @Valid @RequestBody InitialChoiceRequest request
     ) {
         System.out.println("인증된 사용자 이메일: " + user.getEmail());

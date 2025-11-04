@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.search.controller;
 
+import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
@@ -58,7 +59,7 @@ public class ExhibitionController {
     // 검색 기록 (키워드만 기록, 인증된 사용자 기준)
     @PostMapping("/search/log")
     public ApiResponse<String> logSearch(
-            @AuthenticationPrincipal User user,
+            @CurrentUser User user,
             @RequestParam String query
     ) {
         if (user == null) {
