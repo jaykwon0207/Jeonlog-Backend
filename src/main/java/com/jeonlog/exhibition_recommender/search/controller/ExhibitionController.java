@@ -27,7 +27,7 @@ public class ExhibitionController {
 
     // 전체 전시 목록 조회
     @GetMapping
-    public ApiResponse<List<ExhibitionImageResponseDto>> getAllExhibitions() {
+    public ApiResponse<List<ExhibitionResponseDto>> getAllExhibitions() {
         return ApiResponse.ok(exhibitionService.getAllExhibitions());
     }
 

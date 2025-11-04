@@ -22,9 +22,9 @@ public class ExhibitionService {
     private final ExhibitionRepository exhibitionRepository;
 
     // 전체 전시 목록 조회
-    public List<ExhibitionImageResponseDto> getAllExhibitions() {
+    public List<ExhibitionResponseDto> getAllExhibitions() {
         return exhibitionRepository.findAll().stream()
-                .map(ExhibitionImageResponseDto::from)
+                .map(ExhibitionResponseDto::from)
                 .collect(Collectors.toList());
     }
 
