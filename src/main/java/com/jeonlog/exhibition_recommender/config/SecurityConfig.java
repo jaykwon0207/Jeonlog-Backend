@@ -28,6 +28,12 @@ public class SecurityConfig {
     private final UserRepository userRepository;
 
     @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtTokenProvider, userRepository);
+    }
+
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
@@ -64,6 +70,7 @@ public class SecurityConfig {
                 UsernamePasswordAuthenticationFilter.class
         );
 
+        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

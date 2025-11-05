@@ -36,8 +36,8 @@ public class ExhibitionResponseDto {
     private List<String> artistNames;
     private String venueName;
 
-    public static ExhibitionImageResponseDto from(Exhibition exhibition) {
-        return ExhibitionImageResponseDto.builder()
+    public static ExhibitionResponseDto from(Exhibition exhibition) {
+        return ExhibitionResponseDto.builder()
                 .id(exhibition.getId())
                 .title(exhibition.getTitle())
                 .description(exhibition.getDescription())

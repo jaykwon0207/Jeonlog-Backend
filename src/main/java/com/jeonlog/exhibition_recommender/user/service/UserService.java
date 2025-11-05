@@ -2,6 +2,7 @@ package com.jeonlog.exhibition_recommender.user.service;
 
 import com.jeonlog.exhibition_recommender.auth.dto.AddInfoRequestDto;
 import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
+import com.jeonlog.exhibition_recommender.user.domain.Gender;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.UserDto;
 import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
@@ -66,6 +67,21 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
+    }
+
+
+    @Transactional
+    public User saveNewUser(OAuthAttributes attributes, AddInfoRequestDto request) {
+        User user = User.builder()
+                .email(attributes.getEmail())
+                .name(attributes.getName())
+                .oauthProvider(attributes.getOauthProvider())
+                .oauthId(attributes.getOauthId())
+                .gender(request.getGender())
+                .birthYear(request.getBirthYear())
+                .build();
+
+        return userRepository.save(user);
     }
 
     // 🔹 회원 탈퇴
