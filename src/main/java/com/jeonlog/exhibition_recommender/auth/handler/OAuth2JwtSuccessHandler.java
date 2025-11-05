@@ -31,7 +31,7 @@ public class OAuth2JwtSuccessHandler implements AuthenticationSuccessHandler {
         // ✅ 신규 회원일 경우 → 온보딩 화면으로 딥링크 이동
         if (request.getSession().getAttribute("tempOAuthAttributes") != null) {
             log.info("🆕 신규 회원 → 온보딩 페이지로 이동");
-            response.sendRedirect("jeonlofront://onboarding/age");
+            response.sendRedirect("jeonlogfront://onboarding/age");
             return;
         }
 

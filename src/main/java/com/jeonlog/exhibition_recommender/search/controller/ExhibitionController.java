@@ -4,7 +4,6 @@ import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
-import com.jeonlog.exhibition_recommender.search.dto.ExhibitionImageResponseDto;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
 import com.jeonlog.exhibition_recommender.search.service.ExhibitionService;
 import com.jeonlog.exhibition_recommender.search.service.SearchService;
@@ -27,7 +26,7 @@ public class ExhibitionController {
 
     // 전체 전시 목록 조회
     @GetMapping
-    public ApiResponse<List<ExhibitionImageResponseDto>> getAllExhibitions() {
+    public ApiResponse<List<ExhibitionResponseDto>> getAllExhibitions() {
         return ApiResponse.ok(exhibitionService.getAllExhibitions());
     }
 

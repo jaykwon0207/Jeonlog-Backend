@@ -28,6 +28,12 @@ public class SecurityConfig {
     private final UserRepository userRepository;
 
     @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtTokenProvider, userRepository);
+    }
+
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
@@ -37,11 +43,14 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/", "/login/**", "/css/**", "/js/**", "/images/**",
                                 "/oauth/add-info", "/error", "/oauth2/**", "/oauth2/redirect/**", "/api/health",
+                                "/api/auth/**", // ✅ 추가
                                 "/swagger-ui/**", "/v3/api-docs/**",
                                 "/swagger-resources/**", "/swagger-ui.html", "/webjars/**"
                         ).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
+
+
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -61,6 +70,7 @@ public class SecurityConfig {
                 UsernamePasswordAuthenticationFilter.class
         );
 
+        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

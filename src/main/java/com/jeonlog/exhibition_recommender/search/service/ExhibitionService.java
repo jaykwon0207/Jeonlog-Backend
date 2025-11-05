@@ -4,7 +4,6 @@ import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
-import com.jeonlog.exhibition_recommender.search.dto.ExhibitionImageResponseDto;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +21,9 @@ public class ExhibitionService {
     private final ExhibitionRepository exhibitionRepository;
 
     // 전체 전시 목록 조회
-    public List<ExhibitionImageResponseDto> getAllExhibitions() {
+    public List<ExhibitionResponseDto> getAllExhibitions() {
         return exhibitionRepository.findAll().stream()
-                .map(ExhibitionImageResponseDto::from)
+                .map(ExhibitionResponseDto::from)
                 .collect(Collectors.toList());
     }
 
