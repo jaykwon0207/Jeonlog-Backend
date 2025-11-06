@@ -21,6 +21,7 @@ public class VenueDetailResponseDto implements Serializable {
     private Double latitude;
     private Double longitude;
     private String coverImageUrl; // 대표 이미지(없으면 null)
+    private String backgroundImageUrl;
     private String staticMapUrl;  // 정적 지도 이미지 URL
     private String naverMapUrl;   // 네이버 지도 연동 URL
 
@@ -39,6 +40,7 @@ public class VenueDetailResponseDto implements Serializable {
                 .latitude(v.getLatitude() != null ? v.getLatitude().doubleValue() : null)
                 .longitude(v.getLongitude() != null ? v.getLongitude().doubleValue() : null)
                 .coverImageUrl(coverImageUrl)
+                .backgroundImageUrl(coverImageUrl)
                 .staticMapUrl(v.getLatitude() != null && v.getLongitude() != null ?
                         generateStaticMapUrl(v.getLongitude().doubleValue(), v.getLatitude().doubleValue()) : null)
                 .naverMapUrl(v.getLatitude() != null && v.getLongitude() != null ?

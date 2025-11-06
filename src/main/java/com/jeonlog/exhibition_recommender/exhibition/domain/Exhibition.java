@@ -22,7 +22,7 @@ import java.util.List;
 public class Exhibition {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false) // 전시 이름
@@ -35,13 +35,13 @@ public class Exhibition {
     @Column(nullable = false) // 전시 위치
     private String location;
 
-    @Column(nullable = false, length = 500) // 포스터 url
+    @Column(nullable = false, length = 500) // 포스터 URL
     private String posterUrl;
 
     @Column(nullable = false) // 시작 날짜
     private LocalDate startDate;
 
-    @Column(nullable = false) // 끝나는 날짜
+    @Column(nullable = false) // 종료 날짜
     private LocalDate endDate;
 
     @Column(nullable = false) // 관람료
@@ -61,7 +61,7 @@ public class Exhibition {
     @Column(length = 100, nullable = false) // 문의
     private String contact;
 
-    @Column(length = 500, nullable = false) // 사이트 url
+    @Column(length = 500, nullable = false) // 사이트 URL
     private String website;
 
     @Column(length = 200, nullable = false) // 관람시간
@@ -88,4 +88,8 @@ public class Exhibition {
     @JoinColumn(name = "venue_id", nullable = false)
     private Venue venue;
 
+    // ✅ 포스터 URL 업데이트 메서드 추가
+    public void updatePosterUrl(String newUrl) {
+        this.posterUrl = newUrl;
+    }
 }
