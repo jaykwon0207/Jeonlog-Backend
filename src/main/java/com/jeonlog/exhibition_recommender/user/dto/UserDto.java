@@ -6,6 +6,8 @@ import com.jeonlog.exhibition_recommender.user.domain.User;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.UUID;
+
 @Getter
 public class UserDto {
     private final Long id;
@@ -19,10 +21,11 @@ public class UserDto {
     private final String nickname;
     private final int followerCount;
     private final int followingCount;
+    private final String signature;
 
     @Builder
     private UserDto(Long id, String name, String email, Gender gender, Integer birthYear,
-                    OauthProvider oauthProvider, String introduction, String profileImageUrl, String nickname, int followerCount, int followingCount) {
+                    OauthProvider oauthProvider, String introduction, String profileImageUrl, String nickname, int followerCount, int followingCount, String signature) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -34,8 +37,8 @@ public class UserDto {
         this.nickname = nickname;
         this.followerCount = followerCount;
         this.followingCount = followingCount;
+        this.signature = signature;
     }
-
     public static UserDto from(User user) {
         return UserDto.builder()
                 .id(user.getId())
@@ -49,6 +52,7 @@ public class UserDto {
                 .nickname(user.getNickname())
                 .followerCount(user.getFollowerCount())
                 .followingCount(user.getFollowingCount())
+                .signature(user.getSignature())
                 .build();
     }
 }

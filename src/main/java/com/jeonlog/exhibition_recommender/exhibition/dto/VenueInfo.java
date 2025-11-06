@@ -1,21 +1,22 @@
 package com.jeonlog.exhibition_recommender.exhibition.dto;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Venue;
+import lombok.*;
 
-public record VenueInfo(
-        Long id,
-        String name,
-        String website,
-        String openingHours,
-        String address
-) {
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class VenueInfo {
+    private Long id;
+    private String name;
+    private String address;
+
     public static VenueInfo from(Venue venue) {
-        return new VenueInfo(
-                venue.getId(),
-                venue.getName(),
-                venue.getWebsite(),
-                venue.getOpeningHours(),
-                venue.getAddress()
-        );
+        return VenueInfo.builder()
+                .id(venue.getId())
+                .name(venue.getName())
+                .address(venue.getAddress())
+                .build();
     }
 }

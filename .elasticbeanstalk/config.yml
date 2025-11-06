@@ -1,0 +1,5 @@
+branch-defaults:
+  feature/apple-login:
+    environment: Jeonlog-env
+global:
+  profile: null
