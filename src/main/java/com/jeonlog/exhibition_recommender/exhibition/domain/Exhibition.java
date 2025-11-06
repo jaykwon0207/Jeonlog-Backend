@@ -78,7 +78,6 @@ public class Exhibition {
                     columnNames = {"exhibition_id", "artist_id"}
             )
     )
-
     private List<Artist> artists = new ArrayList<>();
 
     @Builder.Default

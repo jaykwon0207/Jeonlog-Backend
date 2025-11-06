@@ -52,6 +52,9 @@ public class User {
     @Column
     private String profileImageUrl;
 
+    @Column(length = 20)
+    private String signature;
+
     //팔로워 수 (나를 팔로우하는 유저 수)
     @Formula("(SELECT COUNT(*) FROM follow f WHERE f.following_id = id)")
     private int followerCount;

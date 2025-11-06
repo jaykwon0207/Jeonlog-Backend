@@ -1,7 +1,6 @@
 package com.jeonlog.exhibition_recommender.search.service;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
-import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
@@ -36,11 +35,11 @@ public class ExhibitionService {
     }
 
     // 전시 상세 조회
-    public ExhibitionDetailResponseDto getExhibitionDetailById(Long id) {
+    public ExhibitionResponseDto getExhibitionDetailById(Long id) {
         Exhibition exhibition = exhibitionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("해당 전시가 존재하지 않습니다."));
 
-        return ExhibitionDetailResponseDto.from(exhibition);
+        return ExhibitionResponseDto.from(exhibition);
     }
 
     // 전시 검색 (query와 filter 조건에 따라 title, artist, genre, location 기반 필터링)

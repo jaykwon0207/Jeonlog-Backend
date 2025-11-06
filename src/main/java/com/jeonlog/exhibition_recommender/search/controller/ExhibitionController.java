@@ -2,7 +2,6 @@ package com.jeonlog.exhibition_recommender.search.controller;
 
 import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
-import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
 import com.jeonlog.exhibition_recommender.search.service.ExhibitionService;
@@ -40,7 +39,7 @@ public class ExhibitionController {
 
     // 특정 전시 상세 조회
     @GetMapping("/{id}")
-    public ApiResponse<ExhibitionDetailResponseDto> getExhibitionById(@PathVariable Long id) {
+    public ApiResponse<ExhibitionResponseDto> getExhibitionById(@PathVariable Long id) {
         return ApiResponse.ok(exhibitionService.getExhibitionDetailById(id));
     }
 
