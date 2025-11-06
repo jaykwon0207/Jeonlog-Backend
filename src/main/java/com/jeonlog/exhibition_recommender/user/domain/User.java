@@ -71,6 +71,9 @@ public class User {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+        if (this.signature == null) {
+            this.signature = "jeonlog"; // 기본값 설정
+        }
     }
 
     public void updateIntroduction(String introduction) {
@@ -90,6 +93,11 @@ public class User {
         this.birthYear = birthYear;
         this.nickname = nickname;
     }
+
+    public void updateSignature(String signature) {
+        this.signature = signature;
+    }
+
 
 
 }

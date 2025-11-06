@@ -5,6 +5,7 @@ import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.UserDto;
+import com.jeonlog.exhibition_recommender.user.dto.UserSignatureUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.user.service.UserService;
@@ -82,4 +83,14 @@ public class UserController {
                     .body(ApiResponse.error("SIGNUP_FAILED", e.getMessage()));
         }
     }
+
+    //시그니처 수정
+    @PutMapping("/signature")
+    public ApiResponse<UserDto> updateSignature(@AuthenticationPrincipal(expression = "user") User user,
+                                                @RequestBody UserSignatureUpdateRequest request) {
+        if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+        return ApiResponse.ok(userService.updateSignature(user.getEmail(), request.getSignature()));
+    }
+
+
 }
