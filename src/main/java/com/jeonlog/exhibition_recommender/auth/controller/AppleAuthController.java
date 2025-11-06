@@ -24,6 +24,9 @@ public class AppleAuthController {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
+
+
+
     @PostMapping("/apple")
     public ResponseEntity<ApiResponse<?>> appleLogin(@RequestBody AppleLoginRequestDto request) {
         try {
