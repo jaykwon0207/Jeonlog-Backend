@@ -2,19 +2,22 @@ package com.jeonlog.exhibition_recommender.search.controller;
 
 import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
+import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
+import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
+import com.jeonlog.exhibition_recommender.search.dto.KeywordRankDto;
 import com.jeonlog.exhibition_recommender.search.service.ExhibitionService;
 import com.jeonlog.exhibition_recommender.search.service.SearchService;
-import com.jeonlog.exhibition_recommender.search.dto.KeywordRankDto;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/exhibitions")
 @RequiredArgsConstructor
@@ -22,39 +25,38 @@ public class ExhibitionController {
 
     private final ExhibitionService exhibitionService;
     private final SearchService searchService;
+    private final ExhibitionRepository exhibitionRepository;
 
-    // 전체 전시 목록 조회
+    // ✅ 1. 전체 전시 목록 조회
     @GetMapping
     public ApiResponse<List<ExhibitionResponseDto>> getAllExhibitions() {
         return ApiResponse.ok(exhibitionService.getAllExhibitions());
     }
 
-    // 전체 전시 목록 상세 조회
+    // ✅ 2. 전체 전시 목록 상세 조회
     @GetMapping("/detail")
     public ResponseEntity<List<ExhibitionResponseDto>> getExhibitions() {
         List<ExhibitionResponseDto> exhibitions = exhibitionService.getAllExhibitionsDetails();
         return ResponseEntity.ok(exhibitions);
     }
 
-
-    // 특정 전시 상세 조회
+    // ✅ 3. 특정 전시 상세 조회
     @GetMapping("/{id}")
     public ApiResponse<ExhibitionResponseDto> getExhibitionById(@PathVariable Long id) {
         return ApiResponse.ok(exhibitionService.getExhibitionDetailById(id));
     }
 
-    // 전시 검색
+    // ✅ 4. 전시 검색
     @GetMapping("/search")
     public ApiResponse<List<ExhibitionSearchResponseDto>> searchExhibitions(
             @RequestParam String query,
             @RequestParam(required = false) List<String> filter
     ) {
-        // 검색 수행
         List<ExhibitionSearchResponseDto> results = exhibitionService.searchExhibitions(query, filter);
         return ApiResponse.ok(results);
     }
 
-    // 검색 기록 (키워드만 기록, 인증된 사용자 기준)
+    // ✅ 5. 검색 로그 저장 (로그인 사용자)
     @PostMapping("/search/log")
     public ApiResponse<String> logSearch(
             @CurrentUser User user,
@@ -63,13 +65,11 @@ public class ExhibitionController {
         if (user == null) {
             return ApiResponse.error("UNAUTHORIZED", "로그인이 필요합니다.");
         }
-
         searchService.recordSearch(user.getEmail(), query);
         return ApiResponse.ok("검색 로그가 저장되었습니다.");
     }
 
-
-    // 인기 검색어 랭킹 조회
+    // ✅ 6. 인기 검색어 랭킹 조회
     @GetMapping("/search/rank")
     public ApiResponse<List<KeywordRankDto>> getSearchRank(
             @RequestParam(required = false) String from,
@@ -79,5 +79,24 @@ public class ExhibitionController {
         java.time.LocalDateTime fromDt = from == null || from.isBlank() ? null : java.time.LocalDateTime.parse(from);
         java.time.LocalDateTime toDt = to == null || to.isBlank() ? null : java.time.LocalDateTime.parse(to);
         return ApiResponse.ok(searchService.getTopKeywords(fromDt, toDt, limit));
+    }
+
+    // ✅ 7. 포스터 URL 업데이트 (S3 업로드 후 DB 반영)
+    @PostMapping("/{id}/poster-url")
+    public ApiResponse<Void> updatePosterUrl(
+            @PathVariable Long id,
+            @RequestParam String posterUrl,
+            @CurrentUser User user
+    ) {
+        Exhibition exhibition = exhibitionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 전시를 찾을 수 없습니다."));
+
+        exhibition.updatePosterUrl(posterUrl);
+        exhibitionRepository.save(exhibition);
+
+        log.info("✅ [포스터 업데이트] userId={} exhibitionId={} url={}",
+                user != null ? user.getId() : "anonymous", id, posterUrl);
+
+        return ApiResponse.ok(null);
     }
 }

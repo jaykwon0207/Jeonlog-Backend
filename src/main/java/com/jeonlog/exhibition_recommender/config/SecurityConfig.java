@@ -8,6 +8,7 @@ import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -32,7 +33,6 @@ public class SecurityConfig {
         return new JwtAuthenticationFilter(jwtTokenProvider, userRepository);
     }
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -42,15 +42,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/", "/login/**", "/css/**", "/js/**", "/images/**",
-                                "/oauth/add-info", "/error", "/oauth2/**", "/oauth2/redirect/**", "/api/health",
-                                "/api/auth/**", // ✅ 추가
+                                "/oauth/add-info", "/error", "/oauth2/**", "/oauth2/redirect/**",
+                                "/api/auth/**",
                                 "/swagger-ui/**", "/v3/api-docs/**",
-                                "/swagger-resources/**", "/swagger-ui.html", "/webjars/**"
+                                "/swagger-resources/**", "/swagger-ui.html", "/webjars/**",
+                                "/api/health" // ✅ ELB 헬스체크용 공개 경로 추가
                         ).permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
-
-
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -65,12 +64,8 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout.logoutSuccessUrl("/"));
 
-        http.addFilterBefore(
-                new JwtAuthenticationFilter(jwtTokenProvider, userRepository),
-                UsernamePasswordAuthenticationFilter.class
-        );
-
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
@@ -83,6 +78,7 @@ public class SecurityConfig {
         config.setExposedHeaders(List.of("Authorization", "Location", "Content-Disposition"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
