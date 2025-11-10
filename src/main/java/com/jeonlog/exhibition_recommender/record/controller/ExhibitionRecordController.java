@@ -11,6 +11,10 @@ import com.jeonlog.exhibition_recommender.record.repository.RecordMediaRepositor
 import com.jeonlog.exhibition_recommender.record.service.ExhibitionRecordService;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,6 +62,16 @@ public class ExhibitionRecordController {
                         .build()
         );
     }
+
+    // 전시기록 전체 조회
+    @GetMapping("/records")
+    public ApiResponse<Page<ExhibitionRecordDto.RecordListResponse>> getAllRecords(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<ExhibitionRecordDto.RecordListResponse> records = exhibitionRecordService.getAllRecords(pageable);
+        return ApiResponse.ok(records);
+    }
+
 
     // 내가 작성한 전시기록 목록
     @GetMapping("/users/records")

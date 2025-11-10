@@ -15,6 +15,8 @@ import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
 import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -224,5 +226,32 @@ public class ExhibitionRecordService {
         // likeCount는 PUT으로 수정하지 않음(좋아요 API로만 변경)
         ExhibitionRecord saved = exhibitionRecordRepository.save(record);
         return saved.getId();
+    }
+    @Transactional(readOnly = true)
+    public Page<ExhibitionRecordDto.RecordListResponse> getAllRecords(Pageable pageable) {
+
+        // 1. Repository에서 전체 데이터 조회 (Page<ExhibitionRecord> 반환)
+        // JPA 기본 메서드인 findAll()을 사용합니다.
+        Page<ExhibitionRecord> recordsPage = exhibitionRecordRepository.findAll(pageable);
+
+        // 2. Page<ExhibitionRecord> -> Page<RecordListResponse> DTO로 변환
+        // (getRecordsByExhibition 메서드의 변환 로직과 완전히 동일합니다)
+        return recordsPage.map(record -> {
+
+            // 미디어 리스트를 DTO 리스트로 변환
+            List<ExhibitionRecordDto.RecordMediaDto> mediaDtoList = record.getMediaList().stream()
+                    .map(ExhibitionRecordDto.RecordMediaDto::new) // RecordMediaDto 생성자 활용
+                    .toList();
+
+            return ExhibitionRecordDto.RecordListResponse.builder()
+                    .recordId(record.getId())
+                    .content(record.getContent())
+                    .likeCount(record.getLikeCount())
+                    .createdAt(record.getCreatedAt())
+                    .writerNickname(record.getUser().getNickname())
+                    .writerProfileImgUrl(record.getUser().getProfileImageUrl())
+                    .mediaList(mediaDtoList)
+                    .build();
+        });
     }
 }
