@@ -7,6 +7,7 @@ import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,12 +36,13 @@ public class ExhibitionService {
     }
 
     // 전시 상세 조회
-    public ExhibitionResponseDto getExhibitionDetailById(Long id) {
+    public ExhibitionDetailResponseDto getExhibitionDetailById(Long id) {
         Exhibition exhibition = exhibitionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("해당 전시가 존재하지 않습니다."));
 
-        return ExhibitionResponseDto.from(exhibition);
+        return ExhibitionDetailResponseDto.from(exhibition);
     }
+
 
     // 전시 검색 (query와 filter 조건에 따라 title, artist, genre, location 기반 필터링)
     public List<ExhibitionSearchResponseDto> searchExhibitions(

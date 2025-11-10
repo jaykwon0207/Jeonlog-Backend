@@ -8,6 +8,7 @@ import com.jeonlog.exhibition_recommender.record.dto.ExhibitionRecordDto;
 import com.jeonlog.exhibition_recommender.record.dto.ExhibitionRecordDto.CreateRequest;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
+import com.jeonlog.exhibition_recommender.record.dto.RecordSearchCondition;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.record.repository.HashtagRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
@@ -322,5 +323,34 @@ public class ExhibitionRecordService {
         // 기존 태그 + 새로 저장된 태그 모두 반환
         existingTags.addAll(newTags);
         return existingTags;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ExhibitionRecordDto.RecordListResponse> searchRecords(
+            String query, Pageable pageable) {
+
+        Page<ExhibitionRecord> recordsPage = exhibitionRecordRepository.search(query, pageable);
+
+        return recordsPage.map(record -> {
+            List<ExhibitionRecordDto.RecordMediaDto> mediaDtoList = record.getMediaList().stream()
+                    .map(ExhibitionRecordDto.RecordMediaDto::new)
+                    .toList();
+
+            Set<String> hashtags = record.getHashtags().stream()
+                    .map(Hashtag::getName)
+                    .collect(Collectors.toSet());
+
+            return ExhibitionRecordDto.RecordListResponse.builder()
+                    .recordId(record.getId())
+                    .content(record.getContent())
+                    .likeCount(record.getLikeCount())
+                    .createdAt(record.getCreatedAt())
+                    .writerNickname(record.getUser().getNickname())
+                    .writerProfileImgUrl(record.getUser().getProfileImageUrl())
+                    .mediaList(mediaDtoList)
+                    .hashtags(hashtags) 
+                    .exhibitionTitle(record.getExhibition().getTitle())
+                    .build();
+        });
     }
 }

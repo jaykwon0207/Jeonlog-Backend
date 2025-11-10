@@ -8,7 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface ExhibitionRecordRepository extends JpaRepository<ExhibitionRecord, Long> {
+public interface ExhibitionRecordRepository extends
+        JpaRepository<ExhibitionRecord, Long>, ExhibitionRecordRepositoryCustom {
     List<ExhibitionRecord> findAllByUserOrderByCreatedAtDesc(User user);
     int countByUser(User user);
 

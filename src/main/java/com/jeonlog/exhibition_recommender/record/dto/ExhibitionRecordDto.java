@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 public class ExhibitionRecordDto {
 
@@ -122,7 +123,10 @@ public class ExhibitionRecordDto {
         // 미디어 정보 (예: 첫 번째 이미지 썸네일)
         private List<RecordMediaDto> mediaList;
 
-        // Service 레이어에서 Entity -> DTO 변환 로직 필요
+        // 해시태그 목록
+        private Set<String> hashtags;
+
+        private String exhibitionTitle;
     }
 
     /**

@@ -6,6 +6,7 @@ import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.domain.RecordMedia;
 import com.jeonlog.exhibition_recommender.record.dto.ExhibitionRecordDto;
 import com.jeonlog.exhibition_recommender.record.dto.ExhibitionRecordDto.CreateRequest;
+import com.jeonlog.exhibition_recommender.record.dto.RecordSearchCondition;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.record.repository.RecordMediaRepository;
 import com.jeonlog.exhibition_recommender.record.service.ExhibitionRecordService;
@@ -124,5 +125,14 @@ public class ExhibitionRecordController {
 
         mediaRepository.save(saved);
         return ApiResponse.ok(saved.getId());
+    }
+
+    @GetMapping("/records/search")
+    public Page<ExhibitionRecordDto.RecordListResponse> searchRecords(
+            @RequestParam(required = false) String query, // 'title', 'hashtag' 대신 'query'
+            Pageable pageable) {
+
+        // DTO 생성 로직 삭제, query 문자열을 서비스로 바로 전달
+        return exhibitionRecordService.searchRecords(query, pageable);
     }
 }
