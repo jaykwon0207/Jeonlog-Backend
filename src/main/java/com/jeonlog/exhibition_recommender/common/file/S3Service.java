@@ -23,23 +23,12 @@ public class S3Service {
 
     public String generateUploadUrl(Long userId, String filename) {
         LocalDate now = LocalDate.now();
-
-        // 확장자에 따라 폴더 구분
         String lower = filename.toLowerCase();
-        String folder = (lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".avi"))
-                ? "videos" : "images";
+        String folder = (lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".avi")) ? "videos" : "images";
 
-        // S3 키 경로 지정
-        String key = String.format(
-                "records/%s/%d/%02d/%02d/%d_%s_%s",
-                folder,
-                now.getYear(),
-                now.getMonthValue(),
-                now.getDayOfMonth(),
-                userId,
-                UUID.randomUUID(),
-                filename
-        );
+        String key = String.format("records/%s/%d/%02d/%02d/%d_%s_%s",
+                folder, now.getYear(), now.getMonthValue(), now.getDayOfMonth(),
+                userId, UUID.randomUUID(), filename);
 
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucket)
@@ -52,6 +41,10 @@ public class S3Service {
                 .build();
 
         PresignedPutObjectRequest presigned = presigner.presignPutObject(presignRequest);
-        return presigned.url().toString(); // 프론트로 반환
+        return presigned.url().toString();
+    }
+
+    public String getFileUrl(String key) {
+        return String.format("https://%s.s3.ap-northeast-2.amazonaws.com/%s", bucket, key);
     }
 }

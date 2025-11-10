@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -16,17 +18,17 @@ public class FileController {
     private final S3Service s3Service;
 
     @GetMapping("/presign")
-    public ApiResponse<String> getPresignedUrl(
-            @CurrentUser User user,
-            @RequestParam String filename
-    ) {
-        try {
-            String url = s3Service.generateUploadUrl(user.getId(), filename);
-            log.info("✅ Presigned URL 생성 완료: {}", url);
-            return ApiResponse.ok(url);
-        } catch (Exception e) {
-            log.error("❌ Presigned URL 생성 실패: {}", e.getMessage());
-            return ApiResponse.error("S3_GENERATE_FAIL", "Presigned URL 생성 중 오류가 발생했습니다.");
-        }
+    public ApiResponse<String> getPresignedUrl(@CurrentUser User user, @RequestParam String filename) {
+        String url = s3Service.generateUploadUrl(user.getId(), filename);
+        log.info("✅ Presigned URL 생성 완료: {}", url);
+        return ApiResponse.ok(url);
+    }
+
+    @PostMapping("/confirm")
+    public ApiResponse<String> confirmUpload(@CurrentUser User user, @RequestBody Map<String, String> body) {
+        String fileKey = body.get("fileKey");
+        String fixedUrl = s3Service.getFileUrl(fileKey);
+        log.info("✅ 파일 업로드 완료: userId={}, fileKey={}, fixedUrl={}", user.getId(), fileKey, fixedUrl);
+        return ApiResponse.ok(fixedUrl);
     }
 }

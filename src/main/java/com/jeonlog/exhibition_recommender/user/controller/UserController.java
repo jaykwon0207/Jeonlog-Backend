@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.user.controller;
 
+import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.auth.dto.AddInfoRequestDto;
 import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
@@ -26,14 +27,14 @@ public class UserController {
 
     // 🔹 내 정보 조회
     @GetMapping("/me")
-    public ApiResponse<UserDto> getMyInfo(@AuthenticationPrincipal(expression = "user") User user) {
+    public ApiResponse<UserDto> getMyInfo(@CurrentUser User user) {
         if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
         return ApiResponse.ok(UserDto.from(user));
     }
 
     // 🔹 회원정보 수정
     @PutMapping("/me")
-    public ApiResponse<UserDto> updateMyInfo(@AuthenticationPrincipal(expression = "user") User user,
+    public ApiResponse<UserDto> updateMyInfo(@CurrentUser User user,
                                              @RequestBody UserUpdateRequest request) {
         if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
         return ApiResponse.ok(userService.updateUserInfo(user.getEmail(), request));
@@ -86,7 +87,7 @@ public class UserController {
 
     //시그니처 수정
     @PutMapping("/signature")
-    public ApiResponse<UserDto> updateSignature(@AuthenticationPrincipal(expression = "user") User user,
+    public ApiResponse<UserDto> updateSignature(@CurrentUser User user,
                                                 @RequestBody UserSignatureUpdateRequest request) {
         if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
         return ApiResponse.ok(userService.updateSignature(user.getEmail(), request.getSignature()));
