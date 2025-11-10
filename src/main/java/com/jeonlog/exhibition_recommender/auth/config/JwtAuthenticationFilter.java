@@ -1,7 +1,6 @@
 package com.jeonlog.exhibition_recommender.auth.config;
 
-import com.jeonlog.exhibition_recommender.auth.model.CustomUserDetails; // ★ 추가
-import com.jeonlog.exhibition_recommender.user.domain.User;
+import com.jeonlog.exhibition_recommender.auth.model.CustomUserDetails;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -28,25 +27,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain chain)
             throws ServletException, IOException {
 
+        String uri = request.getRequestURI();
+
+        // ✅ 로그인, OAuth2, 에러, 헬스체크 등은 필터 통과
+        if (uri.startsWith("/login") || uri.startsWith("/oauth2") ||
+                uri.startsWith("/error") || uri.startsWith("/api/health") ||
+                uri.equals("/favicon.ico")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         String header = request.getHeader("Authorization");
 
-        if (header != null && header.startsWith("Bearer ")) {
+        if (header == null || !header.startsWith("Bearer ")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        try {
             String token = header.substring(7);
+
             if (jwtTokenProvider.validateToken(token)) {
                 String email = jwtTokenProvider.getEmailFromToken(token);
                 if (email != null) {
                     userRepository.findByEmail(email).ifPresent(user -> {
-                        CustomUserDetails cud = new CustomUserDetails(user); // ★ 래핑
+                        CustomUserDetails cud = new CustomUserDetails(user);
                         UsernamePasswordAuthenticationToken auth =
                                 new UsernamePasswordAuthenticationToken(cud, null, cud.getAuthorities());
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     });
                 }
             }
+        } catch (Exception e) {
+            log.error("❌ JWT Authentication Filter Error: {}", e.getMessage());
         }
 
-
         chain.doFilter(request, response);
-
     }
 }

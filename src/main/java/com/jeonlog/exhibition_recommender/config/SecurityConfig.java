@@ -38,10 +38,11 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/", "/login/**", "/css/**", "/js/**", "/images/**",
+                                "/favicon.ico", // ✅ 추가
                                 "/oauth/add-info", "/error", "/oauth2/**", "/oauth2/redirect/**",
                                 "/api/auth/**",
                                 "/swagger-ui/**", "/v3/api-docs/**",

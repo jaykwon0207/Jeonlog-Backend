@@ -1,4 +1,5 @@
 package com.jeonlog.exhibition_recommender.auth.config;
+
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
+    // ✅ Access Token 생성
     public String createAccessToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
@@ -32,6 +34,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    // ✅ Refresh Token 생성
     public String createRefreshToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
@@ -41,6 +44,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    // ✅ 이메일 추출
     public String getEmailFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -50,6 +54,7 @@ public class JwtTokenProvider {
                 .getSubject();
     }
 
+    // ✅ 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -63,9 +68,9 @@ public class JwtTokenProvider {
         }
     }
 
+    // ✅ Refresh Token으로 Access Token 재발급
     public String refreshAccessToken(String refreshToken) {
         try {
-            // Refresh Token 유효성 검증 (만료 X)
             Jwts.parserBuilder()
                     .setSigningKey(getSigningKey())
                     .build()
@@ -78,5 +83,31 @@ public class JwtTokenProvider {
 
         String email = getEmailFromToken(refreshToken);
         return createAccessToken(email);
+    }
+
+    // ✅ (NEW) tempToken 생성 - 신규 사용자 온보딩용 (Base64 JSON 포함)
+    public String createTempToken(String base64Attributes, long validityMs) {
+        return Jwts.builder()
+                .setSubject("TEMP")
+                .claim("data", base64Attributes)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + validityMs))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    // ✅ (NEW) tempToken 복호화 → Base64 데이터 추출
+    public String getDataFromTempToken(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .get("data", String.class);
+        } catch (JwtException e) {
+            log.warn("❌ tempToken 유효성 검증 실패: {}", e.getMessage());
+            throw e;
+        }
     }
 }
