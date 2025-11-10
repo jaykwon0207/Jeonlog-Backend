@@ -13,4 +13,6 @@ public interface ExhibitionRecordRepository extends JpaRepository<ExhibitionReco
     int countByUser(User user);
 
     Page<ExhibitionRecord> findByExhibitionId(Long exhibitionId, Pageable pageable);
+
+    Page<ExhibitionRecord> findByHashtags_Name(String hashtagName, Pageable pageable);
 }
