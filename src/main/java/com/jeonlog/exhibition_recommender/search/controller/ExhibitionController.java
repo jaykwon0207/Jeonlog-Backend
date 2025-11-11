@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class ExhibitionController {
 
     // ✅ 3. 특정 전시 상세 조회
     @GetMapping("/{id}")
-    public ApiResponse<ExhibitionResponseDto> getExhibitionById(@PathVariable Long id) {
+    public ApiResponse<ExhibitionDetailResponseDto> getExhibitionById(@PathVariable Long id) {
         return ApiResponse.ok(exhibitionService.getExhibitionDetailById(id));
     }
 

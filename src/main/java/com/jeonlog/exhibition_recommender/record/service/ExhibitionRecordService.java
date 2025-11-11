@@ -1,13 +1,16 @@
 package com.jeonlog.exhibition_recommender.record.service;
 
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
+import com.jeonlog.exhibition_recommender.record.domain.Hashtag;
 import com.jeonlog.exhibition_recommender.record.domain.MediaType;
 import com.jeonlog.exhibition_recommender.record.domain.RecordMedia;
 import com.jeonlog.exhibition_recommender.record.dto.ExhibitionRecordDto;
 import com.jeonlog.exhibition_recommender.record.dto.ExhibitionRecordDto.CreateRequest;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
+import com.jeonlog.exhibition_recommender.record.dto.RecordSearchCondition;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
+import com.jeonlog.exhibition_recommender.record.repository.HashtagRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 
 // ⬇️ 가중치 업데이트용 추가 import
@@ -15,11 +18,19 @@ import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
 import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +39,7 @@ public class ExhibitionRecordService {
     private final ExhibitionRepository exhibitionRepository;
     private final ExhibitionRecordRepository exhibitionRecordRepository;
     private final UserGenreRepository userGenreRepository;
+    private final HashtagRepository hashtagRepository;
 
     @Transactional
     public Long addRecord(Long exhibitionId, User user, CreateRequest req) {
@@ -84,6 +96,12 @@ public class ExhibitionRecordService {
         }
 
         record.getMediaList().addAll(mediaList);
+
+        // 본문(content)에서 해시태그 이름(Set<String>) 파싱
+        Set<String> tagNames = parseHashtags(req.getContent());
+        Set<Hashtag> hashtagEntities = findOrCreateHashtags(tagNames);
+        record.updateHashtags(hashtagEntities);
+
 
         // 저장
         ExhibitionRecord saved = exhibitionRecordRepository.save(record);
@@ -179,6 +197,11 @@ public class ExhibitionRecordService {
         }
         record.setContentForUpdate(req.getContent());
 
+        // 해시태그 업데이트 로직 추가
+        Set<String> tagNames = parseHashtags(req.getContent());
+        Set<Hashtag> hashtagEntities = findOrCreateHashtags(tagNames);
+        record.updateHashtags(hashtagEntities);
+
         // 미디어 검증
         List<String> photos = req.getPhotoUrls() == null ? List.of() : req.getPhotoUrls();
         if (photos.size() > 10) {
@@ -224,5 +247,110 @@ public class ExhibitionRecordService {
         // likeCount는 PUT으로 수정하지 않음(좋아요 API로만 변경)
         ExhibitionRecord saved = exhibitionRecordRepository.save(record);
         return saved.getId();
+    }
+    @Transactional(readOnly = true)
+    public Page<ExhibitionRecordDto.RecordListResponse> getAllRecords(Pageable pageable) {
+
+        // 1. Repository에서 전체 데이터 조회 (Page<ExhibitionRecord> 반환)
+        // JPA 기본 메서드인 findAll()을 사용합니다.
+        Page<ExhibitionRecord> recordsPage = exhibitionRecordRepository.findAll(pageable);
+
+        // 2. Page<ExhibitionRecord> -> Page<RecordListResponse> DTO로 변환
+        // (getRecordsByExhibition 메서드의 변환 로직과 완전히 동일합니다)
+        return recordsPage.map(record -> {
+
+            // 미디어 리스트를 DTO 리스트로 변환
+            List<ExhibitionRecordDto.RecordMediaDto> mediaDtoList = record.getMediaList().stream()
+                    .map(ExhibitionRecordDto.RecordMediaDto::new) // RecordMediaDto 생성자 활용
+                    .toList();
+
+            return ExhibitionRecordDto.RecordListResponse.builder()
+                    .recordId(record.getId())
+                    .content(record.getContent())
+                    .likeCount(record.getLikeCount())
+                    .createdAt(record.getCreatedAt())
+                    .writerNickname(record.getUser().getNickname())
+                    .writerProfileImgUrl(record.getUser().getProfileImageUrl())
+                    .mediaList(mediaDtoList)
+                    .build();
+        });
+    }
+
+
+
+    // 본문(content)에서 #해시태그 를 파싱하여 Set<String>으로 반환
+    private Set<String> parseHashtags(String content) {
+        if (content == null) {
+            return Collections.emptySet();
+        }
+
+        // 정규표현식으로 #단어 추출
+        Pattern pattern = Pattern.compile("#([\\w가-힣]+)");
+        Matcher matcher = pattern.matcher(content);
+        Set<String> tags = new HashSet<>();
+        while (matcher.find()) {
+            tags.add(matcher.group(1)); // # 제외한 단어 (예: "사랑")
+        }
+        return tags;
+    }
+
+
+    // 해시태그 이름 목록(Set<String>)을 받아,
+    // DB에서 조회하거나(Find) 새로 생성하여(Create) 엔티티 Set<Hashtag>으로 반환
+    private Set<Hashtag> findOrCreateHashtags(Set<String> tagNames) {
+        if (tagNames == null || tagNames.isEmpty()) {
+            return new HashSet<>();
+        }
+
+        // 이미 존재하는 태그들을 DB에서 한 번에 조회
+        Set<Hashtag> existingTags = hashtagRepository.findByNameIn(tagNames);
+        Set<String> existingTagNames = existingTags.stream()
+                .map(Hashtag::getName)
+                .collect(Collectors.toSet());
+
+        // DB에 존재하지 않는 태그 이름들만 필터링
+        Set<String> newTagNames = tagNames.stream()
+                .filter(name -> !existingTagNames.contains(name))
+                .collect(Collectors.toSet());
+
+        // 새 태그 엔티티 생성 및 저장
+        Set<Hashtag> newTags = new HashSet<>();
+        for (String newName : newTagNames) {
+            Hashtag savedTag = hashtagRepository.save(new Hashtag(newName));
+            newTags.add(savedTag);
+        }
+
+        // 기존 태그 + 새로 저장된 태그 모두 반환
+        existingTags.addAll(newTags);
+        return existingTags;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ExhibitionRecordDto.RecordListResponse> searchRecords(
+            String query, Pageable pageable) {
+
+        Page<ExhibitionRecord> recordsPage = exhibitionRecordRepository.search(query, pageable);
+
+        return recordsPage.map(record -> {
+            List<ExhibitionRecordDto.RecordMediaDto> mediaDtoList = record.getMediaList().stream()
+                    .map(ExhibitionRecordDto.RecordMediaDto::new)
+                    .toList();
+
+            Set<String> hashtags = record.getHashtags().stream()
+                    .map(Hashtag::getName)
+                    .collect(Collectors.toSet());
+
+            return ExhibitionRecordDto.RecordListResponse.builder()
+                    .recordId(record.getId())
+                    .content(record.getContent())
+                    .likeCount(record.getLikeCount())
+                    .createdAt(record.getCreatedAt())
+                    .writerNickname(record.getUser().getNickname())
+                    .writerProfileImgUrl(record.getUser().getProfileImageUrl())
+                    .mediaList(mediaDtoList)
+                    .hashtags(hashtags) 
+                    .exhibitionTitle(record.getExhibition().getTitle())
+                    .build();
+        });
     }
 }
