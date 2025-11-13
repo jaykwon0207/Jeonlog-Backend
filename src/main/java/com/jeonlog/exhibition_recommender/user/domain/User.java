@@ -1,5 +1,7 @@
 package com.jeonlog.exhibition_recommender.user.domain;
 
+import com.jeonlog.exhibition_recommender.user.domain.Gender;
+import com.jeonlog.exhibition_recommender.user.domain.OauthProvider;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Formula;
@@ -7,17 +9,19 @@ import org.hibernate.annotations.Formula;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "email"),
-        @UniqueConstraint(columnNames = "oauth_id")})
+@Table(name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "email"),
+                @UniqueConstraint(columnNames = "oauth_id")
+        })
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)  //외부에서 생성 방지
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  // DB가 내부 식별용 ID 자동생성
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
@@ -40,7 +44,6 @@ public class User {
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true)
     private Gender gender;
 
     @Column(nullable = false)
@@ -55,49 +58,34 @@ public class User {
     @Column(length = 20)
     private String signature;
 
-    //팔로워 수 (나를 팔로우하는 유저 수)
     @Formula("(SELECT COUNT(*) FROM follow f WHERE f.following_id = id)")
     private int followerCount;
 
-    //팔로잉 수 (내가 팔로우하는 유저 수)
     @Formula("(SELECT COUNT(*) FROM follow f WHERE f.follower_id = id)")
     private int followingCount;
-
-    public User update(String name){
-        this.name = name;
-        return this;
-    }
 
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
-        if (this.signature == null) {
-            this.signature = "jeonlog"; // 기본값 설정
-        }
+        if (this.signature == null) this.signature = "jeonlog";
     }
 
-    public void updateIntroduction(String introduction) {
-        this.introduction = introduction;
-    }
-
-    public void updateProfileImageUrl(String profileImageUrl) {
-        this.profileImageUrl = profileImageUrl;
-    }
-
-    public void updateNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    public void updateExtraInfo(Gender gender, Integer birthYear, String nickname) {
-        this.gender = gender;
-        this.birthYear = birthYear;
-        this.nickname = nickname;
+    public User update(String name) {
+        this.name = name;
+        return this;
     }
 
     public void updateSignature(String signature) {
         this.signature = signature;
     }
 
-
-
+    public void updateProfile(Gender gender, Integer birthYear, String nickname,
+                              String introduction, String profileImageUrl, String signature) {
+        if (gender != null) this.gender = gender;
+        if (birthYear != null) this.birthYear = birthYear;
+        if (nickname != null && !nickname.isBlank()) this.nickname = nickname;
+        if (introduction != null) this.introduction = introduction;
+        if (profileImageUrl != null) this.profileImageUrl = profileImageUrl;
+        if (signature != null && !signature.isBlank()) this.signature = signature;
+    }
 }
