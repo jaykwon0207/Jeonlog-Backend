@@ -67,6 +67,12 @@ public class Exhibition {
     @Column(length = 200, nullable = false) // 관람시간
     private String viewingTime;
 
+    @Column(length = 200, nullable = false) // 개인 맞춤 전시 추천 포스터 URL
+    private String personalizedPosterUrl;
+
+    @Column(nullable = false, length = 500) // 전체 추천 포스터 URL
+    private String generalRecommendationsPosterUrl;
+
     @Builder.Default
     @ManyToMany
     @JoinTable(
@@ -92,4 +98,5 @@ public class Exhibition {
     public void updatePosterUrl(String newUrl) {
         this.posterUrl = newUrl;
     }
+
 }
