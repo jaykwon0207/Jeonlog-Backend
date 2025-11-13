@@ -3,7 +3,7 @@ package com.jeonlog.exhibition_recommender.auth.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jeonlog.exhibition_recommender.auth.config.JwtTokenProvider;
 import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
-import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
+import com.jeonlog.exhibition_recommender.user.domain.OauthProvider; // ✅ 추가
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +12,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.Base64;
+import java.util.Map;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -31,29 +35,40 @@ public class OAuth2JwtSuccessHandler implements AuthenticationSuccessHandler {
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = (String) oAuth2User.getAttributes().get("email");
+        String name = (String) oAuth2User.getAttributes().get("name");
+        String provider = (String) oAuth2User.getAttributes().getOrDefault("provider", "GOOGLE");
+        String oauthId = (String) oAuth2User.getAttributes().getOrDefault("id", "");
 
         if (email == null) {
             response.sendRedirect("/login?error=NO_EMAIL");
             return;
         }
 
-        // ✅ 신규 사용자일 경우 tempToken 생성
+        // ✅ 신규 사용자 감지
         boolean isNewUser = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("NEW_USER"));
 
         if (isNewUser) {
             log.info("🆕 신규 사용자 감지 → RN 온보딩으로 tempToken 전달");
 
-            // ✅ OAuthAttributes 정보를 Base64(JSON)로 인코딩
-            Map<String, Object> attributes = oAuth2User.getAttributes();
-            String json = objectMapper.writeValueAsString(attributes);
+            // ✅ 1️⃣ OAuthAttributes 객체 생성
+            OAuthAttributes oAuthAttributes = OAuthAttributes.builder()
+                    .email(email)
+                    .name(name)
+                    .oauthProvider(OauthProvider.valueOf(provider.toUpperCase()))
+                    .oauthId(oauthId)
+                    .build();
+
+            // ✅ 2️⃣ JSON → Base64 변환
+            String json = objectMapper.writeValueAsString(oAuthAttributes);
             String base64 = Base64.getUrlEncoder().encodeToString(json.getBytes());
 
-            // ✅ tempToken (1시간 유효)
+            // ✅ 3️⃣ tempToken (유효기간: 1시간)
             String tempToken = jwtTokenProvider.createTempToken(base64, 60 * 60 * 1000);
 
-            // ✅ RN 딥링크로 전달
+            // ✅ 4️⃣ RN 딥링크로 전달
             String redirectUrl = String.format("jeonlogfront://onboarding/age?tempToken=%s", tempToken);
+            log.info("🪶 Redirect URL: {}", redirectUrl);
             response.sendRedirect(redirectUrl);
             return;
         }

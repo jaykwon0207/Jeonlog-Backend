@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/oauth")
+@RequestMapping("/api/oauth")
 @RequiredArgsConstructor
 public class AddInfoController {
 
@@ -28,10 +28,15 @@ public class AddInfoController {
 
     @PostMapping("/add-info")
     public ResponseEntity<ApiResponse<Map<String, String>>> completeSignUp(
-            @RequestHeader("Temp-Token") String tempToken,
+            @RequestHeader(value = "Temp-Token", required = false) String tempToken,
             @RequestBody AddInfoRequestDto request
     ) {
         try {
+            if (tempToken == null || tempToken.isBlank()) {
+                return ResponseEntity.status(401)
+                        .body(ApiResponse.error("NO_TEMP_TOKEN", "Temp-Token 헤더가 누락되었습니다."));
+            }
+
             // 1️⃣ tempToken 복호화 → OAuthAttributes 복원
             String base64Data = jwtTokenProvider.getDataFromTempToken(tempToken);
             String json = new String(Base64.getUrlDecoder().decode(base64Data));
