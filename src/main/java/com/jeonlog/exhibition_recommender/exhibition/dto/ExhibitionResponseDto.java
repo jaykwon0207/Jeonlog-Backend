@@ -18,6 +18,8 @@ public class ExhibitionResponseDto {
     private String location;
     private String posterUrl;
     private LocalDate startDate;
+    private String generalRecommendationsPosterUrl;
+    private String personalizedPosterUrl;
     private LocalDate endDate;
     private int price;
     private boolean isFree;
@@ -51,6 +53,8 @@ public class ExhibitionResponseDto {
                 .description(exhibition.getDescription())
                 .contact(exhibition.getContact())
                 .website(exhibition.getWebsite())
+                .generalRecommendationsPosterUrl(exhibition.getGeneralRecommendationsPosterUrl())
+                .personalizedPosterUrl(exhibition.getPersonalizedPosterUrl())
                 .viewingTime(exhibition.getViewingTime())
                 .genre(exhibition.getGenre()) // ✅ DB의 genre 컬럼(enum) 그대로
                 .exhibitionTheme(exhibition.getExhibitionTheme()) // ✅ theme도 그대로

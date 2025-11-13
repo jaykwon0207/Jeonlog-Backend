@@ -34,6 +34,8 @@ public class QExhibition extends EntityPathBase<Exhibition> {
 
     public final EnumPath<ExhibitionTheme> exhibitionTheme = createEnum("exhibitionTheme", ExhibitionTheme.class);
 
+    public final StringPath generalRecommendationsPosterUrl = createString("generalRecommendationsPosterUrl");
+
     public final EnumPath<GenreType> genre = createEnum("genre", GenreType.class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
@@ -41,6 +43,8 @@ public class QExhibition extends EntityPathBase<Exhibition> {
     public final BooleanPath isFree = createBoolean("isFree");
 
     public final StringPath location = createString("location");
+
+    public final StringPath personalizedPosterUrl = createString("personalizedPosterUrl");
 
     public final StringPath posterUrl = createString("posterUrl");
 
