@@ -92,7 +92,7 @@ public class ExhibitionController {
                 .orElseThrow(() -> new IllegalArgumentException("해당 전시를 찾을 수 없습니다."));
 
         exhibition.updatePosterUrl(posterUrl);
-        exhibitionRepository.save(exhibition);
+        exhibitionRepository.save(exhibition); // 바로 리포지토리랑 연결됨
 
         log.info("✅ [포스터 업데이트] userId={} exhibitionId={} url={}",
                 user != null ? user.getId() : "anonymous", id, posterUrl);

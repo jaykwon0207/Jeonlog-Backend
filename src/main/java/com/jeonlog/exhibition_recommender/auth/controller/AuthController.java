@@ -27,6 +27,7 @@ public class AuthController {
             @CookieValue(name = "refresh_token", required = false) String refreshCookie,
             @RequestBody(required = false) Map<String, String> body
     ) {
+
         // 모바일일 경우 body로 전달됨
         String refreshToken = (body != null && body.get("refreshToken") != null)
                 ? body.get("refreshToken")
@@ -49,18 +50,8 @@ public class AuthController {
     // ✅ 로그아웃
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<?>> logout() {
-        boolean isProd = Arrays.asList(env.getActiveProfiles()).contains("prod");
-
-        // refresh_token 쿠키 삭제
-        ResponseCookie cookie = ResponseCookie.from("refresh_token", "")
-                .httpOnly(true)
-                .secure(isProd)
-                .path("/")
-                .maxAge(0)
-                .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(ApiResponse.ok("로그아웃 완료"));
+        // 프론트에서는 단순히 로컬의 토큰을 삭제하면 되므로
+        // 서버 측에서는 상태 유지나 쿠키 삭제 불필요
+        return ResponseEntity.ok(ApiResponse.ok("로그아웃 완료 — 토큰 무효화는 클라이언트 측에서 처리하세요."));
     }
 }

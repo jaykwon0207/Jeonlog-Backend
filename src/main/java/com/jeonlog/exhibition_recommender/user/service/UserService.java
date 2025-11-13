@@ -2,12 +2,10 @@ package com.jeonlog.exhibition_recommender.user.service;
 
 import com.jeonlog.exhibition_recommender.auth.dto.AddInfoRequestDto;
 import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
-import com.jeonlog.exhibition_recommender.user.domain.Gender;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.UserDto;
 import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,31 +18,39 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    // 🔹 회원 정보 수정
+    @Transactional
+    public UserDto getUserProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("❌ 사용자를 찾을 수 없습니다."));
+        return UserDto.from(user);
+    }
+
+    // ✅ 회원 정보 수정 (닉네임, 성별, 출생연도, 자기소개, 프로필이미지, 시그니처)
     @Transactional
     public UserDto updateUserInfo(String email, UserUpdateRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("❌ 사용자를 찾을 수 없습니다."));
 
+        // 닉네임 중복 체크
         if (request.getNickname() != null && !request.getNickname().equals(user.getNickname())) {
             if (userRepository.existsByNickname(request.getNickname())) {
                 throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
             }
-            user.updateNickname(request.getNickname());
         }
 
-        if (request.getIntroduction() != null) {
-            user.updateIntroduction(request.getIntroduction());
-        }
-
-        if (request.getProfileImageUrl() != null) {
-            user.updateProfileImageUrl(request.getProfileImageUrl());
-        }
+        // ✅ 시그니처 포함하여 업데이트 호출
+        user.updateProfile(
+                request.getGender(),
+                request.getBirthYear(),
+                request.getNickname(),
+                request.getIntroduction(),
+                request.getProfileImageUrl(),
+                request.getSignature()
+        );
 
         return UserDto.from(user);
     }
 
-    // 🔹 신규 회원가입 (OAuth + 추가정보)
     @Transactional
     public void createNewUser(OAuthAttributes attributes, AddInfoRequestDto dto) {
         if (userRepository.existsByEmail(attributes.getEmail())) {
@@ -69,7 +75,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-
     @Transactional
     public User saveNewUser(OAuthAttributes attributes, AddInfoRequestDto request) {
         User user = User.builder()
@@ -79,24 +84,24 @@ public class UserService {
                 .oauthId(attributes.getOauthId())
                 .gender(request.getGender())
                 .birthYear(request.getBirthYear())
+                .nickname(request.getNickname())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         return userRepository.save(user);
     }
 
-    // 🔹 회원 탈퇴
     @Transactional
     public void deleteCurrentUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("❌ 사용자를 찾을 수 없습니다."));
         userRepository.delete(user);
     }
 
-    // 시그니처 수정
+    @Transactional
     public UserDto updateSignature(String email, String signature) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("❌ 사용자를 찾을 수 없습니다."));
-
         user.updateSignature(signature);
         return UserDto.from(user);
     }

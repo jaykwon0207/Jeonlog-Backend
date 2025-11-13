@@ -2,6 +2,7 @@ package com.jeonlog.exhibition_recommender.common.file;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -9,9 +10,9 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequ
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.util.UUID;
 
+@Profile("prod")  // 🔥 local에서는 S3Service 생성되지 않음!
 @Service
 @RequiredArgsConstructor
 public class S3Service {
@@ -22,14 +23,23 @@ public class S3Service {
     private String bucket;
 
     public String generateUploadUrl(Long userId, String filename) {
-        LocalDate now = LocalDate.now();
         String lower = filename.toLowerCase();
-        String folder = (lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".avi")) ? "videos" : "images";
+        String folder = (lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".avi"))
+                ? "videos"
+                : "images";
 
-        String key = String.format("records/%s/%d/%02d/%02d/%d_%s_%s",
-                folder, now.getYear(), now.getMonthValue(), now.getDayOfMonth(),
-                userId, UUID.randomUUID(), filename);
+        String key = String.format("records/%s/%d_%s_%s",
+                folder, userId, UUID.randomUUID(), filename);
 
+        return createPresignedUrl(key);
+    }
+
+    public String generateProfileUploadUrl(Long userId, String filename) {
+        String key = String.format("profile/%d_%s_%s", userId, UUID.randomUUID(), filename);
+        return createPresignedUrl(key);
+    }
+
+    private String createPresignedUrl(String key) {
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
