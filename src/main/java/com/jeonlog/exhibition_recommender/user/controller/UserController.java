@@ -1,16 +1,12 @@
 package com.jeonlog.exhibition_recommender.user.controller;
 
 import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
-import com.jeonlog.exhibition_recommender.auth.dto.AddInfoRequestDto;
-import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.UserDto;
 import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.user.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,8 +28,10 @@ public class UserController {
 
     // ✅ 회원정보 수정 (닉네임, 성별, 출생연도, 자기소개, 프로필이미지, 시그니처 포함)
     @PutMapping("/me")
-    public ApiResponse<UserDto> updateMyInfo(@CurrentUser User user,
-                                             @RequestBody UserUpdateRequest request) {
+    public ApiResponse<UserDto> updateMyInfo(
+            @CurrentUser User user,
+            @RequestBody UserUpdateRequest request
+    ) {
         if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
         return ApiResponse.ok(userService.updateUserInfo(user.getEmail(), request));
     }
@@ -49,35 +47,6 @@ public class UserController {
     public ApiResponse<String> deleteUser(@CurrentUser User user) {
         if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
         userService.deleteCurrentUserByEmail(user.getEmail());
-        return ApiResponse.ok("✅ 회원 탈퇴 완료");
-    }
-
-    // ✅ 추가 정보 입력 (신규 OAuth 회원가입 시)
-    @PostMapping("/add-info")
-    public ResponseEntity<ApiResponse<?>> addInfo(HttpServletRequest request,
-                                                  @RequestBody AddInfoRequestDto dto) {
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("NO_SESSION", "세션이 만료되었거나 존재하지 않습니다."));
-        }
-
-        OAuthAttributes attributes = (OAuthAttributes) session.getAttribute("tempOAuthAttributes");
-        if (attributes == null) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("NO_OAUTH_ATTRIBUTES", "OAuth 임시 정보가 없습니다."));
-        }
-
-        try {
-            userService.createNewUser(attributes, dto);
-            session.removeAttribute("tempOAuthAttributes");
-            return ResponseEntity.ok(ApiResponse.ok("신규 회원가입 완료"));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("DUPLICATE_NICKNAME", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("SIGNUP_FAILED", e.getMessage()));
-        }
+        return ApiResponse.ok("회원 탈퇴 완료");
     }
 }

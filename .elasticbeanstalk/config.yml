@@ -1,14 +1,12 @@
 branch-defaults:
   develop:
-    environment: JeonlogServer-env
-  feature/apple-login:
-    environment: Jeonlog-env
+    environment: Jeonlog-prod-env
 environment-defaults:
-  JeonlogServer-env:
+  Jeonlog-prod-env:
     branch: null
     repository: null
 global:
-  application_name: jeonlogServer
+  application_name: jeonlog-prod
   default_ec2_keyname: null
   default_platform: Corretto 25 running on 64bit Amazon Linux 2023
   default_region: ap-northeast-2

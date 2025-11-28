@@ -6,12 +6,14 @@ import lombok.Builder;
 @Builder
 public record RecommendationImageDto(
         Long id,
-        String posterUrl
+        String posterUrl,
+        String personalizedPosterUrl
 ) {
     public static RecommendationImageDto from(Exhibition e) {
         return RecommendationImageDto.builder()
                 .id(e.getId())
                 .posterUrl(e.getPosterUrl())
+                .personalizedPosterUrl(e.getPersonalizedPosterUrl())
                 .build();
     }
 }

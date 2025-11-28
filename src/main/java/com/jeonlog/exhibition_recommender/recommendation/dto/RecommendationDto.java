@@ -12,7 +12,9 @@ public record RecommendationDto(
         String location,
         LocalDate startDate,
         LocalDate endDate,
-        String posterUrl
+        String posterUrl,
+        String generalRecommendationsPosterUrl,
+        String personalizedPosterUrl
 ) {
     public static RecommendationDto from(Exhibition e) {
         return RecommendationDto.builder()
@@ -22,6 +24,8 @@ public record RecommendationDto(
                 .startDate(e.getStartDate())
                 .endDate(e.getEndDate())
                 .posterUrl(e.getPosterUrl())
+                .generalRecommendationsPosterUrl(e.getGeneralRecommendationsPosterUrl())
+                .personalizedPosterUrl(e.getPersonalizedPosterUrl())
                 .build();
     }
 }

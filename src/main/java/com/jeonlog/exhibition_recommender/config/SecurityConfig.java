@@ -48,7 +48,7 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/error",
                                 "/oauth2/**", "/oauth2/redirect/**",
-                                "/api/oauth/add-info",          // ✅ TempToken 온보딩용 공개 경로
+                                "/api/oauth/**",          // ✅ TempToken 온보딩용 공개 경로
                                 "/api/auth/**",
                                 "/swagger-ui/**", "/v3/api-docs/**",
                                 "/swagger-resources/**", "/swagger-ui.html", "/webjars/**",

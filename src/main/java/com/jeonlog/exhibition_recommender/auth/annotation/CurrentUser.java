@@ -7,6 +7,6 @@ import java.lang.annotation.*;
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@AuthenticationPrincipal(expression = "user")
+@AuthenticationPrincipal(expression = "user") //자루 부투랑ㄴㅁ
 public @interface CurrentUser {
 }

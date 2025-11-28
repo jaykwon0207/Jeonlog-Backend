@@ -8,6 +8,11 @@ public class HealthController {
 
     @GetMapping("/api/health")
     public String health() {
-        return "OK";
+        return "OKfd332";
+    }
+
+    @GetMapping("/")
+    public String root() {
+        return "redirect:/api/health";
     }
 }

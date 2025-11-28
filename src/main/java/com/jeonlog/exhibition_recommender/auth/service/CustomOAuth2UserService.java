@@ -44,10 +44,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         Optional<User> userOptional = userRepository.findByEmail(attributes.getEmail());
 
-        // 🔽 email 등 필요한 값만 뽑아서 attributes에 직접 넣음 (구글/네이버 모두 통일)
         Map<String, Object> customAttributes = new HashMap<>(attributes.getAttributes());
-        customAttributes.put("email", attributes.getEmail());  // ✅ 반드시 email 포함시킴
-        customAttributes.put("name", attributes.getName());    // ✅ 이름도 넣어두면 편함
+        customAttributes.put("email", attributes.getEmail());
+        customAttributes.put("name", attributes.getName());
+        customAttributes.put("provider", attributes.getOauthProvider().name());
+        customAttributes.put("id", attributes.getOauthId());
 
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
@@ -60,7 +61,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             );
         }
 
-        // ✅ 신규 사용자: 세션에 임시 정보 저장
         httpSession.setAttribute("tempOAuthAttributes", attributes);
 
         return new DefaultOAuth2User(
