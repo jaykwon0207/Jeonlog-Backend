@@ -43,32 +43,43 @@ public class OAuth2JwtSuccessHandler implements AuthenticationSuccessHandler {
         boolean isNewUser = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("NEW_USER"));
 
+        // 신규 사용자 처리
         if (isNewUser) {
-            OAuthAttributes oAuthAttributes = OAuthAttributes.builder()
+            OAuthAttributes attributes = OAuthAttributes.builder()
                     .email(email)
                     .name(name)
                     .oauthProvider(OauthProvider.valueOf(provider))
                     .oauthId(oauthId)
                     .build();
 
-            String json = objectMapper.writeValueAsString(oAuthAttributes);
+            String json = objectMapper.writeValueAsString(attributes);
             String base64 = Base64.getUrlEncoder().encodeToString(json.getBytes());
             String tempToken = jwtTokenProvider.createTempToken(base64, 60 * 60 * 1000);
 
             String redirectUrl = "jeonlogfront://onboarding/age?tempToken=" + tempToken;
 
-            log.info("🆕 신규 사용자 → redirect: {}", redirectUrl);
+            log.info("🆕 신규 사용자");
+            log.info("➡️ redirect: {}", redirectUrl);
+
             response.sendRedirect(redirectUrl);
             return;
         }
 
+        // 기존 사용자 처리
         String accessToken = jwtTokenProvider.createAccessToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken(email);
+
+        log.info("🔐 기존 사용자 로그인 성공");
+        log.info("👉 email: {}", email);
+        log.info("👉 accessToken: {}", accessToken);
+        log.info("👉 refreshToken: {}", refreshToken);
 
         String redirectUrl = String.format(
                 "jeonlogfront://auth?accessToken=%s&refreshToken=%s&newUser=false",
                 accessToken, refreshToken
         );
+
+        log.info("➡️ redirect: {}", redirectUrl);
 
         response.sendRedirect(redirectUrl);
     }
