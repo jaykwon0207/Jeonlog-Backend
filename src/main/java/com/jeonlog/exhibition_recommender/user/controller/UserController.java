@@ -8,6 +8,10 @@ import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,4 +53,15 @@ public class UserController {
         userService.deleteCurrentUserByEmail(user.getEmail());
         return ApiResponse.ok("회원 탈퇴 완료");
     }
+
+    @GetMapping("/search") // 유저 검색
+    public ApiResponse<Page<UserDto.UserSearchResponse>> searchUsers(
+            @RequestParam("query") String query,
+            @PageableDefault(size = 10, sort = "nickname", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        // 'query' 파라미터로 받은 문자열을 UserService를 통해 닉네임 검색에 사용
+        Page<UserDto.UserSearchResponse> users = userService.searchUsersByNickname(query, pageable);
+        return ApiResponse.ok(users);
+    }
+
 }
