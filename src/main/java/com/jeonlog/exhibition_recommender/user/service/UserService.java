@@ -10,6 +10,8 @@ import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
 import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -84,5 +86,15 @@ public class UserService {
         User user = userRepository.findByEmail(email).orElseThrow();
         user.updateSignature(signature);
         return UserDto.from(user);
+    }
+
+    public Page<UserDto.UserSearchResponse> searchUsersByNickname(String nickname, Pageable pageable) {
+        if (nickname == null || nickname.isBlank()) {
+            // 검색어가 없을 경우 빈 페이지 반환
+            return Page.empty(pageable);
+        }
+
+        return userRepository.findByNicknameContainingIgnoreCase(nickname, pageable)
+                .map(UserDto.UserSearchResponse::of);
     }
 }

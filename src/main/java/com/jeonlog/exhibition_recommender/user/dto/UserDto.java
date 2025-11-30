@@ -55,4 +55,30 @@ public class UserDto {
                 .signature(user.getSignature())
                 .build();
     }
+
+    @Getter
+    @Builder
+    public static class UserSearchResponse {
+        private Long userId;
+        private String nickname;
+        private String name;
+        private String profileImageUrl;
+        private String introduction;
+        private String signature;
+        private int followerCount;
+        private int followingCount;
+
+        public static UserSearchResponse of(User user) {
+            return UserSearchResponse.builder()
+                    .userId(user.getId())
+                    .nickname(user.getNickname())
+                    .name(user.getName())
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .introduction(user.getIntroduction())
+                    .signature(user.getSignature())
+                    .followerCount(user.getFollowerCount())
+                    .followingCount(user.getFollowingCount())
+                    .build();
+        }
+    }
 }
