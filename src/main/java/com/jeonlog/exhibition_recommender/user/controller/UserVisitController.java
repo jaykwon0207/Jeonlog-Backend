@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.user.controller;
 
+import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUserEmail;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.VisitRequest;
@@ -24,7 +25,7 @@ public class UserVisitController {
     public ApiResponse<Void> recordVisit(
             @PathVariable Long id,
             @RequestBody(required = false) VisitRequest request,
-            @org.springframework.security.core.annotation.AuthenticationPrincipal String email) {
+            @CurrentUserEmail String email) {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
@@ -37,7 +38,7 @@ public class UserVisitController {
     // ✅ 내가 방문한 전시 목록
     @GetMapping("/users/visits")
     public ApiResponse<List<VisitedExhibitionDto>> getVisitedExhibitions(
-            @org.springframework.security.core.annotation.AuthenticationPrincipal String email) {
+            @CurrentUserEmail String email) {
 
         List<VisitedExhibitionDto> visited = userVisitService.getVisitedExhibitions(email);
 

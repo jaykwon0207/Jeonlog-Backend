@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
-    private final User user;
+    private final User user; // 여기 있는 user가 결국 연결되서 사용하거임
     public CustomUserDetails(User user) { this.user = user; }
     public User getUser() { return user; }
 

@@ -30,16 +30,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
+
         String userNameAttributeName = userRequest
-                .getClientRegistration()
-                .getProviderDetails()
-                .getUserInfoEndpoint()
+                .getClientRegistration() // 이번 OAuth 로그인의 설정 정보
+                .getProviderDetails() // OAuth 제공자(구글/네이버)가 어떻게 작동하는지에 대한 세부정보
+                .getUserInfoEndpoint() // 사용자 정보를 어디서, 어떻게 가져오는지 정보 // 사용자의 고유 ID로 쓸 필드 이름
                 .getUserNameAttributeName();
 
         OAuthAttributes attributes = OAuthAttributes.of(
-                registrationId,
-                userNameAttributeName,
-                oAuth2User.getAttributes()
+                registrationId, // 어떤 provider인지
+                userNameAttributeName, // provider가 "고유 ID로 쓰는 필드 이름"
+                oAuth2User.getAttributes() // 구글/네이버가 넘겨준 raw JSON을 MAP<String, Object>로 가진것
         );
 
         Optional<User> userOptional = userRepository.findByEmail(attributes.getEmail());
