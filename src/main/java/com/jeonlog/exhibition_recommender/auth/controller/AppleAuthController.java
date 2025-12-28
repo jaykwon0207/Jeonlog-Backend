@@ -45,7 +45,7 @@ public class AppleAuthController {
             );
 
             // 4️⃣ JWT 발급
-            String accessToken = jwtTokenProvider.createAccessToken(email);
+            String accessToken = jwtTokenProvider.createAccessToken(user);
             String refreshToken = jwtTokenProvider.createRefreshToken(email);
 
             // 5️⃣ 응답 (신규 유저 여부 포함)

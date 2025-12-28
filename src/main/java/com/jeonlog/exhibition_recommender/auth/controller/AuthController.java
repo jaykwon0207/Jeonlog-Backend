@@ -2,6 +2,8 @@ package com.jeonlog.exhibition_recommender.auth.controller;
 
 import com.jeonlog.exhibition_recommender.auth.config.JwtTokenProvider;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
+import com.jeonlog.exhibition_recommender.user.domain.User;
+import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
@@ -19,6 +21,8 @@ import java.util.Map;
 public class AuthController {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
+
     private final Environment env;
 
     // ✅ Access Token 재발급 (웹 + 모바일 겸용)
@@ -39,7 +43,9 @@ public class AuthController {
         }
 
         try {
-            String newAccess = jwtTokenProvider.refreshAccessToken(refreshToken);
+            String email = jwtTokenProvider.getEmailFromToken(refreshToken);
+            User user = userRepository.findByEmail(email).orElseThrow(()-> new JwtException("user not found"));
+            String newAccess = jwtTokenProvider.refreshAccessToken(refreshToken, user);
             return ResponseEntity.ok(ApiResponse.ok(newAccess));
         } catch (JwtException e) {
             return ResponseEntity.status(401)

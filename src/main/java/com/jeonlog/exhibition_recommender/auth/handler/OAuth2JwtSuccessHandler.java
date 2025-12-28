@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jeonlog.exhibition_recommender.auth.config.JwtTokenProvider;
 import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
 import com.jeonlog.exhibition_recommender.user.domain.OauthProvider;
+import com.jeonlog.exhibition_recommender.user.domain.User;
+import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class OAuth2JwtSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final ObjectMapper objectMapper;
+    private final UserRepository userRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -65,8 +68,9 @@ public class OAuth2JwtSuccessHandler implements AuthenticationSuccessHandler {
             return;
         }
 
+        User user = userRepository.findByEmail(email).orElseThrow(()->new IllegalStateException("user not found"));
         // 기존 사용자 처리
-        String accessToken = jwtTokenProvider.createAccessToken(email);
+        String accessToken = jwtTokenProvider.createAccessToken(user);
         String refreshToken = jwtTokenProvider.createRefreshToken(email);
 
         log.info("🔐 기존 사용자 로그인 성공");
