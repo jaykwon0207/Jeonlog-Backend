@@ -8,7 +8,7 @@ public class HealthController {
 
     @GetMapping("/api/health")
     public String health() {
-        return "OKfd332";
+        return "OKfㄷㅈㅂㅇㄴ32";
     }
 
 }
