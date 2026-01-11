@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.auth.config;
 
+import com.jeonlog.exhibition_recommender.user.domain.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -17,24 +18,25 @@ public class JwtTokenProvider {
     @Value("${JWT_SECRET}")
     private String secretKey;
 
-    private final long accessTokenValidityMs = 15 * 60 * 1000;   // 15분
+    private final long accessTokenValidityMs = 15 * 60 * 1000;        // 15분
     private final long refreshTokenValidityMs = 14 * 24 * 60 * 60 * 1000; // 14일
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    // ✅ Access Token 생성
-    public String createAccessToken(String email) {
+    // ✅ Access Token 생성 (email + role 포함)
+    public String createAccessToken(User user) {
         return Jwts.builder()
-                .setSubject(email)
+                .setSubject(user.getEmail())
+                .claim("role", user.getRole().name())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenValidityMs))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // ✅ Refresh Token 생성
+    // ✅ Refresh Token 생성 (email만)
     public String createRefreshToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
@@ -54,6 +56,16 @@ public class JwtTokenProvider {
                 .getSubject();
     }
 
+    // ✅ ROLE 추출
+    public String getRoleFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
+    }
+
     // ✅ 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
@@ -69,7 +81,8 @@ public class JwtTokenProvider {
     }
 
     // ✅ Refresh Token으로 Access Token 재발급
-    public String refreshAccessToken(String refreshToken) {
+    // (DB에서 조회한 User를 넘겨줘야 함)
+    public String refreshAccessToken(String refreshToken, User user) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(getSigningKey())
@@ -81,11 +94,10 @@ public class JwtTokenProvider {
             throw new JwtException("Invalid refresh token");
         }
 
-        String email = getEmailFromToken(refreshToken);
-        return createAccessToken(email);
+        return createAccessToken(user);
     }
 
-    // ✅ (NEW) tempToken 생성 - 신규 사용자 온보딩용 (Base64 JSON 포함)
+    // ✅ tempToken 생성 - 신규 사용자 온보딩용
     public String createTempToken(String base64Attributes, long validityMs) {
         return Jwts.builder()
                 .setSubject("TEMP")
@@ -96,7 +108,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // ✅ (NEW) tempToken 복호화 → Base64 데이터 추출
+    // ✅ tempToken 복호화
     public String getDataFromTempToken(String token) {
         try {
             return Jwts.parserBuilder()

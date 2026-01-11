@@ -58,6 +58,10 @@ public class User {
     @Column(length = 20)
     private String signature;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private Role role;
+
     @Formula("(SELECT COUNT(*) FROM follow f WHERE f.following_id = id)")
     private int followerCount;
 
@@ -68,6 +72,7 @@ public class User {
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
         if (this.signature == null) this.signature = "jeonlog";
+        if (this.role == null) this.role = Role.USER;
     }
 
     public User update(String name) {

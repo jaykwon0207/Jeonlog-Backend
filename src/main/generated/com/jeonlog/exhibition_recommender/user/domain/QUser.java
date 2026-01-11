@@ -45,6 +45,8 @@ public class QUser extends EntityPathBase<User> {
 
     public final StringPath profileImageUrl = createString("profileImageUrl");
 
+    public final EnumPath<Role> role = createEnum("role", Role.class);
+
     public final StringPath signature = createString("signature");
 
     public QUser(String variable) {

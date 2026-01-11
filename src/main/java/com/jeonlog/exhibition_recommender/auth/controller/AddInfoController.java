@@ -68,7 +68,7 @@ public class AddInfoController {
             userRepository.save(user);
 
             Map<String, String> tokens = new HashMap<>();
-            tokens.put("accessToken", jwtTokenProvider.createAccessToken(dto.getEmail()));
+            tokens.put("accessToken", jwtTokenProvider.createAccessToken(user));
             tokens.put("refreshToken", jwtTokenProvider.createRefreshToken(dto.getEmail()));
 
             return ResponseEntity.ok(ApiResponse.ok(tokens));
