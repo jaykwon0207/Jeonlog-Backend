@@ -8,26 +8,26 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "exhibition_click_logs", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "exhibition")})
+        @UniqueConstraint(columnNames = {"user_id", "exhibition_id", "clicked_date"})
+})
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)  //외부에서 생성 방지
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class ExhibitionClickLog {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "clicked_date", nullable = false)
     private LocalDate clickedDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, unique = true)
+    @JoinColumn(name = "exhibition_id", nullable = false)
     private Exhibition exhibition;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
 }
+

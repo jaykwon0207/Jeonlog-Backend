@@ -1,0 +1,76 @@
+package com.jeonlog.exhibition_recommender.exhibition.domain;
+
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "venues")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+public class Venue {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 150, unique = true)
+    private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private VenueType type;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(length = 255)
+    private String address;
+
+    @Column(length = 50)
+    private String phone;
+
+    @Column(length = 50)
+    private String email;
+
+    @Column(length = 255)
+    private String website;
+
+    @Column(length = 100)
+    private String openingHours;
+
+    @Column(precision = 10, scale =6)
+    private BigDecimal latitude;
+
+    @Column(precision = 10, scale =6)
+    private BigDecimal longitude;
+
+    @Column(length = 500, nullable = true)
+    private String logoImageUrl;     // 로고 이미지 (S3 URL)
+
+    @Column(length = 500, nullable = true)
+    private String backgroundImageUrl; // 배경 이미지 (S3 URL)
+
+    @Column(name = "parking_fee", length = 255)
+    private String parkingFee;
+
+
+    @Builder.Default
+    @OneToMany(mappedBy = "venue")
+    private List<Exhibition> exhibitions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC, id ASC")
+    @Builder.Default
+    private List<VenuePhoto> photos = new ArrayList<>();
+
+
+
+}
