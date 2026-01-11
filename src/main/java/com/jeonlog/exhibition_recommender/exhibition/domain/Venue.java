@@ -58,6 +58,10 @@ public class Venue {
     @Column(length = 500, nullable = true)
     private String backgroundImageUrl; // 배경 이미지 (S3 URL)
 
+    @Column(name = "parking_fee", length = 255)
+    private String parkingFee;
+
+
     @Builder.Default
     @OneToMany(mappedBy = "venue")
     private List<Exhibition> exhibitions = new ArrayList<>();

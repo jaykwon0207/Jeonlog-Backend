@@ -24,6 +24,7 @@ public class VenueDetailResponseDto implements Serializable {
     private String backgroundImageUrl;
     private String staticMapUrl;  // 정적 지도 이미지 URL
     private String naverMapUrl;   // 네이버 지도 연동 URL
+    private String parkingFee;
 
     public static VenueDetailResponseDto of(Venue v, String coverImageUrl) {
         return VenueDetailResponseDto.builder()
@@ -45,6 +46,7 @@ public class VenueDetailResponseDto implements Serializable {
                         generateStaticMapUrl(v.getLongitude().doubleValue(), v.getLatitude().doubleValue()) : null)
                 .naverMapUrl(v.getLatitude() != null && v.getLongitude() != null ?
                         generateNaverMapUrl(v.getLongitude().doubleValue(), v.getLatitude().doubleValue(), v.getName()) : null)
+                .parkingFee(v.getParkingFee())
                 .build();
     }
 
