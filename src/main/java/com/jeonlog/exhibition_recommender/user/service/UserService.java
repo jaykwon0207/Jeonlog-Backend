@@ -8,7 +8,7 @@ import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
 import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -97,4 +97,14 @@ public class UserService {
         return userRepository.findByNicknameContainingIgnoreCase(nickname, pageable)
                 .map(UserDto.UserSearchResponse::of);
     }
+
+    //유저 상세조회
+    @Transactional(readOnly = true)
+    public UserDto.UserDetailResponse getUserDetail(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 유저가 존재하지 않습니다."));
+
+        return UserDto.UserDetailResponse.from(user);
+    }
+
 }

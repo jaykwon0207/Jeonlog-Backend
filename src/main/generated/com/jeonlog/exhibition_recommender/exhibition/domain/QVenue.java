@@ -42,6 +42,8 @@ public class QVenue extends EntityPathBase<Venue> {
 
     public final StringPath openingHours = createString("openingHours");
 
+    public final StringPath parkingFee = createString("parkingFee");
+
     public final StringPath phone = createString("phone");
 
     public final ListPath<VenuePhoto, QVenuePhoto> photos = this.<VenuePhoto, QVenuePhoto>createList("photos", VenuePhoto.class, QVenuePhoto.class, PathInits.DIRECT2);

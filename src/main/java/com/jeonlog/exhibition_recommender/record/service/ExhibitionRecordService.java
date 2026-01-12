@@ -46,6 +46,13 @@ public class ExhibitionRecordService {
         Exhibition exhibition = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 전시가 존재하지 않습니다."));
 
+        if (req.getTitle() == null || req.getTitle().isBlank()) {
+            throw new IllegalArgumentException("title은 필수입니다.");
+        }
+        if (req.getTitle().length() > 100) {
+            throw new IllegalArgumentException("title은 최대 100자입니다.");
+        }
+
         if (req.getContent() != null && req.getContent().length() > 3000) {
             throw new IllegalArgumentException("content는 최대 3000자입니다.");
         }
@@ -67,6 +74,7 @@ public class ExhibitionRecordService {
         }
 
         ExhibitionRecord record = ExhibitionRecord.builder()
+                .title(req.getTitle())
                 .content(req.getContent())
                 .likeCount(0L)
                 .exhibition(exhibition)
@@ -152,6 +160,7 @@ public class ExhibitionRecordService {
             return ExhibitionRecordDto.MyRecordSummary.builder()
                     .id(r.getId())
                     .exhibitionId(exhibition != null ? exhibition.getId() : null)
+                    .title(r.getTitle())
                     .content(trim(r.getContent(), 200))
                     .likeCount(r.getLikeCount())
                     .createdAt(r.getCreatedAt())
@@ -189,6 +198,17 @@ public class ExhibitionRecordService {
         // 소유자 검증
         if (!record.getUser().getId().equals(user.getId())) {
             throw new IllegalArgumentException("본인이 작성한 전시기록만 수정할 수 있습니다.");
+        }
+
+        // title 검증/적용
+        if (req.getTitle() != null) {
+            if (req.getTitle().isBlank()) {
+                throw new IllegalArgumentException("title이 비어있습니다.");
+            }
+            if (req.getTitle().length() > 100) {
+                throw new IllegalArgumentException("title은 최대 100자입니다.");
+            }
+            record.setTitleForUpdate(req.getTitle());
         }
 
         // 본문 검증/적용
@@ -248,6 +268,48 @@ public class ExhibitionRecordService {
         ExhibitionRecord saved = exhibitionRecordRepository.save(record);
         return saved.getId();
     }
+
+    //전시기록 상세조회
+    @Transactional(readOnly = true)
+    public ExhibitionRecordDto.RecordDetailResponse getRecordDetail(Long recordId) {
+        ExhibitionRecord record = exhibitionRecordRepository.findWithDetailById(recordId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 전시기록이 존재하지 않습니다."));
+
+        var exhibition = record.getExhibition();
+        var venue = (exhibition != null) ? exhibition.getVenue() : null;
+
+        List<ExhibitionRecordDto.RecordMediaDto> mediaDtoList = record.getMediaList().stream()
+                .map(ExhibitionRecordDto.RecordMediaDto::new)
+                .toList();
+
+        Set<String> hashtags = record.getHashtags().stream()
+                .map(Hashtag::getName)
+                .collect(Collectors.toSet());
+
+        return ExhibitionRecordDto.RecordDetailResponse.builder()
+                .recordId(record.getId())
+                .title(record.getTitle())
+                .content(record.getContent())
+                .likeCount(record.getLikeCount())
+                .createdAt(record.getCreatedAt())
+                .updatedAt(record.getUpdateAt())
+
+                .writerId(record.getUser().getId())
+                .writerNickname(record.getUser().getNickname())
+                .writerProfileImgUrl(record.getUser().getProfileImageUrl())
+
+                .exhibitionId(exhibition != null ? exhibition.getId() : null)
+                .exhibitionTitle(exhibition != null ? exhibition.getTitle() : null)
+
+                .venueId(venue != null ? venue.getId() : null)
+                .venueName(venue != null ? venue.getName() : null)
+
+                .mediaList(mediaDtoList)
+                .hashtags(hashtags)
+                .build();
+    }
+
+
     @Transactional(readOnly = true)
     public Page<ExhibitionRecordDto.RecordListResponse> getAllRecords(Pageable pageable) {
 
@@ -266,6 +328,7 @@ public class ExhibitionRecordService {
 
             return ExhibitionRecordDto.RecordListResponse.builder()
                     .recordId(record.getId())
+                    .title(record.getTitle())
                     .content(record.getContent())
                     .likeCount(record.getLikeCount())
                     .createdAt(record.getCreatedAt())
@@ -342,6 +405,7 @@ public class ExhibitionRecordService {
 
             return ExhibitionRecordDto.RecordListResponse.builder()
                     .recordId(record.getId())
+                    .title(record.getTitle())
                     .content(record.getContent())
                     .likeCount(record.getLikeCount())
                     .createdAt(record.getCreatedAt())

@@ -36,6 +36,8 @@ public class QExhibitionRecord extends EntityPathBase<ExhibitionRecord> {
 
     public final ListPath<RecordMedia, QRecordMedia> mediaList = this.<RecordMedia, QRecordMedia>createList("mediaList", RecordMedia.class, QRecordMedia.class, PathInits.DIRECT2);
 
+    public final StringPath title = createString("title");
+
     public final DateTimePath<java.time.LocalDateTime> updateAt = createDateTime("updateAt", java.time.LocalDateTime.class);
 
     public final com.jeonlog.exhibition_recommender.user.domain.QUser user;
