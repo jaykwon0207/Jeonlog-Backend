@@ -3,8 +3,10 @@ package com.jeonlog.exhibition_recommender.user.dto;
 import com.jeonlog.exhibition_recommender.user.domain.Gender;
 import com.jeonlog.exhibition_recommender.user.domain.OauthProvider;
 import com.jeonlog.exhibition_recommender.user.domain.User;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
@@ -81,4 +83,32 @@ public class UserDto {
                     .build();
         }
     }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UserDetailResponse {
+        private Long userId;
+        private String nickname;
+        private String profileImageUrl;
+        private Gender gender;
+        private Integer birthYear;
+        private String introduction;
+        private String signature;
+
+        public static UserDetailResponse from(User user) {
+            return UserDetailResponse.builder()
+                    .userId(user.getId())
+                    .nickname(user.getNickname())
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .gender(user.getGender())
+                    .birthYear(user.getBirthYear())
+                    .introduction(user.getIntroduction())
+                    .signature(user.getSignature())
+                    .build();
+        }
+    }
+
+
 }

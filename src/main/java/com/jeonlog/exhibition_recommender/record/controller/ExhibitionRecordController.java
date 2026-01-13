@@ -73,6 +73,13 @@ public class ExhibitionRecordController {
         return ApiResponse.ok(records);
     }
 
+    @GetMapping("/records/{recordId}")
+    public ApiResponse<ExhibitionRecordDto.RecordDetailResponse> getRecordDetail(
+            @PathVariable Long recordId
+    ) {
+        return ApiResponse.ok(exhibitionRecordService.getRecordDetail(recordId));
+    }
+
 
     // 내가 작성한 전시기록 목록
     @GetMapping("/users/records")

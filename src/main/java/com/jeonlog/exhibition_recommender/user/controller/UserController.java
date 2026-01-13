@@ -64,4 +64,11 @@ public class UserController {
         return ApiResponse.ok(users);
     }
 
+    //  유저 상세 조회 (프로필 조회)
+    @GetMapping("/{userId}")
+    public ApiResponse<UserDto.UserDetailResponse> getUserDetail(@PathVariable Long userId) {
+        return ApiResponse.ok(userService.getUserDetail(userId));
+    }
+
+
 }

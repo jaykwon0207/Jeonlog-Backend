@@ -26,6 +26,9 @@ public class ExhibitionRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 100)
+    private String title;  // 전시기록 제목
+
     @Lob
     @Column(columnDefinition = "TEXT")
     private String content;  // 본문(가변 길이 텍스트)
@@ -101,4 +104,9 @@ public class ExhibitionRecord {
             this.hashtags.addAll(newHashtags);
         }
     }
+
+    public void setTitleForUpdate(String title) {
+        this.title = title;
+    }
+
 }
