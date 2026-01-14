@@ -80,6 +80,15 @@ public class ExhibitionRecordController {
         return ApiResponse.ok(exhibitionRecordService.getRecordDetail(recordId));
     }
 
+    @GetMapping("/users/{userId}/records")
+    public ApiResponse<Page<ExhibitionRecordDto.RecordListResponse>> getUserRecords(
+            @PathVariable Long userId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return ApiResponse.ok(exhibitionRecordService.getUserRecords(userId, pageable));
+    }
+
+
 
     // 내가 작성한 전시기록 목록
     @GetMapping("/users/records")
