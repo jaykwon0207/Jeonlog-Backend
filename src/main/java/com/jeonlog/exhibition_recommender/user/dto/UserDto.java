@@ -90,25 +90,34 @@ public class UserDto {
     @AllArgsConstructor
     public static class UserDetailResponse {
         private Long userId;
-        private String nickname;
-        private String profileImageUrl;
+        private String name;
+        private String email;
         private Gender gender;
         private Integer birthYear;
         private String introduction;
+        private String profileImageUrl;
+        private String nickname;
+        private Integer followerCount;
+        private Integer followingCount;
         private String signature;
 
         public static UserDetailResponse from(User user) {
             return UserDetailResponse.builder()
                     .userId(user.getId())
-                    .nickname(user.getNickname())
-                    .profileImageUrl(user.getProfileImageUrl())
+                    .name(user.getName())
+                    .email(user.getEmail())
                     .gender(user.getGender())
                     .birthYear(user.getBirthYear())
                     .introduction(user.getIntroduction())
+                    .profileImageUrl(user.getProfileImageUrl())
+                    .nickname(user.getNickname())
+                    .followerCount(user.getFollowerCount())
+                    .followingCount(user.getFollowingCount())
                     .signature(user.getSignature())
                     .build();
         }
     }
+
 
 
 }
