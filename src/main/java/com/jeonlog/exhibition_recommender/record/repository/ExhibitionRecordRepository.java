@@ -22,4 +22,7 @@ public interface ExhibitionRecordRepository extends
     @EntityGraph(attributePaths = {"mediaList", "hashtags", "exhibition", "exhibition.venue", "user"})
     Optional<ExhibitionRecord> findWithDetailById(Long recordId);
 
+    @EntityGraph(attributePaths = {"mediaList", "hashtags", "exhibition", "user"})
+    Page<ExhibitionRecord> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
+
 }

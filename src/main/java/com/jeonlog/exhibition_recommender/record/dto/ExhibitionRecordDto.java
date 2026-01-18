@@ -33,6 +33,8 @@ public class ExhibitionRecordDto {
         private String videoUrl;
         private Integer videoDurationSeconds;
         private String videoThumbnailUrl;
+
+        private Set<@Size(max = 10, message = "해시태그는 10자 이하만 가능합니다") String> hashtags;
     }
 
     @Getter
@@ -51,6 +53,9 @@ public class ExhibitionRecordDto {
         private String videoUrl;
         private Integer videoDurationSeconds;
         private String videoThumbnailUrl;
+
+        private Set<@Size(max = 10, message = "해시태그는 10자 이하만 가능합니다") String> hashtags;
+
     }
 
     // -------------------

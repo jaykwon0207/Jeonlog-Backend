@@ -12,6 +12,7 @@ public class SimpleUserProfileDto {
     private String name;
     private String profileImageUrl;
     private String introduction;
+    private String nickname;
     private int postCount;
     private int followerCount;
     private int followingCount;
@@ -24,6 +25,7 @@ public class SimpleUserProfileDto {
                 .name(user.getName())
                 .profileImageUrl(user.getProfileImageUrl())
                 .introduction(user.getIntroduction())
+                .nickname(user.getNickname())
                 .postCount(postCount)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
