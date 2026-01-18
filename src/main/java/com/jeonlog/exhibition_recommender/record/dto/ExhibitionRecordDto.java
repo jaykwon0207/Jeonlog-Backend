@@ -95,6 +95,7 @@ public class ExhibitionRecordDto {
     @Builder
     public static class MyRecordSummary {
         private Long id;
+        private Long writerId;
         private Long exhibitionId;
         private String title;
         private String content;
@@ -135,6 +136,7 @@ public class ExhibitionRecordDto {
         private Long writerId;
         private String writerNickname;
         private String writerProfileImgUrl;
+        private String writerIntroduction;
 
         // 전시
         private Long exhibitionId;
@@ -165,6 +167,7 @@ public class ExhibitionRecordDto {
         private LocalDateTime createdAt;
 
         // 작성자 정보
+        private Long writerId;
         private String writerNickname;
         private String writerProfileImgUrl; // User 엔티티에 프로필 이미지 URL이 있다고 가정
 
