@@ -36,6 +36,10 @@ public class ExhibitionRecord {
 
     @Builder.Default
     @Column(nullable = false)
+    private Boolean draft = false;
+
+    @Builder.Default
+    @Column(nullable = false)
     private Long likeCount = 0L;    // 좋아요 수 기본 0
 
     @CreatedDate
@@ -75,6 +79,7 @@ public class ExhibitionRecord {
         if (createdAt == null) createdAt = now;
         if (updateAt == null) updateAt = now;
         if (likeCount == null) likeCount = 0L;
+        if (draft == null) draft = false;
     }
 
     @PreUpdate

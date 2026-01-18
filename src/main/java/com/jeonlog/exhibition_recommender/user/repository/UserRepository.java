@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.user.repository;
 
+import com.jeonlog.exhibition_recommender.user.domain.OauthProvider;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByNickname(String nickname);
 
     boolean existsByEmail(String email);
+
+    Optional<User> findByOauthIdAndOauthProvider(String oauthId, OauthProvider provider);
+
 
     // 닉네임으로 검색 (대소문자 구분 없이, 포함 검색)
     Page<User> findByNicknameContainingIgnoreCase(String nickname, Pageable pageable);

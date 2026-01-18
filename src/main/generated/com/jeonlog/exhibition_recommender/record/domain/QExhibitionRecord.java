@@ -26,6 +26,8 @@ public class QExhibitionRecord extends EntityPathBase<ExhibitionRecord> {
 
     public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
 
+    public final BooleanPath draft = createBoolean("draft");
+
     public final com.jeonlog.exhibition_recommender.exhibition.domain.QExhibition exhibition;
 
     public final SetPath<Hashtag, QHashtag> hashtags = this.<Hashtag, QHashtag>createSet("hashtags", Hashtag.class, QHashtag.class, PathInits.DIRECT2);

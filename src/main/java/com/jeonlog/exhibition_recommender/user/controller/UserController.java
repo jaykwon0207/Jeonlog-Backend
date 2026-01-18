@@ -4,6 +4,7 @@ import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.UserDto;
+import com.jeonlog.exhibition_recommender.user.dto.UserOnboardingRequest;
 import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.user.service.UserService;
@@ -28,6 +29,15 @@ public class UserController {
     public ApiResponse<UserDto> getMyInfo(@CurrentUser User user) {
         if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
         return ApiResponse.ok(UserDto.from(user));
+    }
+
+    // ✅ 🆕 온보딩 완료
+    @PostMapping("/onboarding")
+    public ApiResponse<UserDto> completeOnboarding(
+            @CurrentUser User user,
+            @RequestBody UserOnboardingRequest request
+    ) {
+        return ApiResponse.ok(userService.completeOnboarding(user, request));
     }
 
     // ✅ 회원정보 수정 (닉네임, 성별, 출생연도, 자기소개, 프로필이미지, 시그니처 포함)

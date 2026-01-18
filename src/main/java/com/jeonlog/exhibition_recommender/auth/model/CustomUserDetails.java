@@ -17,6 +17,8 @@ public class CustomUserDetails implements UserDetails {
                 new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
         );
     }
+
+
     @Override public String getPassword() { return ""; }
     @Override public String getUsername() { return user.getEmail(); } // username=이메일
     @Override public boolean isAccountNonExpired() { return true; }

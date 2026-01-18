@@ -8,6 +8,7 @@ import lombok.Getter;
 
 import java.util.Base64;
 import java.util.Map;
+import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
@@ -19,7 +20,8 @@ public class AppleOAuthAttributes {
     public static AppleOAuthAttributes fromIdToken(String idToken) throws Exception {
         String[] parts = idToken.split("\\.");
         String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
-        Map<String, Object> payload = new ObjectMapper().readValue(payloadJson, Map.class);
+        Map<String, Object> payload =
+                new ObjectMapper().readValue(payloadJson, Map.class);
 
         return new AppleOAuthAttributes(
                 (String) payload.get("sub"),
@@ -30,9 +32,10 @@ public class AppleOAuthAttributes {
     public User toEntity() {
         return User.builder()
                 .oauthId(sub)
-                .email(email)
                 .oauthProvider(OauthProvider.APPLE)
+                .email(email)
                 .name("Apple User")
+                .nickname("apple_" + UUID.randomUUID().toString().substring(0, 8))
                 .build();
     }
 }
