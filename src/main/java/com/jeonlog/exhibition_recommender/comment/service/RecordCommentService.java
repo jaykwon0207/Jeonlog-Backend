@@ -9,6 +9,7 @@ import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
+import com.jeonlog.exhibition_recommender.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class RecordCommentService {
     private final RecordCommentRepository commentRepository;
     private final ExhibitionRecordRepository recordRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     //댓글 또는 대댓글 생성
     @Transactional
@@ -44,6 +46,21 @@ public class RecordCommentService {
                 .content(request.getContent())
                 .parent(parentComment)
                 .build();
+        // 저장
+        RecordComment saved = commentRepository.save(comment);
+
+        //알림: record 작성자에게 (본인 댓글이면 NotificationService에서 return)
+        String preview = saved.getContent();
+        notificationService.notifyRecordComment(
+                record.getId(),
+                record.getUser().getId(),
+                user.getId(),
+                user.getNickname(),
+                preview
+        );
+
+
+
 
         return RecordCommentResponse.from(commentRepository.save(comment));
     }

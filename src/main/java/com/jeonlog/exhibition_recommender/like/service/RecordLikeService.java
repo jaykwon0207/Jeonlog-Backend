@@ -4,11 +4,12 @@ package com.jeonlog.exhibition_recommender.like.service;
 import com.jeonlog.exhibition_recommender.like.domain.RecordLike;
 import com.jeonlog.exhibition_recommender.like.dto.RecordLikeDto;
 import com.jeonlog.exhibition_recommender.like.repository.RecordLikeRepository;
+import com.jeonlog.exhibition_recommender.notification.service.NotificationService;
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.domain.RecordMedia;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ public class RecordLikeService {
 
     private final RecordLikeRepository recordLikeRepository;
     private final ExhibitionRecordRepository exhibitionRecordRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public RecordLikeDto like(Long recordId, User user) {
@@ -34,8 +36,18 @@ public class RecordLikeService {
                             .user(user)
                             .record(record)
                             .build();
+
                     recordLikeRepository.save(newLike);
                     record.increaseLikeCount();
+
+                    notificationService.notifyRecordLike(
+                            record.getId(),
+                            record.getUser().getId(),
+                            user.getId(),
+                            user.getNickname()
+                    );
+
+
                     return newLike;
                 });
 
