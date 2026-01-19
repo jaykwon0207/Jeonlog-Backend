@@ -182,6 +182,7 @@ public class ExhibitionRecordService {
                     .likeCount(r.getLikeCount())
                     .createdAt(r.getCreatedAt())
                     .updatedAt(r.getUpdateAt())
+                    .writerId(user.getId())
                     .venueId(venue != null ? venue.getId() : null)
                     .venueName(venue != null ? venue.getName() : null)
                     .media(r.getMediaList().stream().map(m ->
@@ -318,6 +319,8 @@ public class ExhibitionRecordService {
                 .writerId(record.getUser().getId())
                 .writerNickname(record.getUser().getNickname())
                 .writerProfileImgUrl(record.getUser().getProfileImageUrl())
+                .writerIntroduction(record.getUser().getIntroduction())
+
 
                 .exhibitionId(exhibition != null ? exhibition.getId() : null)
                 .exhibitionTitle(exhibition != null ? exhibition.getTitle() : null)
@@ -353,6 +356,7 @@ public class ExhibitionRecordService {
                     .content(record.getContent())
                     .likeCount(record.getLikeCount())
                     .createdAt(record.getCreatedAt())
+                    .writerId(record.getUser().getId())
                     .writerNickname(record.getUser().getNickname())
                     .writerProfileImgUrl(record.getUser().getProfileImageUrl())
                     .mediaList(mediaDtoList)
