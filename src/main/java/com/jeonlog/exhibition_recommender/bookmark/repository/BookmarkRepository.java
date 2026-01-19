@@ -11,15 +11,14 @@ import java.util.Optional;
 
 public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
 
-    boolean existsByUserAndExhibition(User user, Exhibition exhibition);
+    void deleteByUserId(Long userId);
+
 
     Optional<Bookmark> findByUserAndExhibition(User user, Exhibition exhibition);
 
-    void deleteByUserAndExhibition(User user, Exhibition exhibition);
 
     long countByExhibition(Exhibition exhibition);
 
-    Page<Bookmark> findByExhibition(Exhibition exhibition, Pageable pageable);
 
     Page<Bookmark> findByUser(User user, Pageable pageable);
 }

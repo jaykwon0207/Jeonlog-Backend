@@ -59,8 +59,10 @@ public class UserController {
     // ✅ 회원 탈퇴
     @DeleteMapping
     public ApiResponse<String> deleteUser(@CurrentUser User user) {
-        if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
-        userService.deleteCurrentUserByEmail(user.getEmail());
+        if (user == null) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+        }
+        userService.deleteCurrentUser(user);
         return ApiResponse.ok("회원 탈퇴 완료");
     }
 

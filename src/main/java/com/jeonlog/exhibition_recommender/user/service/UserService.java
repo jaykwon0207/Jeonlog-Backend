@@ -2,6 +2,7 @@ package com.jeonlog.exhibition_recommender.user.service;
 
 import com.jeonlog.exhibition_recommender.auth.dto.AddInfoRequestDto;
 import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
+import com.jeonlog.exhibition_recommender.bookmark.repository.BookmarkRepository;
 import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
 import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
@@ -22,6 +23,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserGenreRepository userGenreRepository;
+    private final BookmarkRepository bookmarkRepository;
 
     // =========================
     // 1️⃣ 온보딩 완료 (신규 사용자)
@@ -108,18 +110,13 @@ public class UserService {
         return UserDto.from(user);
     }
 
-    // =========================
-    // 5️⃣ 회원 탈퇴
-    // =========================
-    public void deleteCurrentUserByEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    @Transactional
+    public void deleteCurrentUser(User user) {
+        bookmarkRepository.deleteByUserId(user.getId());
         userRepository.delete(user);
     }
 
-    // =========================
-    // 6️⃣ 유저 검색 (닉네임)
-    // =========================
+
     @Transactional(readOnly = true)
     public Page<UserDto.UserSearchResponse> searchUsersByNickname(
             String nickname,
@@ -134,9 +131,7 @@ public class UserService {
                 .map(UserDto.UserSearchResponse::of);
     }
 
-    // =========================
-    // 7️⃣ 유저 상세 조회
-    // =========================
+
     @Transactional(readOnly = true)
     public UserDto.UserDetailResponse getUserDetail(Long userId) {
 
