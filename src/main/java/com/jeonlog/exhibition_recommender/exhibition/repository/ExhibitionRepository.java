@@ -105,4 +105,8 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
     // 전시 정보 조회 시 venue 정보도 함께 조회
     @Query("SELECT e FROM Exhibition e JOIN FETCH e.venue")
     List<Exhibition> findAllWithVenue();
+
+    // 전시 종료 2주전 알림을 위해 추가
+    List<Exhibition> findByEndDate(LocalDate endDate);
+
 }
