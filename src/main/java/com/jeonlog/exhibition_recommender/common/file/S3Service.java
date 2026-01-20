@@ -54,7 +54,5 @@ public class S3Service {
         return presigned.url().toString();
     }
 
-    public String getFileUrl(String key) {
-        return String.format("https://%s.s3.ap-northeast-2.amazonaws.com/%s", bucket, key);
-    }
+
 }
