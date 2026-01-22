@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class RegisterPushTokenRequest {
-    private Long userId;      // TODO: 나중엔 인증에서 꺼내고 제거
-    private String token;     // ExponentPushToken[...]
-    private String platform;  // EXPO
+    private String token;     //
+    private String platform;  // "FCM" 같은 값으로 보내도 되고, 없어도 됨
 }
