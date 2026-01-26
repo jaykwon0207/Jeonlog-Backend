@@ -42,6 +42,7 @@ test-output/
 
 # 혹시 실수로 다른 이름으로 만들 경우까지 커버
 .env.*.propertiesperties
+
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml

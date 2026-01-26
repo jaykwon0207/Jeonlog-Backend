@@ -1,10 +1,6 @@
 package com.jeonlog.exhibition_recommender.auth.handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jeonlog.exhibition_recommender.auth.config.JwtTokenProvider;
-import com.jeonlog.exhibition_recommender.user.domain.OauthProvider;
-import com.jeonlog.exhibition_recommender.user.domain.User;
-import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
+import com.jeonlog.exhibition_recommender.auth.service.OAuthLoginSuccessService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,61 +10,50 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.Base64;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class OAuth2JwtSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final JwtTokenProvider jwtTokenProvider;
-    private final ObjectMapper objectMapper;
-    private final UserRepository userRepository;
+    private final OAuthLoginSuccessService successService;
 
     @Override
     public void onAuthenticationSuccess(
             HttpServletRequest request,
             HttpServletResponse response,
             Authentication authentication
-    ) throws IOException {
+    ) {
+        try {
+            OAuth2User user = (OAuth2User) authentication.getPrincipal();
 
-        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+            String provider = (String) user.getAttributes().get("provider");
+            String oauthId  = (String) user.getAttributes().get("oauthId");
+            String email    = (String) user.getAttributes().get("email");
+            String name     = (String) user.getAttributes().get("name");
 
-        String provider = (String) oAuth2User.getAttributes().get("provider");
-        String oauthId = (String) oAuth2User.getAttributes().get("id");
-        String email = (String) oAuth2User.getAttributes().get("email");
+            boolean isNewUser = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("NEW_USER"));
 
-        boolean isNewUser = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("NEW_USER"));
-
-        if (isNewUser) {
-            String json = objectMapper.writeValueAsString(
-                    oAuth2User.getAttributes()
+            var result = successService.handle(
+                    provider, oauthId, email, name, isNewUser
             );
-            String base64 = Base64.getUrlEncoder().encodeToString(json.getBytes());
-            String tempToken = jwtTokenProvider.createTempToken(base64, 60 * 60 * 1000);
 
-            response.sendRedirect(
-                    "jeonlogfront://onboarding/age?tempToken=" + tempToken
-            );
-            return;
+            if (result.newUser()) {
+                response.sendRedirect(
+                        "jeonlogfront://onboarding/age?tempToken=" + result.tempToken()
+                );
+            } else {
+                response.sendRedirect(
+                        "jeonlogfront://auth"
+                                + "?accessToken=" + result.accessToken()
+                                + "&refreshToken=" + result.refreshToken()
+                                + "&newUser=false"
+                );
+            }
+
+        } catch (Exception e) {
+            log.error("OAuth success handling failed", e);
+            throw new RuntimeException(e);
         }
-
-        User user = userRepository
-                .findByOauthProviderAndOauthId(
-                        OauthProvider.valueOf(provider),
-                        oauthId
-                )
-                .orElseThrow(() -> new IllegalStateException("user not found"));
-
-        String accessToken = jwtTokenProvider.createAccessToken(user);
-        String refreshToken = jwtTokenProvider.createRefreshToken(email);
-
-        response.sendRedirect(
-                "jeonlogfront://auth?accessToken=" + accessToken
-                        + "&refreshToken=" + refreshToken
-                        + "&newUser=false"
-        );
     }
 }

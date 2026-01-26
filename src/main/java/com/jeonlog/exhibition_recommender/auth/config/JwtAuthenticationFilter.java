@@ -1,6 +1,8 @@
 package com.jeonlog.exhibition_recommender.auth.config;
 
 import com.jeonlog.exhibition_recommender.auth.model.CustomUserDetails;
+import com.jeonlog.exhibition_recommender.user.domain.OauthProvider;
+import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,27 +23,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
 
-    // ⭐⭐⭐ 핵심 수정: temp-token API 필터 제외
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
 
-        return uri.startsWith("/api/oauth/add-info")
-                || uri.startsWith("/api/oauth/check-nickname")
-                || uri.startsWith("/api/oauth/apple")
-                || uri.startsWith("/login")
-                || uri.startsWith("/oauth2")
+        log.info("[JWT FILTER CHECK] uri={}", uri);
+
+        return uri.startsWith("/login/oauth2/")   // 🔥 Google OAuth 콜백
+                || uri.startsWith("/oauth2/")
+                || uri.startsWith("/api/auth/")
+                || uri.startsWith("/api/oauth/")
                 || uri.startsWith("/error")
-                || uri.startsWith("/api/health")
+                || uri.startsWith("/swagger")
+                || uri.startsWith("/v3/api-docs")
                 || uri.equals("/")
                 || uri.equals("/favicon.ico");
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain chain
+    ) throws ServletException, IOException {
 
         String header = request.getHeader("Authorization");
 
@@ -52,26 +56,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
 
-        if (token.isBlank()) {
-            chain.doFilter(request, response);
-            return;
-        }
-
         try {
-            if (jwtTokenProvider.validateToken(token)) {
-                String email = jwtTokenProvider.getEmailFromToken(token);
+            if (!jwtTokenProvider.validateToken(token)) {
+                chain.doFilter(request, response);
+                return;
+            }
 
-                userRepository.findByEmail(email).ifPresent(user -> {
-                    CustomUserDetails cud = new CustomUserDetails(user);
+            String subject = jwtTokenProvider.getSubject(token);
+            String[] parts = subject.split(":");
 
-                    var auth = new UsernamePasswordAuthenticationToken(
+            if (parts.length != 2) {
+                chain.doFilter(request, response);
+                return;
+            }
+
+            OauthProvider provider = OauthProvider.valueOf(parts[0]);
+            String oauthId = parts[1];
+
+            User user = userRepository
+                    .findByOauthProviderAndOauthId(provider, oauthId)
+                    .orElse(null);
+
+            if (user == null) {
+                chain.doFilter(request, response);
+                return;
+            }
+
+            CustomUserDetails cud = new CustomUserDetails(user);
+
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(
                             cud, null, cud.getAuthorities()
                     );
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                });
-            }
+
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
         } catch (Exception e) {
-            log.error("❌ JWT Authentication Filter Error: {}", e.getMessage());
+            log.error("JWT filter error", e);
         }
 
         chain.doFilter(request, response);

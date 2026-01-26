@@ -6,6 +6,7 @@ import com.jeonlog.exhibition_recommender.auth.handler.OAuth2JwtSuccessHandler;
 import com.jeonlog.exhibition_recommender.auth.service.CustomOAuth2UserService;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,6 +20,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -36,32 +38,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // ✅ 기본 설정
+                // ✅ 기본 보안 설정
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
 
-                // ✅ 요청별 권한 설정
+                // ✅ 권한 설정
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/", "/login/**", "/css/**", "/js/**", "/images/**",
+                                "/",
                                 "/favicon.ico",
                                 "/error",
-                                "/oauth2/**", "/oauth2/redirect/**",
-                                "/api/oauth/**",          // ✅ TempToken 온보딩용 공개 경로
+                                "/oauth2/**",
+                                "/api/oauth/**",
                                 "/api/auth/**",
-                                "/swagger-ui/**", "/v3/api-docs/**",
-                                "/swagger-resources/**", "/swagger-ui.html", "/webjars/**",
-                                "/api/health",                   // ✅ ELB 헬스체크용
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/swagger-ui.html",
+                                "/webjars/**",
+                                "/api/health",
                                 "/api/users/check-nickname"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 프론트엔드 연동용
 
-                        .requestMatchers("/api/health").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
-                // ✅ 인증 실패 시 401 반환
+                // ✅ 인증 실패 시 401 (JWT 보호 API용)
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(401);
@@ -72,15 +78,24 @@ public class SecurityConfig {
 
                 // ✅ OAuth2 로그인
                 .oauth2Login(oauth -> oauth
-                        .userInfoEndpoint(info -> info.userService(customOAuth2UserService))
+                        .userInfoEndpoint(info ->
+                                info.userService(customOAuth2UserService)
+                        )
                         .successHandler(oAuth2JwtSuccessHandler)
+                        .failureHandler((request, response, exception) -> {
+                            log.error("[OAUTH] login failed", exception);
+                            response.sendError(401, "OAuth login failed");
+                        })
                 )
 
-                // ✅ 로그아웃 설정
+                // ✅ 로그아웃 (상태 없음)
                 .logout(logout -> logout.logoutSuccessUrl("/"));
 
-        // ✅ JWT 필터 등록
-        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        // ✅ JWT 인증 필터
+        http.addFilterBefore(
+                jwtAuthenticationFilter(),
+                UsernamePasswordAuthenticationFilter.class
+        );
 
         return http.build();
     }
@@ -89,18 +104,25 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+
         config.setAllowedOriginPatterns(List.of(
-                "http://localhost:8081",             // RN 로컬 개발 환경
-                "https://jeonlog.com",              // 운영 도메인
+                "http://localhost:8081",
+                "https://jeonlog.com",
                 "https://api.jeonlog.com"
         ));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+
+        config.setAllowedMethods(
+                List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+        );
         config.setAllowedHeaders(List.of("*"));
-        config.setExposedHeaders(List.of("Authorization", "Location", "Content-Disposition"));
+        config.setExposedHeaders(
+                List.of("Authorization", "Location", "Content-Disposition")
+        );
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
