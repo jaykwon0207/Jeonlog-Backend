@@ -35,6 +35,9 @@ application.properties
 # 테스트 출력물
 test-output/
 
+# Spring properties 전체(프로필 포함) 막기
+application-*.properties
+application*.properties
 
 # 환경 변수 파일 (절대 깃에 올리지 말 것)
 .env.local.properties

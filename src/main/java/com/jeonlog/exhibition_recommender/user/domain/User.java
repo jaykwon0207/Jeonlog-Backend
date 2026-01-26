@@ -1,7 +1,5 @@
 package com.jeonlog.exhibition_recommender.user.domain;
 
-import com.jeonlog.exhibition_recommender.user.domain.Gender;
-import com.jeonlog.exhibition_recommender.user.domain.OauthProvider;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Formula;
@@ -9,11 +7,12 @@ import org.hibernate.annotations.Formula;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users",
+@Table(
+        name = "users",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = "email"),
-                @UniqueConstraint(columnNames = "oauth_id")
-        })
+                @UniqueConstraint(columnNames = {"oauth_provider", "oauth_id"})
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -24,8 +23,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    @Column(unique = true)
+    private String email; // Apple은 null 가능
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -34,25 +33,22 @@ public class User {
     @Column(nullable = false, length = 50)
     private OauthProvider oauthProvider;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String oauthId;
 
-    @Column(nullable = false, unique = true, length = 30)
-    private String nickname;
+    @Column(unique = true, length = 30)
+    private String nickname; // 온보딩 후 입력
 
-    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
-    @Column(nullable = false)
     private Integer birthYear;
 
     @Column(length = 1000)
     private String introduction;
 
-    @Column
     private String profileImageUrl;
 
     @Column(length = 20)
@@ -75,17 +71,28 @@ public class User {
         if (this.role == null) this.role = Role.USER;
     }
 
-    public User update(String name) {
+    public void update(String name) {
         this.name = name;
-        return this;
     }
 
-    public void updateSignature(String signature) {
-        this.signature = signature;
+    public void completeOnboarding(
+            Gender gender,
+            Integer birthYear,
+            String nickname
+    ) {
+        this.gender = gender;
+        this.birthYear = birthYear;
+        this.nickname = nickname;
     }
 
-    public void updateProfile(Gender gender, Integer birthYear, String nickname,
-                              String introduction, String profileImageUrl, String signature) {
+    public void updateProfile(
+            Gender gender,
+            Integer birthYear,
+            String nickname,
+            String introduction,
+            String profileImageUrl,
+            String signature
+    ) {
         if (gender != null) this.gender = gender;
         if (birthYear != null) this.birthYear = birthYear;
         if (nickname != null && !nickname.isBlank()) this.nickname = nickname;

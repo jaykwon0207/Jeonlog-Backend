@@ -4,6 +4,7 @@ import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.UserDto;
+import com.jeonlog.exhibition_recommender.user.dto.UserOnboardingRequest;
 import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.user.service.UserService;
@@ -30,6 +31,15 @@ public class UserController {
         return ApiResponse.ok(UserDto.from(user));
     }
 
+    // ✅ 🆕 온보딩 완료
+    @PostMapping("/onboarding")
+    public ApiResponse<UserDto> completeOnboarding(
+            @CurrentUser User user,
+            @RequestBody UserOnboardingRequest request
+    ) {
+        return ApiResponse.ok(userService.completeOnboarding(user, request));
+    }
+
     // ✅ 회원정보 수정 (닉네임, 성별, 출생연도, 자기소개, 프로필이미지, 시그니처 포함)
     @PutMapping("/me")
     public ApiResponse<UserDto> updateMyInfo(
@@ -49,8 +59,10 @@ public class UserController {
     // ✅ 회원 탈퇴
     @DeleteMapping
     public ApiResponse<String> deleteUser(@CurrentUser User user) {
-        if (user == null) throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
-        userService.deleteCurrentUserByEmail(user.getEmail());
+        if (user == null) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
+        }
+        userService.deleteCurrentUser(user);
         return ApiResponse.ok("회원 탈퇴 완료");
     }
 
@@ -63,5 +75,12 @@ public class UserController {
         Page<UserDto.UserSearchResponse> users = userService.searchUsersByNickname(query, pageable);
         return ApiResponse.ok(users);
     }
+
+    //  유저 상세 조회 (프로필 조회)
+    @GetMapping("/{userId}")
+    public ApiResponse<UserDto.UserDetailResponse> getUserDetail(@PathVariable Long userId) {
+        return ApiResponse.ok(userService.getUserDetail(userId));
+    }
+
 
 }

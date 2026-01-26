@@ -9,6 +9,7 @@ import com.jeonlog.exhibition_recommender.user.repository.FollowRepository;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -59,6 +60,7 @@ public class ProfileService {
     }
 
     // 🔹 팔로우
+    @Transactional
     public void follow(String email, Long targetId) {
         User me = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
@@ -76,6 +78,7 @@ public class ProfileService {
     }
 
     // 🔹 언팔로우
+    @Transactional
     public void unfollow(String email, Long targetId) {
         User me = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));

@@ -52,7 +52,8 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/swagger-ui/**", "/v3/api-docs/**",
                                 "/swagger-resources/**", "/swagger-ui.html", "/webjars/**",
-                                "/api/health"                   // ✅ ELB 헬스체크용
+                                "/api/health",                   // ✅ ELB 헬스체크용
+                                "/api/users/check-nickname"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 프론트엔드 연동용
 

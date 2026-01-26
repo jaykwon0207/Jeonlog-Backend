@@ -18,6 +18,8 @@ import java.util.Map;
 public class FileController {
 
     private final S3Service s3Service;
+    private final CloudFrontUrlResolver cloudFrontUrlResolver;
+
 
     @GetMapping("/presign")
     public ApiResponse<String> getPresignedUrl(@CurrentUser User user, @RequestParam String filename) {
@@ -35,10 +37,19 @@ public class FileController {
     }
 
     @PostMapping("/confirm")
-    public ApiResponse<String> confirmUpload(@CurrentUser User user, @RequestBody Map<String, String> body) {
+    public ApiResponse<String> confirmUpload(@CurrentUser User user,
+                                             @RequestBody Map<String, String> body) {
+
         String fileKey = body.get("fileKey");
-        String fixedUrl = s3Service.getFileUrl(fileKey);
-        log.info("✅ 파일 업로드 완료: userId={}, fileKey={}, fixedUrl={}", user.getId(), fileKey, fixedUrl);
-        return ApiResponse.ok(fixedUrl);
+
+        // CloudFront URL ⭕
+        String cloudFrontUrl = cloudFrontUrlResolver.resolve(fileKey);
+
+        log.info("✅ 업로드 완료: userId={}, fileKey={}, cloudFrontUrl={}",
+                user.getId(), fileKey, cloudFrontUrl);
+
+        return ApiResponse.ok(cloudFrontUrl);
     }
+
+
 }

@@ -2,6 +2,7 @@ package com.jeonlog.exhibition_recommender.record.dto;
 
 import com.jeonlog.exhibition_recommender.record.domain.MediaType;
 import com.jeonlog.exhibition_recommender.record.domain.RecordMedia;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -20,6 +21,11 @@ public class ExhibitionRecordDto {
     @AllArgsConstructor
     @Builder
     public static class CreateRequest {
+
+        @NotBlank(message = "title은 필수입니다")
+        @Size(max = 100, message = "title은 최대 100자입니다")
+        private String title;
+
         @Size(max = 3000, message = "content는 최대 3000자입니다")
         private String content;
 
@@ -27,6 +33,8 @@ public class ExhibitionRecordDto {
         private String videoUrl;
         private Integer videoDurationSeconds;
         private String videoThumbnailUrl;
+
+        private Set<@Size(max = 10, message = "해시태그는 10자 이하만 가능합니다") String> hashtags;
     }
 
     @Getter
@@ -34,6 +42,10 @@ public class ExhibitionRecordDto {
     @AllArgsConstructor
     @Builder
     public static class UpdateRequest {
+
+        @Size(max = 100, message = "title은 최대 100자입니다")
+        private String title;
+
         @Size(max = 3000, message = "content는 최대 3000자입니다")
         private String content;
 
@@ -41,6 +53,9 @@ public class ExhibitionRecordDto {
         private String videoUrl;
         private Integer videoDurationSeconds;
         private String videoThumbnailUrl;
+
+        private Set<@Size(max = 10, message = "해시태그는 10자 이하만 가능합니다") String> hashtags;
+
     }
 
     // -------------------
@@ -80,7 +95,9 @@ public class ExhibitionRecordDto {
     @Builder
     public static class MyRecordSummary {
         private Long id;
+        private Long writerId;
         private Long exhibitionId;
+        private String title;
         private String content;
         private Long likeCount;
         private LocalDateTime createdAt;
@@ -103,6 +120,38 @@ public class ExhibitionRecordDto {
         }
     }
 
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RecordDetailResponse {
+        private Long recordId;
+        private String title;
+        private String content;
+        private Long likeCount;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+
+        // 작성자
+        private Long writerId;
+        private String writerNickname;
+        private String writerProfileImgUrl;
+        private String writerIntroduction;
+
+        // 전시
+        private Long exhibitionId;
+        private String exhibitionTitle;
+
+        // 장소(있으면)
+        private Long venueId;
+        private String venueName;
+
+        // 미디어/해시태그
+        private List<RecordMediaDto> mediaList;
+        private Set<String> hashtags;
+    }
+
+
     /**
      * 전시기록 목록 조회 응답 DTO
      */
@@ -112,11 +161,13 @@ public class ExhibitionRecordDto {
     @AllArgsConstructor
     public static class RecordListResponse {
         private Long recordId;
+        private String title;
         private String content;
         private Long likeCount;
         private LocalDateTime createdAt;
 
         // 작성자 정보
+        private Long writerId;
         private String writerNickname;
         private String writerProfileImgUrl; // User 엔티티에 프로필 이미지 URL이 있다고 가정
 
@@ -138,7 +189,7 @@ public class ExhibitionRecordDto {
     @AllArgsConstructor
     public static class RecordMediaDto {
         private Long mediaId;
-        private String mediaType; // "IMAGE" or "VIDEO"
+        private String mediaType; // "PHOTO" or "VIDEO"
         private String fileUrl;
         private String thumbnailUrl; // 썸네일 URL
 

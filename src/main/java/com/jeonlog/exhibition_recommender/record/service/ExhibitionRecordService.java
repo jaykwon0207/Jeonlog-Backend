@@ -17,6 +17,7 @@ import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
 import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
 
+import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ExhibitionRecordService {
 
+    private final UserRepository userRepository;
     private final ExhibitionRepository exhibitionRepository;
     private final ExhibitionRecordRepository exhibitionRecordRepository;
     private final UserGenreRepository userGenreRepository;
@@ -45,6 +47,13 @@ public class ExhibitionRecordService {
     public Long addRecord(Long exhibitionId, User user, CreateRequest req) {
         Exhibition exhibition = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 전시가 존재하지 않습니다."));
+
+        if (req.getTitle() == null || req.getTitle().isBlank()) {
+            throw new IllegalArgumentException("title은 필수입니다.");
+        }
+        if (req.getTitle().length() > 100) {
+            throw new IllegalArgumentException("title은 최대 100자입니다.");
+        }
 
         if (req.getContent() != null && req.getContent().length() > 3000) {
             throw new IllegalArgumentException("content는 최대 3000자입니다.");
@@ -67,6 +76,7 @@ public class ExhibitionRecordService {
         }
 
         ExhibitionRecord record = ExhibitionRecord.builder()
+                .title(req.getTitle())
                 .content(req.getContent())
                 .likeCount(0L)
                 .exhibition(exhibition)
@@ -98,7 +108,10 @@ public class ExhibitionRecordService {
         record.getMediaList().addAll(mediaList);
 
         // 본문(content)에서 해시태그 이름(Set<String>) 파싱
-        Set<String> tagNames = parseHashtags(req.getContent());
+//      Set<String> tagNames = parseHashtags(req.getContent());
+        Set<String> tagNames = new HashSet<>(parseHashtags(req.getContent()));
+        tagNames.addAll(normalizeHashtags(req.getHashtags()));
+
         Set<Hashtag> hashtagEntities = findOrCreateHashtags(tagNames);
         record.updateHashtags(hashtagEntities);
 
@@ -118,6 +131,18 @@ public class ExhibitionRecordService {
 
         return saved.getId();
     }
+
+    private Set<String> normalizeHashtags(Set<String> rawTags) {
+        if (rawTags == null || rawTags.isEmpty()) return Collections.emptySet();
+
+        return rawTags.stream()
+                .filter(t -> t != null && !t.isBlank())
+                .map(String::trim)
+                .map(t -> t.startsWith("#") ? t.substring(1) : t)
+                .filter(t -> !t.isBlank())
+                .collect(Collectors.toSet());
+    }
+
 
     @Transactional
     public void deleteRecord(Long exhibitionId, Long recordId, User user) {
@@ -152,10 +177,12 @@ public class ExhibitionRecordService {
             return ExhibitionRecordDto.MyRecordSummary.builder()
                     .id(r.getId())
                     .exhibitionId(exhibition != null ? exhibition.getId() : null)
+                    .title(r.getTitle())
                     .content(trim(r.getContent(), 200))
                     .likeCount(r.getLikeCount())
                     .createdAt(r.getCreatedAt())
                     .updatedAt(r.getUpdateAt())
+                    .writerId(user.getId())
                     .venueId(venue != null ? venue.getId() : null)
                     .venueName(venue != null ? venue.getName() : null)
                     .media(r.getMediaList().stream().map(m ->
@@ -191,6 +218,17 @@ public class ExhibitionRecordService {
             throw new IllegalArgumentException("본인이 작성한 전시기록만 수정할 수 있습니다.");
         }
 
+        // title 검증/적용
+        if (req.getTitle() != null) {
+            if (req.getTitle().isBlank()) {
+                throw new IllegalArgumentException("title이 비어있습니다.");
+            }
+            if (req.getTitle().length() > 100) {
+                throw new IllegalArgumentException("title은 최대 100자입니다.");
+            }
+            record.setTitleForUpdate(req.getTitle());
+        }
+
         // 본문 검증/적용
         if (req.getContent() != null && req.getContent().length() > 3000) {
             throw new IllegalArgumentException("content는 최대 3000자입니다.");
@@ -198,9 +236,13 @@ public class ExhibitionRecordService {
         record.setContentForUpdate(req.getContent());
 
         // 해시태그 업데이트 로직 추가
-        Set<String> tagNames = parseHashtags(req.getContent());
+        //Set<String> tagNames = parseHashtags(req.getContent());
+        Set<String> tagNames = new HashSet<>(parseHashtags(req.getContent()));
+        tagNames.addAll(normalizeHashtags(req.getHashtags()));
         Set<Hashtag> hashtagEntities = findOrCreateHashtags(tagNames);
         record.updateHashtags(hashtagEntities);
+
+
 
         // 미디어 검증
         List<String> photos = req.getPhotoUrls() == null ? List.of() : req.getPhotoUrls();
@@ -248,6 +290,50 @@ public class ExhibitionRecordService {
         ExhibitionRecord saved = exhibitionRecordRepository.save(record);
         return saved.getId();
     }
+
+    //전시기록 상세조회
+    @Transactional(readOnly = true)
+    public ExhibitionRecordDto.RecordDetailResponse getRecordDetail(Long recordId) {
+        ExhibitionRecord record = exhibitionRecordRepository.findWithDetailById(recordId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 전시기록이 존재하지 않습니다."));
+
+        var exhibition = record.getExhibition();
+        var venue = (exhibition != null) ? exhibition.getVenue() : null;
+
+        List<ExhibitionRecordDto.RecordMediaDto> mediaDtoList = record.getMediaList().stream()
+                .map(ExhibitionRecordDto.RecordMediaDto::new)
+                .toList();
+
+        Set<String> hashtags = record.getHashtags().stream()
+                .map(Hashtag::getName)
+                .collect(Collectors.toSet());
+
+        return ExhibitionRecordDto.RecordDetailResponse.builder()
+                .recordId(record.getId())
+                .title(record.getTitle())
+                .content(record.getContent())
+                .likeCount(record.getLikeCount())
+                .createdAt(record.getCreatedAt())
+                .updatedAt(record.getUpdateAt())
+
+                .writerId(record.getUser().getId())
+                .writerNickname(record.getUser().getNickname())
+                .writerProfileImgUrl(record.getUser().getProfileImageUrl())
+                .writerIntroduction(record.getUser().getIntroduction())
+
+
+                .exhibitionId(exhibition != null ? exhibition.getId() : null)
+                .exhibitionTitle(exhibition != null ? exhibition.getTitle() : null)
+
+                .venueId(venue != null ? venue.getId() : null)
+                .venueName(venue != null ? venue.getName() : null)
+
+                .mediaList(mediaDtoList)
+                .hashtags(hashtags)
+                .build();
+    }
+
+
     @Transactional(readOnly = true)
     public Page<ExhibitionRecordDto.RecordListResponse> getAllRecords(Pageable pageable) {
 
@@ -266,9 +352,11 @@ public class ExhibitionRecordService {
 
             return ExhibitionRecordDto.RecordListResponse.builder()
                     .recordId(record.getId())
+                    .title(record.getTitle())
                     .content(record.getContent())
                     .likeCount(record.getLikeCount())
                     .createdAt(record.getCreatedAt())
+                    .writerId(record.getUser().getId())
                     .writerNickname(record.getUser().getNickname())
                     .writerProfileImgUrl(record.getUser().getProfileImageUrl())
                     .mediaList(mediaDtoList)
@@ -342,6 +430,7 @@ public class ExhibitionRecordService {
 
             return ExhibitionRecordDto.RecordListResponse.builder()
                     .recordId(record.getId())
+                    .title(record.getTitle())
                     .content(record.getContent())
                     .likeCount(record.getLikeCount())
                     .createdAt(record.getCreatedAt())
@@ -353,4 +442,39 @@ public class ExhibitionRecordService {
                     .build();
         });
     }
+
+
+    @Transactional(readOnly = true)
+    public Page<ExhibitionRecordDto.RecordListResponse> getUserRecords(Long userId, Pageable pageable) {
+
+        User target = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("대상 유저 없음"));
+
+        Page<ExhibitionRecord> recordsPage =
+                exhibitionRecordRepository.findByUserOrderByCreatedAtDesc(target, pageable);
+
+        return recordsPage.map(record -> {
+            List<ExhibitionRecordDto.RecordMediaDto> mediaDtoList = record.getMediaList().stream()
+                    .map(ExhibitionRecordDto.RecordMediaDto::new)
+                    .toList();
+
+            Set<String> hashtags = record.getHashtags().stream()
+                    .map(Hashtag::getName)
+                    .collect(Collectors.toSet());
+
+            return ExhibitionRecordDto.RecordListResponse.builder()
+                    .recordId(record.getId())
+                    .title(record.getTitle())
+                    .content(record.getContent())
+                    .likeCount(record.getLikeCount())
+                    .createdAt(record.getCreatedAt())
+                    .writerNickname(record.getUser().getNickname())
+                    .writerProfileImgUrl(record.getUser().getProfileImageUrl())
+                    .mediaList(mediaDtoList)
+                    .hashtags(hashtags)
+                    .exhibitionTitle(record.getExhibition() != null ? record.getExhibition().getTitle() : null)
+                    .build();
+        });
+    }
+
 }
