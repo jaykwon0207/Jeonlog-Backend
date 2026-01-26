@@ -1,7 +1,6 @@
 package com.jeonlog.exhibition_recommender.auth.service;
 
 import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
-import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,11 +11,13 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
@@ -29,59 +30,34 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String registrationId =
                 userRequest.getClientRegistration().getRegistrationId();
 
-        String userNameAttributeName =
-                userRequest.getClientRegistration()
-                        .getProviderDetails()
-                        .getUserInfoEndpoint()
-                        .getUserNameAttributeName();
+        OAuthAttributes attributes =
+                OAuthAttributes.of(registrationId, oAuth2User.getAttributes());
 
-        OAuthAttributes attributes = OAuthAttributes.of(
-                registrationId,
-                userNameAttributeName,
-                oAuth2User.getAttributes()
-        );
-
-        Map<String, Object> customAttributes = new HashMap<>(attributes.getAttributes());
+        // ✅ 공통 attribute 계약
+        Map<String, Object> customAttributes = new HashMap<>();
+        customAttributes.put("provider", attributes.getOauthProvider().name());
+        customAttributes.put("oauthId", attributes.getOauthId());
         customAttributes.put("email", attributes.getEmail());
         customAttributes.put("name", attributes.getName());
-        customAttributes.put("provider", attributes.getOauthProvider().name());
-        customAttributes.put("id", attributes.getOauthId());
 
-        Optional<User> userOptional =
-                userRepository.findByOauthProviderAndOauthId(
+        boolean exists =
+                userRepository.existsByOauthProviderAndOauthId(
                         attributes.getOauthProvider(),
                         attributes.getOauthId()
                 );
 
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            user.update(attributes.getName());
-
+        if (exists) {
             return new DefaultOAuth2User(
-                    Collections.singleton(new SimpleGrantedAuthority("USER")),
+                    Set.of(new SimpleGrantedAuthority("USER")),
                     customAttributes,
-                    attributes.getNameAttributeKey()
+                    "oauthId"
             );
         }
 
-        // ✅ 신규 User 생성 (단 1번)
-        userRepository.save(
-                User.builder()
-                        .email(attributes.getEmail()) // Apple null 가능
-                        .name(attributes.getName())
-                        .oauthProvider(attributes.getOauthProvider())
-                        .oauthId(attributes.getOauthId())
-                        .nickname(
-                                attributes.getOauthProvider().name().toLowerCase()
-                                        + "_" + attributes.getOauthId().substring(0, 8)
-                        )
-                        .build()
-        );
-
         return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority("NEW_USER")),
+                Set.of(new SimpleGrantedAuthority("NEW_USER")),
                 customAttributes,
-                attributes.getNameAttributeKey()
+                "oauthId"
         );
     }
 }

@@ -11,82 +11,56 @@ import java.util.Collections;
 import java.util.Map;
 
 @Getter
+@Builder
 public class OAuthAttributes {
-    private final Map<String, Object> attributes;
-    private final String nameAttributeKey;
+
     private final String name;
     private final String email;
-    private final Gender gender;
-    private final Integer birthYear;
     private final OauthProvider oauthProvider;
     private final String oauthId;
 
-
-    @Builder
-    public OAuthAttributes(Map<String, Object> attributes, String nameAttributeKey, String name, String email,
-                           Gender gender, Integer birthYear, OauthProvider oauthProvider, String oauthId) {
-        this.attributes = attributes;
-        this.nameAttributeKey = nameAttributeKey;
-        this.name = name;
-        this.email = email;
-        this.gender = gender;
-        this.birthYear = birthYear;
-        this.oauthProvider = oauthProvider;
-        this.oauthId = oauthId;
+    public static OAuthAttributes of(
+            String registrationId,
+            Map<String, Object> attributes
+    ) {
+        return switch (registrationId) {
+            case "google" -> ofGoogle(attributes);
+            case "naver" -> ofNaver(attributes);
+            default -> throw new IllegalArgumentException("Unsupported OAuth: " + registrationId);
+        };
     }
 
-    public static OAuthAttributes of(String registrationId, String userNameAttributeName, Map<String, Object> attributes) {
-        if ("naver".equals(registrationId)) {
-            return ofNaver(userNameAttributeName, attributes);
-        } else if ("google".equals(registrationId)) {
-            return ofGoogle(userNameAttributeName, attributes);
-        }
-        throw new IllegalArgumentException("지원하지 않는 OAuth 서비스입니다: " + registrationId);
-    }
-
-    private static OAuthAttributes ofNaver(String userNameAttributeName, Map<String, Object> attributes) {
-        Map<String, Object> response = (Map<String, Object>) attributes.get("response");
-
-        if (response == null) {
-            throw new IllegalArgumentException("Naver OAuth response is null.");
-        }
-
-
-        return OAuthAttributes.builder()
-                .name((String) response.get("name"))
-                .email((String) response.get("email"))
-                .gender(null) // 직접 입력 or null
-                .birthYear(0) // 직접 입력 or 0
-                .oauthProvider(OauthProvider.NAVER)
-                .oauthId((String) response.get("id"))
-                .attributes(Collections.singletonMap("response", response)) // ✅ 핵심: 다시 감싸기
-                .nameAttributeKey(userNameAttributeName)
-                .build();
-    }
-
-    private static OAuthAttributes ofGoogle(String userNameAttributeName, Map<String, Object> attributes) {
+    private static OAuthAttributes ofGoogle(Map<String, Object> attributes) {
         return OAuthAttributes.builder()
                 .name((String) attributes.get("name"))
                 .email((String) attributes.get("email"))
-                .gender(null) // 직접 입력
-                .birthYear(0) // 직접 입력
                 .oauthProvider(OauthProvider.GOOGLE)
                 .oauthId((String) attributes.get("email"))
-                .attributes(attributes)
-                .nameAttributeKey(userNameAttributeName)
                 .build();
     }
 
-    public User toEntity() {
-        return User.builder()
-                .name(name)
-                .email(email)
-                .oauthProvider(oauthProvider)
-                .oauthId(oauthId)
-                .gender(gender)
-                .birthYear(birthYear)
-                .createdAt(LocalDateTime.now())
+    private static OAuthAttributes ofNaver(Map<String, Object> attributes) {
+
+        Object responseObj = attributes.get("response");
+
+        Map<String, Object> response =
+                responseObj instanceof Map
+                        ? (Map<String, Object>) responseObj
+                        : attributes; // ⭐ 핵심
+
+        String id = (String) response.get("id");
+        String email = (String) response.get("email");
+        String name = (String) response.get("name");
+
+        if (id == null) {
+            throw new IllegalArgumentException("NAVER oauthId(id) is null");
+        }
+
+        return OAuthAttributes.builder()
+                .name(name != null ? name : "Naver User")
+                .email(email)              // email은 null 허용 가능
+                .oauthProvider(OauthProvider.NAVER)
+                .oauthId(id)               // ✅ 무조건 id
                 .build();
     }
-
 }

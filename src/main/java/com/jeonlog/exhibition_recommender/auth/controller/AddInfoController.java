@@ -54,9 +54,11 @@ public class AddInfoController {
                     request.getNickname()
             );
 
+            userRepository.save(user);
+
             Map<String, String> tokens = new HashMap<>();
             tokens.put("accessToken", jwtTokenProvider.createAccessToken(user));
-            tokens.put("refreshToken", jwtTokenProvider.createRefreshToken(user.getEmail()));
+            tokens.put("refreshToken", jwtTokenProvider.createRefreshToken(user));
 
             return ResponseEntity.ok(ApiResponse.ok(tokens));
 
