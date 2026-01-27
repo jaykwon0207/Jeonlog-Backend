@@ -12,6 +12,10 @@ import java.time.LocalDateTime;
 @Builder
 public class NotificationResponse {
     private Long id;
+    private String actorNickname;
+    private String message;
+    private String actorProfileImageUrl;
+
     private NotificationType type;
     private TargetType targetType;
     private Long targetId;
@@ -20,9 +24,13 @@ public class NotificationResponse {
     private boolean isRead;
     private LocalDateTime createdAt;
 
-    public static NotificationResponse from(Notification n) {
+
+    public static NotificationResponse from(Notification n, String actorProfileImageUrl) {
         return NotificationResponse.builder()
                 .id(n.getId())
+                .actorNickname(n.getActorNickname())
+                .message(n.getMessage())
+                .actorProfileImageUrl(actorProfileImageUrl)
                 .type(n.getType())
                 .targetType(n.getTargetType())
                 .targetId(n.getTargetId())
@@ -31,5 +39,9 @@ public class NotificationResponse {
                 .isRead(n.isRead())
                 .createdAt(n.getCreatedAt())
                 .build();
+    }
+
+    public static NotificationResponse from(Notification n) {
+        return from(n, null);
     }
 }
