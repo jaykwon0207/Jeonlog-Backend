@@ -37,6 +37,14 @@ public class Notification {
     @Column(name = "actor_user_id")
     private Long actorUserId;
 
+    // actor nickname (좋아요/댓글에서만 사용)
+    @Column(name = "actor_nickname", length = 50)
+    private String actorNickname;
+
+    // 닉네임 제외 문구 ("님이"는 프론트에서 붙임)
+    @Column(name = "message", length = 255)
+    private String message;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private NotificationType type;
