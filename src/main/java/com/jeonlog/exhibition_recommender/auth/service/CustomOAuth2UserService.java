@@ -64,7 +64,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             );
         }
 
-        // ✅ 신규 User 생성 (단 1번)
+        // 신규 User 생성 (단 1번)
         userRepository.save(
                 User.builder()
                         .email(attributes.getEmail()) // Apple null 가능

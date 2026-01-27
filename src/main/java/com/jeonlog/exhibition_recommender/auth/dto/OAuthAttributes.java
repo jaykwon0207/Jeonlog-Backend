@@ -59,7 +59,7 @@ public class OAuthAttributes {
                 .birthYear(0) // 직접 입력 or 0
                 .oauthProvider(OauthProvider.NAVER)
                 .oauthId((String) response.get("id"))
-                .attributes(Collections.singletonMap("response", response)) // ✅ 핵심: 다시 감싸기
+                .attributes(Collections.singletonMap("response", response)) //핵심: 다시 감싸기
                 .nameAttributeKey(userNameAttributeName)
                 .build();
     }

@@ -71,7 +71,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 });
             }
         } catch (Exception e) {
-            log.error("❌ JWT Authentication Filter Error: {}", e.getMessage());
+            log.error("JWT Authentication Filter Error: {}", e.getMessage());
         }
 
         chain.doFilter(request, response);

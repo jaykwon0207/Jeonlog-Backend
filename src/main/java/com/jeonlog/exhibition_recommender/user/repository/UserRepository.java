@@ -45,5 +45,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("select u.id as id, u.profileImageUrl as profileImageUrl from User u where u.id in :ids")
     List<UserProfileImageProjection> findProfileImageUrlsByIds(@Param("ids") List<Long> ids);
 
+    @Query("select u.id from User u")
+    List<Long> findAllUserIds();
+
 
 }

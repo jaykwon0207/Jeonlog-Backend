@@ -25,7 +25,7 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    // ✅ Access Token 생성 (email + role 포함)
+    // Access Token 생성 (email + role 포함)
     public String createAccessToken(User user) {
         return Jwts.builder()
                 .setSubject(user.getEmail())
@@ -36,7 +36,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // ✅ Refresh Token 생성 (email만)
+    // Refresh Token 생성 (email만)
     public String createRefreshToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
@@ -46,7 +46,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // ✅ 이메일 추출
+    // 이메일 추출
     public String getEmailFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -56,7 +56,7 @@ public class JwtTokenProvider {
                 .getSubject();
     }
 
-    // ✅ ROLE 추출
+    // ROLE 추출
     public String getRoleFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -66,7 +66,7 @@ public class JwtTokenProvider {
                 .get("role", String.class);
     }
 
-    // ✅ 토큰 유효성 검증
+    // 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -75,12 +75,12 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            log.warn("❌ JWT 유효성 검증 실패: {}", e.getMessage());
+            log.warn("JWT 유효성 검증 실패: {}", e.getMessage());
             return false;
         }
     }
 
-    // ✅ Refresh Token으로 Access Token 재발급
+    // Refresh Token으로 Access Token 재발급
     // (DB에서 조회한 User를 넘겨줘야 함)
     public String refreshAccessToken(String refreshToken, User user) {
         try {
@@ -97,7 +97,7 @@ public class JwtTokenProvider {
         return createAccessToken(user);
     }
 
-    // ✅ tempToken 생성 - 신규 사용자 온보딩용
+    // tempToken 생성 - 신규 사용자 온보딩용
     public String createTempToken(String base64Attributes, long validityMs) {
         return Jwts.builder()
                 .setSubject("TEMP")
@@ -108,7 +108,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // ✅ tempToken 복호화
+    //  tempToken 복호화
     public String getDataFromTempToken(String token) {
         try {
             return Jwts.parserBuilder()
@@ -118,7 +118,7 @@ public class JwtTokenProvider {
                     .getBody()
                     .get("data", String.class);
         } catch (JwtException e) {
-            log.warn("❌ tempToken 유효성 검증 실패: {}", e.getMessage());
+            log.warn("tempToken 유효성 검증 실패: {}", e.getMessage());
             throw e;
         }
     }

@@ -25,7 +25,7 @@ public class AuthController {
 
     private final Environment env;
 
-    // ✅ Access Token 재발급 (웹 + 모바일 겸용)
+    // Access Token 재발급 (웹 + 모바일 겸용)
     @PostMapping("/access-token")
     public ResponseEntity<ApiResponse<?>> issueAccessToken(
             @CookieValue(name = "refresh_token", required = false) String refreshCookie,
@@ -53,7 +53,7 @@ public class AuthController {
         }
     }
 
-    // ✅ 로그아웃
+    // 로그아웃
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<?>> logout() {
         // 프론트에서는 단순히 로컬의 토큰을 삭제하면 되므로

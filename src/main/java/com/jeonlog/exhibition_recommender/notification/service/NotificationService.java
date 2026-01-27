@@ -5,14 +5,13 @@ import com.jeonlog.exhibition_recommender.notification.dto.NotificationListRespo
 import com.jeonlog.exhibition_recommender.notification.dto.NotificationResponse;
 import com.jeonlog.exhibition_recommender.notification.repository.NotificationRepository;
 import com.jeonlog.exhibition_recommender.notification.repository.PushTokenRepository;
+import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 
-import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,9 +22,8 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final PushTokenRepository pushTokenRepository;
-    private final ExpoPushClient expoPushClient;
+    private final FcmPushClient fcmPushClient;
     private final UserRepository userRepository;
-
 
     @Transactional
     public void registerPushToken(Long userId, String token, String platform) {
@@ -33,24 +31,21 @@ public class NotificationService {
                 .orElse(PushToken.builder()
                         .userId(userId)
                         .token(token)
-                        .platform(platform == null ? "EXPO" : platform)
+                        .platform(platform == null ? "FCM" : platform)
                         .isActive(true)
                         .build());
 
-        pt.updateToken(token, platform == null ? "EXPO" : platform);
+        pt.updateToken(token, platform == null ? "FCM" : platform);
         pushTokenRepository.save(pt);
     }
 
     @Transactional(readOnly = true)
     public NotificationListResponse getNotifications(Long receiverUserId, Long cursor, int size) {
         int pageSize = Math.min(Math.max(size, 1), 50);
-        Slice<Notification> slice;
 
-        if (cursor == null) {
-            slice = notificationRepository.findByReceiverUserIdOrderByIdDesc(receiverUserId, PageRequest.of(0, pageSize));
-        } else {
-            slice = notificationRepository.findByReceiverUserIdAndIdLessThanOrderByIdDesc(receiverUserId, cursor, PageRequest.of(0, pageSize));
-        }
+        Slice<Notification> slice = (cursor == null)
+                ? notificationRepository.findByReceiverUserIdOrderByIdDesc(receiverUserId, PageRequest.of(0, pageSize))
+                : notificationRepository.findByReceiverUserIdAndIdLessThanOrderByIdDesc(receiverUserId, cursor, PageRequest.of(0, pageSize));
 
         List<Notification> notifications = slice.getContent();
 
@@ -84,7 +79,6 @@ public class NotificationService {
                 .build();
     }
 
-
     @Transactional
     public void markAsRead(Long receiverUserId, Long notificationId) {
         Notification n = notificationRepository.findByIdAndReceiverUserId(notificationId, receiverUserId)
@@ -97,18 +91,15 @@ public class NotificationService {
         return notificationRepository.countByReceiverUserIdAndIsReadFalse(receiverUserId);
     }
 
+    //  알림 생성
 
-    // 기록 좋아요 알림 (닉네임 포함)
     @Transactional
     public void notifyRecordLike(Long recordId, Long recordOwnerUserId, Long actorUserId, String actorNickname) {
         if (recordOwnerUserId.equals(actorUserId)) return;
 
-        String nick = normalizeNick(actorNickname); // null 가능
+        String nick = normalizeNick(actorNickname);
         String title = "좋아요";
-
-        // message에는 "님이"를 넣지 않음
         String message = "내 전시기록에 좋아요를 눌렀어요.";
-        String body = buildActorBody(nick, message); // "닉네임님이 message"
 
         Notification saved = notificationRepository.save(Notification.builder()
                 .receiverUserId(recordOwnerUserId)
@@ -119,7 +110,7 @@ public class NotificationService {
                 .targetType(TargetType.EXHIBITION_RECORD)
                 .targetId(recordId)
                 .title(title)
-                .body(body)
+                .body(message)
                 .dedupKey(null)
                 .build());
 
@@ -132,7 +123,7 @@ public class NotificationService {
         data.put("message", message);
         data.put("notificationId", saved.getId());
 
-        sendPushIfPossible(recordOwnerUserId, title, body, data);
+        sendPushIfPossible(recordOwnerUserId, title, message, data);
     }
 
     @Transactional
@@ -147,12 +138,9 @@ public class NotificationService {
         String preview = makePreview(commentPreview, 40);
 
         String title = "댓글";
-
         String message = (preview == null || preview.isBlank())
                 ? "내 전시기록에 댓글을 달았어요."
                 : "댓글을 달았어요: \"" + preview + "\"";
-
-        String body = buildActorBody(nick, message);
 
         Notification saved = notificationRepository.save(Notification.builder()
                 .receiverUserId(recordOwnerUserId)
@@ -163,7 +151,7 @@ public class NotificationService {
                 .targetType(TargetType.EXHIBITION_RECORD)
                 .targetId(recordId)
                 .title(title)
-                .body(body)
+                .body(message)
                 .dedupKey(null)
                 .build());
 
@@ -177,55 +165,140 @@ public class NotificationService {
         if (preview != null) data.put("commentPreview", preview);
         data.put("notificationId", saved.getId());
 
-        sendPushIfPossible(recordOwnerUserId, title, body, data);
+        sendPushIfPossible(recordOwnerUserId, title, message, data);
     }
 
+    @Transactional
+    public void notifyFollow(Long followedUserId, Long actorUserId, String actorNickname) {
+        if (followedUserId.equals(actorUserId)) return;
 
-     // 전시 종료 2주 전 알림 (전시명 포함, dedupKey로 중복 방지)
-     @Transactional
-     public void notifyExhibitionEndingSoon(Long receiverUserId,
-                                            Long exhibitionId,
-                                            String endDateIso,
-                                            String exhibitionTitle) {
-         String dedupKey = "EXHIBITION_ENDING_SOON:" + receiverUserId + ":" + exhibitionId + ":" + endDateIso;
-         if (notificationRepository.existsByDedupKey(dedupKey)) return;
+        String nick = normalizeNick(actorNickname);
+        String title = "팔로우";
+        String message = "회원님을 팔로우하기 시작했어요.";
 
-         String title = "전시 종료 알림";
-         String exTitle = (exhibitionTitle == null || exhibitionTitle.isBlank()) ? "찜한 전시" : exhibitionTitle;
+        Notification saved = notificationRepository.save(Notification.builder()
+                .receiverUserId(followedUserId)
+                .actorUserId(actorUserId)
+                .actorNickname(nick)
+                .message(message)
+                .type(NotificationType.FOLLOW)
+                .targetType(TargetType.USER)
+                .targetId(actorUserId)
+                .title(title)
+                .body(message)
+                .dedupKey(null)
+                .build());
 
-         // 시스템 알림은 actorNickname 없음. message 그대로 쓰면 됨
-         String message = "[" + exTitle + "] 전시가 2주 후 종료돼요. 놓치지 마세요!";
-         String body = message;
+        Map<String, Object> data = new HashMap<>();
+        data.put("type", "FOLLOW");
+        data.put("targetType", "USER");
+        data.put("targetId", actorUserId);
+        data.put("actorUserId", actorUserId);
+        if (nick != null) data.put("actorNickname", nick);
+        data.put("message", message);
+        data.put("notificationId", saved.getId());
 
-         Notification saved = notificationRepository.save(Notification.builder()
-                 .receiverUserId(receiverUserId)
-                 .actorUserId(null)
-                 .actorNickname(null)
-                 .message(message)
-                 .type(NotificationType.EXHIBITION_ENDING_SOON)
-                 .targetType(TargetType.EXHIBITION)
-                 .targetId(exhibitionId)
-                 .title(title)
-                 .body(body)
-                 .dedupKey(dedupKey)
-                 .build());
+        sendPushIfPossible(followedUserId, title, message, data);
+    }
 
-         Map<String, Object> data = new HashMap<>();
-         data.put("type", "EXHIBITION_ENDING_SOON");
-         data.put("targetType", "EXHIBITION");
-         data.put("targetId", exhibitionId);
-         data.put("exhibitionTitle", exTitle);
-         data.put("endDate", endDateIso);
-         data.put("message", message);
-         data.put("notificationId", saved.getId());
+    // 전시 종료 2주 전 알림
+    @Transactional
+    public void notifyExhibitionEndingSoon(
+            Long receiverUserId,
+            Long exhibitionId,
+            String endDateIso,
+            String exhibitionTitle
+    ) {
+        String dedupKey = "EXHIBITION_ENDING_SOON:" + receiverUserId + ":" + exhibitionId + ":" + endDateIso;
+        if (notificationRepository.existsByDedupKey(dedupKey)) return;
 
-         sendPushIfPossible(receiverUserId, title, body, data);
-     }
+        String title = "전시 종료 알림";
+        String exTitle = (exhibitionTitle == null || exhibitionTitle.isBlank()) ? "찜한 전시" : exhibitionTitle;
+        String message = "[" + exTitle + "] 전시가 2주 후 종료돼요. 놓치지 마세요!";
 
-    private void sendPushIfPossible(Long receiverUserId, String title, String body, Map<String, Object> data) {
+        Notification saved = notificationRepository.save(Notification.builder()
+                .receiverUserId(receiverUserId)
+                .actorUserId(null)
+                .actorNickname(null)
+                .message(message)
+                .type(NotificationType.EXHIBITION_ENDING_SOON)
+                .targetType(TargetType.EXHIBITION)
+                .targetId(exhibitionId)
+                .title(title)
+                .body(message)
+                .dedupKey(dedupKey)
+                .build());
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("type", "EXHIBITION_ENDING_SOON");
+        data.put("targetType", "EXHIBITION");
+        data.put("targetId", exhibitionId);
+        data.put("exhibitionTitle", exTitle);
+        data.put("endDate", endDateIso);
+        data.put("message", message);
+        data.put("notificationId", saved.getId());
+
+        sendPushIfPossible(receiverUserId, title, message, data);
+    }
+
+    // 서비스 공지: 이미지 최대 5장, 썸네일 없음
+    @Transactional
+    public void notifyServiceAnnouncementToAll(
+            Long announcementId,
+            String title,
+            String body,
+            List<String> imageUrls,
+            boolean pushEnabled
+    ) {
+        List<Long> userIds = userRepository.findAllUserIds();
+
+        int chunkSize = 500;
+        for (int i = 0; i < userIds.size(); i += chunkSize) {
+            List<Long> chunk = userIds.subList(i, Math.min(i + chunkSize, userIds.size()));
+
+            List<Notification> batch = chunk.stream()
+                    .map(receiverId -> Notification.builder()
+                            .receiverUserId(receiverId)
+                            .actorUserId(null)
+                            .actorNickname(null)
+                            .message(body)
+                            .type(NotificationType.SERVICE_ANNOUNCEMENT)
+                            .targetType(TargetType.SERVICE_ANNOUNCEMENT)
+                            .targetId(announcementId)
+                            .title(title)
+                            .body(body)
+                            .dedupKey("SERVICE_ANNOUNCEMENT:" + announcementId + ":" + receiverId)
+                            .build())
+                    .toList();
+
+            notificationRepository.saveAll(batch);
+        }
+
+        if (!pushEnabled) return;
+
+        List<String> urls = (imageUrls == null) ? List.of() : imageUrls;
+        if (urls.size() > 5) urls = urls.subList(0, 5);
+
+        List<String> finalUrls = urls;
+        pushTokenRepository.findAll().forEach(pt -> {
+            if (!pt.isActive()) return;
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("type", "SERVICE_ANNOUNCEMENT");
+            data.put("targetType", "SERVICE_ANNOUNCEMENT");
+            data.put("targetId", announcementId);
+            if (!finalUrls.isEmpty()) data.put("imageUrls", String.join(",", finalUrls));
+
+            fcmPushClient.send(pt.getToken(), title, body, data);
+        });
+    }
+
+    // 내부 유틸
+
+    private void sendPushIfPossible(Long receiverUserId, String title, String pushBody, Map<String, Object> data) {
         pushTokenRepository.findByUserId(receiverUserId).ifPresent(pt -> {
             if (!pt.isActive()) return;
-            expoPushClient.send(pt.getToken(), title, body, data);
+            fcmPushClient.send(pt.getToken(), title, pushBody, data);
         });
     }
 
@@ -233,12 +306,6 @@ public class NotificationService {
         if (actorNickname == null) return null;
         String s = actorNickname.trim();
         return s.isBlank() ? null : s;
-    }
-
-    // actor 기반 알림 body: OS/하위호환용 (프론트는 actorNickname + "\n" + message로 조립)
-    private String buildActorBody(String nick, String message) {
-        String who = (nick == null) ? "누군가" : nick;
-        return who + "님이 " + message;
     }
 
     private String makePreview(String raw, int maxLen) {

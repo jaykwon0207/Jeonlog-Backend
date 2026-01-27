@@ -57,7 +57,8 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 프론트엔드 연동용
 
-                        .requestMatchers("/api/health").hasRole("ADMIN")
+                        .requestMatchers("/api/notifications/**").authenticated()
+
                         .anyRequest().authenticated()
                 )
 
