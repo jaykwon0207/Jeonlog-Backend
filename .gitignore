@@ -51,3 +51,8 @@ test-output/
 
 #Apple p8 파일
 *.p8
+
+# QueryDSL generated
+build/
+src/main/generated/
+**/Q*.java
