@@ -10,6 +10,8 @@ import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.jeonlog.exhibition_recommender.notification.service.NotificationService;
+
 
 import java.util.List;
 
@@ -20,6 +22,8 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final ExhibitionRecordRepository exhibitionRecordRepository;
+    private final NotificationService notificationService;
+
 
     // 🔹 팔로잉 목록
     public List<SimpleUserProfileDto> getFollowings(String myEmail) {
@@ -72,10 +76,21 @@ public class ProfileService {
             throw new IllegalArgumentException("자기 자신은 팔로우할 수 없습니다.");
         }
 
-        if (!followRepository.existsByFollowerAndFollowing(me, target)) {
-            followRepository.save(new Follow(me, target));
+        // 이미 팔로우면 그냥 끝 (알림도 안 보냄)
+        if (followRepository.existsByFollowerAndFollowing(me, target)) {
+            return;
         }
+
+        followRepository.save(new Follow(me, target));
+
+        // 팔로우 알림 생성 + 푸시
+        notificationService.notifyFollow(
+                target.getId(),
+                me.getId(),
+                me.getNickname()
+        );
     }
+
 
     // 🔹 언팔로우
     @Transactional

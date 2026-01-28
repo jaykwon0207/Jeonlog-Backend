@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -15,6 +16,8 @@ public class NotificationResponse {
     private String actorNickname;
     private String message;
     private String actorProfileImageUrl;
+
+    private List<String> imageUrls;
 
     private NotificationType type;
     private TargetType targetType;
@@ -25,12 +28,13 @@ public class NotificationResponse {
     private LocalDateTime createdAt;
 
 
-    public static NotificationResponse from(Notification n, String actorProfileImageUrl) {
+    public static NotificationResponse from(Notification n, String actorProfileImageUrl, List<String> imageUrls) {
         return NotificationResponse.builder()
                 .id(n.getId())
                 .actorNickname(n.getActorNickname())
                 .message(n.getMessage())
                 .actorProfileImageUrl(actorProfileImageUrl)
+                .imageUrls(imageUrls)
                 .type(n.getType())
                 .targetType(n.getTargetType())
                 .targetId(n.getTargetId())
@@ -41,7 +45,13 @@ public class NotificationResponse {
                 .build();
     }
 
+
+    public static NotificationResponse from(Notification n, String actorProfileImageUrl) {
+        return from(n, actorProfileImageUrl, List.of());
+    }
+
+
     public static NotificationResponse from(Notification n) {
-        return from(n, null);
+        return from(n, null, List.of());
     }
 }

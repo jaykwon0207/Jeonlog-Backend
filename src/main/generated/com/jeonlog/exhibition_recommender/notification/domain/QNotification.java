@@ -19,6 +19,8 @@ public class QNotification extends EntityPathBase<Notification> {
 
     public static final QNotification notification = new QNotification("notification");
 
+    public final StringPath actorNickname = createString("actorNickname");
+
     public final NumberPath<Long> actorUserId = createNumber("actorUserId", Long.class);
 
     public final StringPath body = createString("body");
@@ -30,6 +32,8 @@ public class QNotification extends EntityPathBase<Notification> {
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final BooleanPath isRead = createBoolean("isRead");
+
+    public final StringPath message = createString("message");
 
     public final DateTimePath<java.time.LocalDateTime> readAt = createDateTime("readAt", java.time.LocalDateTime.class);
 

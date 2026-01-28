@@ -67,7 +67,7 @@ public class AuthController {
         }
     }
 
-    // ✅ 로그아웃
+    // 로그아웃
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<?>> logout() {
         // 서버는 stateless

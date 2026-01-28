@@ -53,6 +53,8 @@ dependencies {
 	implementation "software.amazon.awssdk:regions"
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
+	implementation 'com.google.firebase:firebase-admin:9.2.0'
+
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'//Swagger
 
 	// QueryDSL
