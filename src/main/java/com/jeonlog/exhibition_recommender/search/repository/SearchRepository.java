@@ -1,6 +1,7 @@
 package com.jeonlog.exhibition_recommender.search.repository;
 
 import com.jeonlog.exhibition_recommender.search.domain.Search;
+import com.jeonlog.exhibition_recommender.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +19,8 @@ public interface SearchRepository extends JpaRepository<Search, Long> {
             "ORDER BY COUNT(s) DESC")
     List<Object[]> aggregateKeywordCounts(@Param("from") LocalDateTime from,
                                           @Param("to") LocalDateTime to);
+
+    void deleteAllByUser(User user);
 
 }
 

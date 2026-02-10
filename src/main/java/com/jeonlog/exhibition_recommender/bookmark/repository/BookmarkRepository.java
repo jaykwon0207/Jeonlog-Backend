@@ -28,4 +28,6 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Long> {
     @Query("select b.user.id from Bookmark b where b.exhibition.id = :exhibitionId and b.notifyEnabled = true")
     List<Long> findNotifiedUserIdsByExhibitionId(@Param("exhibitionId") Long exhibitionId);
 
+    void deleteAllByUser(User user);
+
 }

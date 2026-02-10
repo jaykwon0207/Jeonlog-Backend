@@ -29,23 +29,17 @@ public class BookmarkService {
 
     // 북마크 추가
     @Transactional
-    public BookmarkResponse add(Long exhibitionId, String email, BookmarkRequest req) {
+    public BookmarkResponse add(Long exhibitionId, String email) {
         User me = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
         Exhibition ex = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("전시 없음"));
 
-        boolean notify = req != null && req.isNotifyEnabled();
-
         Bookmark bm = bookmarkRepository.findByUserAndExhibition(me, ex)
-                .map(existing -> {
-                    existing.updateNotify(notify);
-                    return existing;
-                })
                 .orElseGet(() -> {
                     // 신규 생성 시 가중치 +0.02
                     Bookmark created = bookmarkRepository.save(
-                            Bookmark.builder().user(me).exhibition(ex).notifyEnabled(notify).build()
+                            Bookmark.builder().user(me).exhibition(ex).build()
                     );
 
                     UserGenre ug = userGenreRepository.findByUserId(me.getId())
@@ -97,6 +91,7 @@ public class BookmarkService {
     }
 
     // 전시별 북마크 수
+    @Transactional(readOnly = true)
     public Long count(Long exhibitionId) {
         Exhibition ex = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("전시 없음"));
@@ -112,20 +107,6 @@ public class BookmarkService {
                 .map(bm -> toExhibitionDto(bm.getExhibition()));
     }
 
-    // 내 북마크 상태 조회
-    @Transactional(readOnly = true)
-    public BookmarkResponse myBookmarkState(Long exhibitionId, String email) {
-        User me = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
-        Exhibition ex = exhibitionRepository.findById(exhibitionId)
-                .orElseThrow(() -> new IllegalArgumentException("전시 없음"));
-
-        return bookmarkRepository.findByUserAndExhibition(me, ex)
-                .map(bm -> BookmarkResponse.of(ex, true, bm.isNotifyEnabled(),
-                        bookmarkRepository.countByExhibition(ex)))
-                .orElse(BookmarkResponse.of(ex, false, false,
-                        bookmarkRepository.countByExhibition(ex)));
-    }
 
     private ExhibitionDto toExhibitionDto(Exhibition ex) {
         Venue v = ex.getVenue();

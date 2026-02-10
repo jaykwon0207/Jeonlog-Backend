@@ -22,12 +22,11 @@ public class BookmarkController {
     @PostMapping("/{exhibitionId}/bookmarks")
     public ApiResponse<BookmarkResponse> add(
             @PathVariable Long exhibitionId,
-            @CurrentUser User user,
-            @RequestBody(required = false) BookmarkRequest req) {
-        return ApiResponse.ok(service.add(exhibitionId, user.getEmail(), req));
+            @CurrentUser User user) {
+        return ApiResponse.ok(service.add(exhibitionId, user.getEmail()));
     }
 
-    // 북마크 알림여부 변경
+    // 북마크 알림여부 변경글
     @PatchMapping("/{exhibitionId}/bookmarks/notify")
     public ApiResponse<BookmarkResponse> updateNotify(
             @PathVariable Long exhibitionId,

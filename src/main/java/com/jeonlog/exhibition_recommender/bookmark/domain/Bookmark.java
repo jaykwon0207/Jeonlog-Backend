@@ -53,10 +53,9 @@ public class Bookmark {
     }
 
     @Builder
-    public Bookmark(User user, Exhibition exhibition, boolean notifyEnabled) {
+    public Bookmark(User user, Exhibition exhibition) {
         this.user = user;
         this.exhibition = exhibition;
-        this.notifyEnabled = notifyEnabled;
     }
 
     public void updateNotify(boolean enabled) {

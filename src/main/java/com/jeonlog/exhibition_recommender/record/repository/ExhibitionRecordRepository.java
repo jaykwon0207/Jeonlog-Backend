@@ -10,19 +10,29 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface ExhibitionRecordRepository extends
-        JpaRepository<ExhibitionRecord, Long>, ExhibitionRecordRepositoryCustom {
+public interface ExhibitionRecordRepository
+        extends JpaRepository<ExhibitionRecord, Long>, ExhibitionRecordRepositoryCustom {
+
+    // 조회용 (유지)
     List<ExhibitionRecord> findAllByUserOrderByCreatedAtDesc(User user);
     int countByUser(User user);
 
     Page<ExhibitionRecord> findByExhibitionId(Long exhibitionId, Pageable pageable);
-
     Page<ExhibitionRecord> findByHashtags_Name(String hashtagName, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"mediaList", "hashtags", "exhibition", "exhibition.venue", "user"})
+    @EntityGraph(attributePaths = {
+            "mediaList", "hashtags", "exhibition", "exhibition.venue", "user"
+    })
     Optional<ExhibitionRecord> findWithDetailById(Long recordId);
 
-    @EntityGraph(attributePaths = {"mediaList", "hashtags", "exhibition", "user"})
+    @EntityGraph(attributePaths = {
+            "mediaList", "hashtags", "exhibition", "user"
+    })
     Page<ExhibitionRecord> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
+    // ✅ 탈퇴 전용 bulk delete
+    void deleteAllByUser(User user);
+
+    // ✅ 탈퇴 전 좋아요 삭제용 (ID만 필요할 때 대비)
+    List<Long> findIdsByUser(User user);
 }

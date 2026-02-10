@@ -8,6 +8,7 @@ import com.jeonlog.exhibition_recommender.user.dto.UserOnboardingRequest;
 import com.jeonlog.exhibition_recommender.user.dto.UserUpdateRequest;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.user.service.UserService;
+import com.jeonlog.exhibition_recommender.user.service.UserWithdrawService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,8 @@ public class UserController {
 
     private final UserService userService;
     private final UserRepository userRepository;
+    private final UserWithdrawService userWithdrawService;
+
 
     // ✅ 내 정보 조회
     @GetMapping("/me")
@@ -59,10 +62,7 @@ public class UserController {
     // ✅ 회원 탈퇴
     @DeleteMapping
     public ApiResponse<String> deleteUser(@CurrentUser User user) {
-        if (user == null) {
-            throw new IllegalArgumentException("사용자를 찾을 수 없습니다.");
-        }
-        userService.deleteCurrentUser(user);
+        userWithdrawService.withdraw(user.getId());
         return ApiResponse.ok("회원 탈퇴 완료");
     }
 
