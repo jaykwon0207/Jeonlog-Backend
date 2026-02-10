@@ -22,4 +22,10 @@ public interface RecordScrapRepository extends JpaRepository<RecordScrap, Long> 
     // 특정 기록의 스크랩 전체 삭제 (ex. 기록 삭제 시)
     void deleteAllByRecord(ExhibitionRecord record);
 
+    // ✅ 탈퇴용 bulk 삭제 (추가)
+    void deleteAllByRecordIn(List<ExhibitionRecord> records);
+
+    void deleteAllByUser(User user);
+
+
 }

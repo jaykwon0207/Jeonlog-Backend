@@ -24,4 +24,6 @@ public interface UserBookmarkRepository extends JpaRepository<Bookmark, Long> {
             "WHERE ub.exhibition.endDate < :today")
     void deleteBookmarksForEndedExhibitions(@Param("today") LocalDate today);
 
+    void deleteAllByUser(User user);
+
 }

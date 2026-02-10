@@ -92,6 +92,7 @@ public class SecurityConfig {
                 .logout(logout -> logout.logoutSuccessUrl("/"));
 
         // ✅ JWT 인증 필터
+        // 모든 url 요청은 filter를 거침
         http.addFilterBefore(
                 jwtAuthenticationFilter(),
                 UsernamePasswordAuthenticationFilter.class
@@ -121,8 +122,7 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }

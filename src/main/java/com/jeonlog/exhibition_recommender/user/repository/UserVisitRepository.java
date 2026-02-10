@@ -9,4 +9,5 @@ import java.util.List;
 public interface UserVisitRepository extends JpaRepository<UserVisit, Long> {
     List<UserVisit> findAllByUser(User user);
 
+    void deleteAllByUser(User user);
 }

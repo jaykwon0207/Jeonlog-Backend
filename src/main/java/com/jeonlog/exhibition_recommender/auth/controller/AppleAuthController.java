@@ -1,26 +1,16 @@
 package com.jeonlog.exhibition_recommender.auth.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jeonlog.exhibition_recommender.auth.config.JwtTokenProvider;
+
 import com.jeonlog.exhibition_recommender.auth.dto.AppleLoginRequestDto;
 import com.jeonlog.exhibition_recommender.auth.dto.AppleOAuthAttributes;
-import com.jeonlog.exhibition_recommender.auth.dto.OAuthAttributes;
-import com.jeonlog.exhibition_recommender.auth.dto.TempOAuthDto;
 import com.jeonlog.exhibition_recommender.auth.service.AppleTokenService;
 import com.jeonlog.exhibition_recommender.auth.service.OAuthLoginSuccessService;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
-import com.jeonlog.exhibition_recommender.user.domain.OauthProvider;
-import com.jeonlog.exhibition_recommender.user.domain.User;
-import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Base64;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
