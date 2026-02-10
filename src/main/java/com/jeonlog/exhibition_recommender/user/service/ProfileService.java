@@ -1,5 +1,6 @@
 package com.jeonlog.exhibition_recommender.user.service;
 
+import com.jeonlog.exhibition_recommender.notification.service.NotificationService;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.user.domain.Follow;
 import com.jeonlog.exhibition_recommender.user.domain.User;
@@ -10,8 +11,6 @@ import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.jeonlog.exhibition_recommender.notification.service.NotificationService;
-
 
 import java.util.List;
 
@@ -25,65 +24,88 @@ public class ProfileService {
     private final NotificationService notificationService;
 
 
-    // 🔹 팔로잉 목록
+    // 내 팔로잉 목록
     public List<SimpleUserProfileDto> getFollowings(String myEmail) {
-        User me = userRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
+        User me = getUserByEmail(myEmail);
 
         List<Follow> followings = followRepository.findByFollower(me);
 
         return followings.stream()
-                .map(relation -> {
-                    User target = relation.getFollowing();
-                    boolean isFollowing = true;
-                    int postCount = exhibitionRecordRepository.countByUser(target);
-                    int followerCount = followRepository.countByFollowing(target);
-                    int followingCount = followRepository.countByFollower(target);
-                    return SimpleUserProfileDto.from(target, isFollowing, postCount, followerCount, followingCount);
-                })
+                .map(relation -> toDto(
+                        relation.getFollowing(),
+                        true
+                ))
                 .toList();
     }
 
-    // 🔹 팔로워 목록
+    // 내 팔로워 목록
     public List<SimpleUserProfileDto> getFollowers(String myEmail) {
-        User me = userRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
+        User me = getUserByEmail(myEmail);
 
+        List<Long> myFollowingIds = followRepository.findFollowingIdsByFollower(me);
         List<Follow> followers = followRepository.findByFollowing(me);
 
         return followers.stream()
                 .map(relation -> {
                     User target = relation.getFollower();
-                    boolean isFollowing = followRepository.existsByFollowerAndFollowing(me, target);
-                    int postCount = exhibitionRecordRepository.countByUser(target);
-                    int followerCount = followRepository.countByFollowing(target);
-                    int followingCount = followRepository.countByFollower(target);
-                    return SimpleUserProfileDto.from(target, isFollowing, postCount, followerCount, followingCount);
+                    boolean isFollowing = myFollowingIds.contains(target.getId());
+                    return toDto(target, isFollowing);
                 })
                 .toList();
     }
 
-    // 🔹 팔로우
+
+    // 다른 유저 팔로잉 목록
+    public List<SimpleUserProfileDto> getFollowingsByUserId(String myEmail, Long userId) {
+        User me = getUserByEmail(myEmail);
+        User targetUser = getUserById(userId);
+
+        List<Long> myFollowingIds = followRepository.findFollowingIdsByFollower(me);
+        List<Follow> followings = followRepository.findByFollower(targetUser);
+
+        return followings.stream()
+                .map(relation -> {
+                    User target = relation.getFollowing();
+                    boolean isFollowing = myFollowingIds.contains(target.getId());
+                    return toDto(target, isFollowing);
+                })
+                .toList();
+    }
+
+    // 다른 유저 팔로워 목록
+    public List<SimpleUserProfileDto> getFollowersByUserId(String myEmail, Long userId) {
+        User me = getUserByEmail(myEmail);
+        User targetUser = getUserById(userId);
+
+        List<Long> myFollowingIds = followRepository.findFollowingIdsByFollower(me);
+        List<Follow> followers = followRepository.findByFollowing(targetUser);
+
+        return followers.stream()
+                .map(relation -> {
+                    User target = relation.getFollower();
+                    boolean isFollowing = myFollowingIds.contains(target.getId());
+                    return toDto(target, isFollowing);
+                })
+                .toList();
+    }
+
+
+    // 팔로우 / 언팔로우
     @Transactional
     public void follow(String email, Long targetId) {
-        User me = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
-
-        User target = userRepository.findById(targetId)
-                .orElseThrow(() -> new UserNotFoundException("팔로우 대상 유저 없음"));
+        User me = getUserByEmail(email);
+        User target = getUserById(targetId);
 
         if (me.equals(target)) {
             throw new IllegalArgumentException("자기 자신은 팔로우할 수 없습니다.");
         }
 
-        // 이미 팔로우면 그냥 끝 (알림도 안 보냄)
         if (followRepository.existsByFollowerAndFollowing(me, target)) {
             return;
         }
 
         followRepository.save(new Follow(me, target));
 
-        // 팔로우 알림 생성 + 푸시
         notificationService.notifyFollow(
                 target.getId(),
                 me.getId(),
@@ -91,32 +113,46 @@ public class ProfileService {
         );
     }
 
-
-    // 🔹 언팔로우
     @Transactional
     public void unfollow(String email, Long targetId) {
-        User me = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
-
-        User target = userRepository.findById(targetId)
-                .orElseThrow(() -> new UserNotFoundException("언팔 대상 유저 없음"));
+        User me = getUserByEmail(email);
+        User target = getUserById(targetId);
 
         followRepository.deleteByFollowerAndFollowing(me, target);
     }
 
-    // 🔹 다른 유저 프로필 조회
+    // 프로필 요약
     public SimpleUserProfileDto getUserProfile(String myEmail, Long targetUserId) {
-        User me = userRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
-
-        User target = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new UserNotFoundException("대상 유저 없음"));
+        User me = getUserByEmail(myEmail);
+        User target = getUserById(targetUserId);
 
         boolean isFollowing = followRepository.existsByFollowerAndFollowing(me, target);
+
+        return toDto(target, isFollowing);
+    }
+
+    // 공통 유틸
+    private SimpleUserProfileDto toDto(User target, boolean isFollowing) {
         int postCount = exhibitionRecordRepository.countByUser(target);
         int followerCount = followRepository.countByFollowing(target);
         int followingCount = followRepository.countByFollower(target);
 
-        return SimpleUserProfileDto.from(target, isFollowing, postCount, followerCount, followingCount);
+        return SimpleUserProfileDto.from(
+                target,
+                isFollowing,
+                postCount,
+                followerCount,
+                followingCount
+        );
+    }
+
+    private User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
+    }
+
+    private User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("유저 없음"));
     }
 }
