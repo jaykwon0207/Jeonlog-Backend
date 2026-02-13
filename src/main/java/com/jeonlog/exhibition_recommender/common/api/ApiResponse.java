@@ -13,7 +13,7 @@ import java.time.Instant;
 // 이게 프론트엔드랑 연동할 떄 자주 사용하는 방식임
 @Getter @Builder
 @AllArgsConstructor @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL) // null인 경우엔 json에 포함하지 않는다
 public class ApiResponse<T> {
     private boolean success;
     private T data;
@@ -22,7 +22,6 @@ public class ApiResponse<T> {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", timezone = "Asia/Seoul")
     private Instant timestamp;
-
     public static <T> ApiResponse<T> ok(T data) {
         return ApiResponse.<T>builder()
                 .success(true)

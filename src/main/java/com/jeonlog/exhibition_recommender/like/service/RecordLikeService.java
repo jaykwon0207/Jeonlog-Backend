@@ -47,7 +47,6 @@ public class RecordLikeService {
                             user.getNickname()
                     );
 
-
                     return newLike;
                 });
 
@@ -62,6 +61,7 @@ public class RecordLikeService {
         LocalDateTime likedAt = null;
 
         var optionalLike = recordLikeRepository.findByUserAndRecord(user, record);
+
         if (optionalLike.isPresent()) {
             RecordLike like = optionalLike.get();
             likedAt = like.getLikedAt();

@@ -6,7 +6,9 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor @Builder
 public class RecordLikeDto {
     private Long recordId;
     private Long exhibitionId;
@@ -16,7 +18,9 @@ public class RecordLikeDto {
     private LocalDateTime likedAt;
     private List<MediaItem> media;
 
-    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @Getter @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor @Builder
     public static class MediaItem {
         private Long id;
         private MediaType type;

@@ -59,12 +59,8 @@ public class RecordCommentService {
                 preview
         );
 
-
-
-
         return RecordCommentResponse.from(commentRepository.save(comment));
     }
-
 
      //특정 전시기록의 모든 댓글 조회
      //(부모 댓글만 가져오고, 각 댓글에 연결된 replies는 DTO 변환 시 포함)
