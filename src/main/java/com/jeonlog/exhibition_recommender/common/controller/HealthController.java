@@ -11,4 +11,9 @@ public class HealthController {
         return "OKfd332";
     }
 
+    @GetMapping("/")
+    public String root() {
+        return "running";
+    }
+
 }

@@ -60,7 +60,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/webjars/**",
                                 "/api/health",
-                                "/api/users/check-nickname"
+                                "/api/users/check-nickname",
+                                "/api/users/search"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

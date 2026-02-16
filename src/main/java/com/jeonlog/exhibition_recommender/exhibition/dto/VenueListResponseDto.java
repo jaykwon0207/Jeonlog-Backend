@@ -8,7 +8,7 @@ import java.io.Serializable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class VenueListResponseDto implements Serializable {
+public class VenueListResponseDto implements Serializable { // serializable 없어도 될듯
     private Long id;
     private String name;
     private String type;          // enum -> String 변환
