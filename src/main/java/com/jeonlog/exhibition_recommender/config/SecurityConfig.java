@@ -2,6 +2,7 @@ package com.jeonlog.exhibition_recommender.config;
 
 import com.jeonlog.exhibition_recommender.auth.config.JwtAuthenticationFilter;
 import com.jeonlog.exhibition_recommender.auth.config.JwtTokenProvider;
+import com.jeonlog.exhibition_recommender.auth.config.ProviderAwareAuthorizationRequestResolver;
 import com.jeonlog.exhibition_recommender.auth.handler.OAuth2JwtSuccessHandler;
 import com.jeonlog.exhibition_recommender.auth.service.CustomOAuth2UserService;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
@@ -29,6 +30,7 @@ public class SecurityConfig {
     private final OAuth2JwtSuccessHandler oAuth2JwtSuccessHandler;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+    private final ProviderAwareAuthorizationRequestResolver providerAwareAuthorizationRequestResolver;
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
@@ -79,6 +81,9 @@ public class SecurityConfig {
 
                 // ✅ OAuth2 로그인
                 .oauth2Login(oauth -> oauth
+                        .authorizationEndpoint(endpoint ->
+                                endpoint.authorizationRequestResolver(providerAwareAuthorizationRequestResolver)
+                        )
                         .userInfoEndpoint(info ->
                                 info.userService(customOAuth2UserService)
                         )

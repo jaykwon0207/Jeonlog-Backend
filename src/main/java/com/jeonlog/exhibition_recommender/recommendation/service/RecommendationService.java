@@ -80,7 +80,7 @@ public class RecommendationService {
 
         if (result.size() < 10) {
             int r = 10 - result.size();
-            var rnd = exhibitionRepository.pickAnyRandomExcluding(empty(picked), r);
+            var rnd = exhibitionRepository.pickAnyRandomExcluding(today, empty(picked), r);
             add(result, picked, rnd, r);
         }
 

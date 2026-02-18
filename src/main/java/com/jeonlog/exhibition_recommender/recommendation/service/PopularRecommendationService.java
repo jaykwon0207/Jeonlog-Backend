@@ -30,7 +30,7 @@ public class PopularRecommendationService {
         var top10 = org.springframework.data.domain.PageRequest.of(0, 10);
 
         List<Long> ids = popularRepository.findTopPopularExhibitionIds(
-                fromDate, toDate, fromDt, toDt, clickWeight, bookmarkWeight, top10);
+                today, fromDate, toDate, fromDt, toDt, clickWeight, bookmarkWeight, top10);
 
         if (ids.isEmpty()) return List.of();
 
@@ -46,4 +46,3 @@ public class PopularRecommendationService {
     }
 
 }
-

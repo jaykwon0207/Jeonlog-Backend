@@ -23,6 +23,7 @@ public interface PopularByAgeRecommendationRepository extends JpaRepository<Exhi
                ON b.exhibition = e
               AND b.createdAt BETWEEN :fromDt AND :toDt
               AND b.user.birthYear BETWEEN :minBirthYear AND :maxBirthYear
+        WHERE e.endDate >= :today
         GROUP BY e.id
         ORDER BY (
             COUNT(ecl) * :clickWeight
@@ -33,6 +34,7 @@ public interface PopularByAgeRecommendationRepository extends JpaRepository<Exhi
         e.id DESC
         """)
     List<Long> findTopPopularByAge(
+            @Param("today") LocalDate today,
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,
             @Param("fromDt") LocalDateTime fromDt,

@@ -35,7 +35,7 @@ public class PopularByGenderRecommendationService {
         var top10 = PageRequest.of(0, 10);
 
         List<Long> ids = repo.findTopPopularByGender(
-                fromDate, toDate, fromDt, toDt, gender, clickWeight, bookmarkWeight, top10);
+                today, fromDate, toDate, fromDt, toDt, gender, clickWeight, bookmarkWeight, top10);
 
         if (ids.isEmpty()) return List.of();
 
