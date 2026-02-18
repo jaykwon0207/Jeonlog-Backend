@@ -90,11 +90,13 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
     @Query(value = """
         SELECT *
         FROM exhibitions e
-        WHERE e.id NOT IN (:excludeIds)
+        WHERE e.end_date >= :today
+          AND e.id NOT IN (:excludeIds)
         ORDER BY RAND()
         LIMIT :limit
         """, nativeQuery = true)
     List<Exhibition> pickAnyRandomExcluding(
+            @Param("today") LocalDate today,
             @Param("excludeIds") Collection<Long> excludeIds,
             @Param("limit") int limit
     );

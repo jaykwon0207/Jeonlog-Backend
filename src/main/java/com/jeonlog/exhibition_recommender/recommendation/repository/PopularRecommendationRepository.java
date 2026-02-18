@@ -20,6 +20,7 @@ public interface PopularRecommendationRepository extends JpaRepository<Exhibitio
         LEFT JOIN Bookmark b
                ON b.exhibition = e
               AND b.createdAt BETWEEN :fromDt AND :toDt
+        WHERE e.endDate >= :today
         GROUP BY e.id
         ORDER BY (
             COUNT(ecl) * :clickWeight
@@ -30,6 +31,7 @@ public interface PopularRecommendationRepository extends JpaRepository<Exhibitio
         e.id DESC
         """)
     List<Long> findTopPopularExhibitionIds(
+            @Param("today") LocalDate today,
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,
             @Param("fromDt") LocalDateTime fromDt,

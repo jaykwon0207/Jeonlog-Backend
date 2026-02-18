@@ -41,6 +41,7 @@ public class PopularByAgeRecommendationService {
         // 상위 10개 전시 조회
         var top10 = PageRequest.of(0, 10);
         List<Long> ids = repo.findTopPopularByAge(
+                today,
                 fromDate, toDate, fromDt, toDt,
                 minBirthYear, maxBirthYear,
                 clickWeight, bookmarkWeight,

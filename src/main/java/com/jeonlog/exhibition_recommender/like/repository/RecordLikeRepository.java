@@ -20,5 +20,7 @@ public interface RecordLikeRepository extends JpaRepository<RecordLike, Long> {
     void deleteAllByUser(User user);
 
     // ✅ 기록에 달린 좋아요
+    void deleteAllByRecord(ExhibitionRecord record);
+
     void deleteAllByRecordIn(List<ExhibitionRecord> records);
 }

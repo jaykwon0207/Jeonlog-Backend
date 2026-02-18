@@ -11,6 +11,9 @@ import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.dto.RecordSearchCondition;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.record.repository.HashtagRepository;
+import com.jeonlog.exhibition_recommender.like.repository.RecordLikeRepository;
+import com.jeonlog.exhibition_recommender.comment.repository.RecordCommentRepository;
+import com.jeonlog.exhibition_recommender.scrap.repository.RecordScrapRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 
 // ⬇️ 가중치 업데이트용 추가 import
@@ -40,6 +43,9 @@ public class ExhibitionRecordService {
     private final UserRepository userRepository;
     private final ExhibitionRepository exhibitionRepository;
     private final ExhibitionRecordRepository exhibitionRecordRepository;
+    private final RecordLikeRepository recordLikeRepository;
+    private final RecordCommentRepository recordCommentRepository;
+    private final RecordScrapRepository recordScrapRepository;
     private final UserGenreRepository userGenreRepository;
     private final HashtagRepository hashtagRepository;
 
@@ -161,6 +167,11 @@ public class ExhibitionRecordService {
         userGenreRepository.findByUserId(user.getId()).ifPresent(ug -> {
             ug.revertExhibitionRecord(exhibition.getGenre(), exhibition.getExhibitionTheme()); // −0.03
         });
+
+        // FK 제약으로 인해 자식 테이블 먼저 정리
+        recordCommentRepository.deleteAllByRecord(record);
+        recordLikeRepository.deleteAllByRecord(record);
+        recordScrapRepository.deleteAllByRecord(record);
 
         exhibitionRecordRepository.delete(record);
     }

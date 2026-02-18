@@ -23,6 +23,7 @@ public interface PopularByGenderRecommendationRepository extends JpaRepository<E
                ON b.exhibition = e
               AND b.createdAt BETWEEN :fromDt AND :toDt
               AND b.user.gender = :gender
+        WHERE e.endDate >= :today
         GROUP BY e.id
         ORDER BY (
             (COUNT(ecl) * 1.0) * :clickWeight
@@ -31,6 +32,7 @@ public interface PopularByGenderRecommendationRepository extends JpaRepository<E
         COUNT(b) DESC, COUNT(ecl) DESC, e.id DESC
         """)
     List<Long> findTopPopularByGender(
+            @Param("today") LocalDate today,
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,
             @Param("fromDt") LocalDateTime fromDt,

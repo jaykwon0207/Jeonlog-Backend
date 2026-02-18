@@ -11,6 +11,7 @@ public interface RecordCommentRepository extends JpaRepository<RecordComment, Lo
     List<RecordComment> findByRecordIdAndParentIsNullOrderByCreatedAtAsc(Long recordId);
     void deleteAllByUser(User user);
 
+    void deleteAllByRecord(ExhibitionRecord record);
+
     void deleteAllByRecordIn(List<ExhibitionRecord> records);
 }
-
