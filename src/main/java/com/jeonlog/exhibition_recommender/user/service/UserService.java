@@ -126,8 +126,10 @@ public class UserService {
             return Page.empty(pageable);
         }
 
+        String normalizedNickname = nickname.trim();
+
         return userRepository
-                .findByNicknameContainingIgnoreCase(nickname, pageable)
+                .findByNicknameContainingIgnoreCase(normalizedNickname, pageable)
                 .map(UserDto.UserSearchResponse::of);
     }
 

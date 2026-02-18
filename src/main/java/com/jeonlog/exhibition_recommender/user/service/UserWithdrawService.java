@@ -42,27 +42,31 @@ public class UserWithdrawService {
         User user = userRepository.findById(userId)
                 .orElseThrow();
 
-        // 1️⃣ 팔로우 관계 (양방향 FK)
+        // 1️⃣ 팔로우 관계
         followRepository.deleteAllByFollowerOrFollowing(user, user);
 
         // 2️⃣ 유저가 누른 좋아요 / 스크랩
         recordLikeRepository.deleteAllByUser(user);
         recordScrapRepository.deleteAllByUser(user);
 
-        // 3️⃣ 북마크 계열
+        // 🔥 3️⃣ 유저가 작성한 댓글 (빠졌던 부분)
+        recordCommentRepository.deleteAllByUser(user);
+
+        // 4️⃣ 북마크 계열
         bookmarkRepository.deleteAllByUser(user);
         userBookmarkRepository.deleteAllByUser(user);
 
-        // 4️⃣ 검색 / 방문 로그
+        // 5️⃣ 검색 / 방문 로그
         searchRepository.deleteAllByUser(user);
         userVisitRepository.deleteAllByUser(user);
 
-        // 5️⃣ 유저가 작성한 기록 조회
+        // 6️⃣ 유저가 작성한 기록
         List<ExhibitionRecord> records =
                 recordRepository.findAllByUserOrderByCreatedAtDesc(user);
 
         if (!records.isEmpty()) {
-            // FK 최하단부터
+
+            // 기록에 달린 자식 테이블 먼저 삭제
             recordCommentRepository.deleteAllByRecordIn(records);
             recordLikeRepository.deleteAllByRecordIn(records);
             recordScrapRepository.deleteAllByRecordIn(records);
@@ -70,7 +74,7 @@ public class UserWithdrawService {
             recordRepository.deleteAll(records);
         }
 
-        // 6️⃣ 최종 유저 삭제
+        // 7️⃣ 최종 유저 삭제
         userRepository.delete(user);
     }
 }

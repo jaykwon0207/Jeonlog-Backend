@@ -68,11 +68,12 @@ public class UserController {
 
     @GetMapping("/search") // 유저 검색
     public ApiResponse<Page<UserDto.UserSearchResponse>> searchUsers(
-            @RequestParam("query") String query,
+            @RequestParam(value = "query", required = false) String query,
+            @RequestParam(value = "nickname", required = false) String nickname,
             @PageableDefault(size = 10, sort = "nickname", direction = Sort.Direction.ASC) Pageable pageable
     ) {
-        // 'query' 파라미터로 받은 문자열을 UserService를 통해 닉네임 검색에 사용
-        Page<UserDto.UserSearchResponse> users = userService.searchUsersByNickname(query, pageable);
+        String keyword = query != null ? query : nickname;
+        Page<UserDto.UserSearchResponse> users = userService.searchUsersByNickname(keyword, pageable);
         return ApiResponse.ok(users);
     }
 
