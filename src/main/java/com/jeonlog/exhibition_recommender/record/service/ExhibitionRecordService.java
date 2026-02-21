@@ -20,6 +20,7 @@ import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
 import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
 
+import com.jeonlog.exhibition_recommender.user.repository.UserBlockRepository;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -48,6 +49,7 @@ public class ExhibitionRecordService {
     private final RecordScrapRepository recordScrapRepository;
     private final UserGenreRepository userGenreRepository;
     private final HashtagRepository hashtagRepository;
+    private final UserBlockRepository userBlockRepository;
 
     @Transactional
     public Long addRecord(Long exhibitionId, User user, CreateRequest req) {
@@ -304,9 +306,13 @@ public class ExhibitionRecordService {
 
     //전시기록 상세조회
     @Transactional(readOnly = true)
-    public ExhibitionRecordDto.RecordDetailResponse getRecordDetail(Long recordId) {
+    public ExhibitionRecordDto.RecordDetailResponse getRecordDetail(Long recordId, User viewer) {
         ExhibitionRecord record = exhibitionRecordRepository.findWithDetailById(recordId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 전시기록이 존재하지 않습니다."));
+
+        if (isExcludedWriter(viewer.getId(), record.getUser().getId())) {
+            throw new IllegalArgumentException("차단 관계의 사용자 콘텐츠는 조회할 수 없습니다.");
+        }
 
         var exhibition = record.getExhibition();
         var venue = (exhibition != null) ? exhibition.getVenue() : null;
@@ -346,11 +352,13 @@ public class ExhibitionRecordService {
 
 
     @Transactional(readOnly = true)
-    public Page<ExhibitionRecordDto.RecordListResponse> getAllRecords(Pageable pageable) {
+    public Page<ExhibitionRecordDto.RecordListResponse> getAllRecords(Pageable pageable, User viewer) {
 
         // 1. Repository에서 전체 데이터 조회 (Page<ExhibitionRecord> 반환)
         // JPA 기본 메서드인 findAll()을 사용합니다.
-        Page<ExhibitionRecord> recordsPage = exhibitionRecordRepository.findAll(pageable);
+        Set<Long> excludedUserIds = getExcludedUserIds(viewer.getId());
+        Page<ExhibitionRecord> recordsPage =
+                exhibitionRecordRepository.findAllExcludingUsers(excludedUserIds, pageable);
 
         // 2. Page<ExhibitionRecord> -> Page<RecordListResponse> DTO로 변환
         // (getRecordsByExhibition 메서드의 변환 로직과 완전히 동일합니다)
@@ -360,6 +368,10 @@ public class ExhibitionRecordService {
             List<ExhibitionRecordDto.RecordMediaDto> mediaDtoList = record.getMediaList().stream()
                     .map(ExhibitionRecordDto.RecordMediaDto::new) // RecordMediaDto 생성자 활용
                     .toList();
+
+            Set<String> hashtags = record.getHashtags().stream()
+                    .map(Hashtag::getName)
+                    .collect(Collectors.toSet());
 
             return ExhibitionRecordDto.RecordListResponse.builder()
                     .recordId(record.getId())
@@ -371,6 +383,8 @@ public class ExhibitionRecordService {
                     .writerNickname(record.getUser().getNickname())
                     .writerProfileImgUrl(record.getUser().getProfileImageUrl())
                     .mediaList(mediaDtoList)
+                    .hashtags(hashtags)
+                    .exhibitionTitle(record.getExhibition() != null ? record.getExhibition().getTitle() : null)
                     .build();
         });
     }
@@ -426,9 +440,11 @@ public class ExhibitionRecordService {
 
     @Transactional(readOnly = true)
     public Page<ExhibitionRecordDto.RecordListResponse> searchRecords(
-            String query, Pageable pageable) {
+            String query, Pageable pageable, User viewer) {
 
-        Page<ExhibitionRecord> recordsPage = exhibitionRecordRepository.search(query, pageable);
+        Set<Long> excludedUserIds = getExcludedUserIds(viewer.getId());
+        Page<ExhibitionRecord> recordsPage =
+                exhibitionRecordRepository.searchExcludingUsers(query, excludedUserIds, pageable);
 
         return recordsPage.map(record -> {
             List<ExhibitionRecordDto.RecordMediaDto> mediaDtoList = record.getMediaList().stream()
@@ -456,13 +472,18 @@ public class ExhibitionRecordService {
 
 
     @Transactional(readOnly = true)
-    public Page<ExhibitionRecordDto.RecordListResponse> getUserRecords(Long userId, Pageable pageable) {
+    public Page<ExhibitionRecordDto.RecordListResponse> getUserRecords(Long userId, Pageable pageable, User viewer) {
 
         User target = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("대상 유저 없음"));
 
+        if (isExcludedWriter(viewer.getId(), target.getId())) {
+            return Page.empty(pageable);
+        }
+
+        Set<Long> excludedUserIds = getExcludedUserIds(viewer.getId());
         Page<ExhibitionRecord> recordsPage =
-                exhibitionRecordRepository.findByUserOrderByCreatedAtDesc(target, pageable);
+                exhibitionRecordRepository.findByUserExcludingUsers(target, excludedUserIds, pageable);
 
         return recordsPage.map(record -> {
             List<ExhibitionRecordDto.RecordMediaDto> mediaDtoList = record.getMediaList().stream()
@@ -486,6 +507,17 @@ public class ExhibitionRecordService {
                     .exhibitionTitle(record.getExhibition() != null ? record.getExhibition().getTitle() : null)
                     .build();
         });
+    }
+
+    private boolean isExcludedWriter(Long viewerId, Long writerId) {
+        return getExcludedUserIds(viewerId).contains(writerId);
+    }
+
+    private Set<Long> getExcludedUserIds(Long viewerId) {
+        Set<Long> excluded = new HashSet<>();
+        excluded.addAll(userBlockRepository.findBlockedUserIdsByBlockerId(viewerId));
+        excluded.addAll(userBlockRepository.findBlockerUserIdsByBlockedId(viewerId));
+        return excluded;
     }
 
 }

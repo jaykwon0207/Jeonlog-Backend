@@ -25,6 +25,12 @@ public interface ExhibitionRecordRepository
     })
     Optional<ExhibitionRecord> findWithDetailById(Long recordId);
 
+    @Override
+    @EntityGraph(attributePaths = {
+            "mediaList", "hashtags", "exhibition", "user"
+    })
+    Page<ExhibitionRecord> findAll(Pageable pageable);
+
     @EntityGraph(attributePaths = {
             "mediaList", "hashtags", "exhibition", "user"
     })

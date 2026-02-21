@@ -7,12 +7,15 @@ import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.dto.SimpleUserProfileDto;
 import com.jeonlog.exhibition_recommender.user.exception.UserNotFoundException;
 import com.jeonlog.exhibition_recommender.user.repository.FollowRepository;
+import com.jeonlog.exhibition_recommender.user.repository.UserBlockRepository;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ public class ProfileService {
 
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
+    private final UserBlockRepository userBlockRepository;
     private final ExhibitionRecordRepository exhibitionRecordRepository;
     private final NotificationService notificationService;
 
@@ -27,10 +31,12 @@ public class ProfileService {
     // 내 팔로잉 목록
     public List<SimpleUserProfileDto> getFollowings(String myEmail) {
         User me = getUserByEmail(myEmail);
+        Set<Long> excludedUserIds = getExcludedUserIds(me.getId());
 
         List<Follow> followings = followRepository.findByFollower(me);
 
         return followings.stream()
+                .filter(relation -> !excludedUserIds.contains(relation.getFollowing().getId()))
                 .map(relation -> toDto(
                         relation.getFollowing(),
                         true
@@ -41,11 +47,13 @@ public class ProfileService {
     // 내 팔로워 목록
     public List<SimpleUserProfileDto> getFollowers(String myEmail) {
         User me = getUserByEmail(myEmail);
+        Set<Long> excludedUserIds = getExcludedUserIds(me.getId());
 
         List<Long> myFollowingIds = followRepository.findFollowingIdsByFollower(me);
         List<Follow> followers = followRepository.findByFollowing(me);
 
         return followers.stream()
+                .filter(relation -> !excludedUserIds.contains(relation.getFollower().getId()))
                 .map(relation -> {
                     User target = relation.getFollower();
                     boolean isFollowing = myFollowingIds.contains(target.getId());
@@ -59,11 +67,13 @@ public class ProfileService {
     public List<SimpleUserProfileDto> getFollowingsByUserId(String myEmail, Long userId) {
         User me = getUserByEmail(myEmail);
         User targetUser = getUserById(userId);
+        Set<Long> excludedUserIds = getExcludedUserIds(me.getId());
 
         List<Long> myFollowingIds = followRepository.findFollowingIdsByFollower(me);
         List<Follow> followings = followRepository.findByFollower(targetUser);
 
         return followings.stream()
+                .filter(relation -> !excludedUserIds.contains(relation.getFollowing().getId()))
                 .map(relation -> {
                     User target = relation.getFollowing();
                     boolean isFollowing = myFollowingIds.contains(target.getId());
@@ -76,11 +86,13 @@ public class ProfileService {
     public List<SimpleUserProfileDto> getFollowersByUserId(String myEmail, Long userId) {
         User me = getUserByEmail(myEmail);
         User targetUser = getUserById(userId);
+        Set<Long> excludedUserIds = getExcludedUserIds(me.getId());
 
         List<Long> myFollowingIds = followRepository.findFollowingIdsByFollower(me);
         List<Follow> followers = followRepository.findByFollowing(targetUser);
 
         return followers.stream()
+                .filter(relation -> !excludedUserIds.contains(relation.getFollower().getId()))
                 .map(relation -> {
                     User target = relation.getFollower();
                     boolean isFollowing = myFollowingIds.contains(target.getId());
@@ -98,6 +110,9 @@ public class ProfileService {
 
         if (me.equals(target)) {
             throw new IllegalArgumentException("자기 자신은 팔로우할 수 없습니다.");
+        }
+        if (userBlockRepository.existsRelationBetween(me.getId(), target.getId())) {
+            throw new IllegalArgumentException("차단 관계에서는 팔로우할 수 없습니다.");
         }
 
         if (followRepository.existsByFollowerAndFollowing(me, target)) {
@@ -125,6 +140,10 @@ public class ProfileService {
     public SimpleUserProfileDto getUserProfile(String myEmail, Long targetUserId) {
         User me = getUserByEmail(myEmail);
         User target = getUserById(targetUserId);
+
+        if (userBlockRepository.existsRelationBetween(me.getId(), target.getId())) {
+            throw new IllegalArgumentException("차단 관계의 사용자는 조회할 수 없습니다.");
+        }
 
         boolean isFollowing = followRepository.existsByFollowerAndFollowing(me, target);
 
@@ -154,5 +173,12 @@ public class ProfileService {
     private User getUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("유저 없음"));
+    }
+
+    private Set<Long> getExcludedUserIds(Long userId) {
+        Set<Long> excluded = new HashSet<>();
+        excluded.addAll(userBlockRepository.findBlockedUserIdsByBlockerId(userId));
+        excluded.addAll(userBlockRepository.findBlockerUserIdsByBlockedId(userId));
+        return excluded;
     }
 }

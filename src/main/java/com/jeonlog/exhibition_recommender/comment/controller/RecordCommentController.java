@@ -31,8 +31,11 @@ public class RecordCommentController {
 
     //특정 전시기록의 모든 댓글 조회
     @GetMapping
-    public ApiResponse<List<RecordCommentResponse>> getComments(@PathVariable Long recordId) {
-        return ApiResponse.ok(commentService.getComments(recordId));
+    public ApiResponse<List<RecordCommentResponse>> getComments(
+            @PathVariable Long recordId,
+            @CurrentUser User user
+    ) {
+        return ApiResponse.ok(commentService.getComments(recordId, user.getId()));
     }
 
    //댓글 수정

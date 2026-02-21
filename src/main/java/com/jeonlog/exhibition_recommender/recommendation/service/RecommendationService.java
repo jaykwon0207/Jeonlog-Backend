@@ -66,22 +66,34 @@ public class RecommendationService {
 
         if (result.size() < 10) {
             int r = 10 - result.size();
-            var rnd = exhibitionRepository.pickActiveRandomExcluding(today, empty(picked), r);
-            add(result, picked, rnd, r);
-        }
-
-        if (result.size() < 10) {
-            int r = 10 - result.size();
-            var rnd = exhibitionRepository.pickUpcomingRandomExcluding(
-                    today, today.plusDays(60), empty(picked), r
+            var candidates = exhibitionRepository.findActiveExcluding(
+                    today, empty(picked), PageRequest.of(0, randomPoolSize(r))
             );
-            add(result, picked, rnd, r);
+            add(result, picked, pickRandom(candidates, r), r);
         }
 
         if (result.size() < 10) {
             int r = 10 - result.size();
-            var rnd = exhibitionRepository.pickAnyRandomExcluding(today, empty(picked), r);
-            add(result, picked, rnd, r);
+            var candidates = exhibitionRepository.findUpcomingExcluding(
+                    today, today.plusDays(60), empty(picked), PageRequest.of(0, randomPoolSize(r))
+            );
+            add(result, picked, pickRandom(candidates, r), r);
+        }
+
+        if (result.size() < 10) {
+            int r = 10 - result.size();
+            var candidates = exhibitionRepository.findAnyOpenExcluding(
+                    today, empty(picked), PageRequest.of(0, randomPoolSize(r))
+            );
+            add(result, picked, pickRandom(candidates, r), r);
+        }
+
+        if (result.size() < 10) {
+            int r = 10 - result.size();
+            var candidates = exhibitionRepository.findAnyExcluding(
+                    empty(picked), PageRequest.of(0, randomPoolSize(r))
+            );
+            add(result, picked, pickRandom(candidates, r), r);
         }
 
         return result;
@@ -101,5 +113,18 @@ public class RecommendationService {
 
     private static Collection<Long> empty(Set<Long> ids) {
         return ids == null || ids.isEmpty() ? List.of(-1L) : ids;
+    }
+
+    private static int randomPoolSize(int need) {
+        return Math.max(need * 5, 50);
+    }
+
+    private static List<Exhibition> pickRandom(List<Exhibition> candidates, int max) {
+        if (candidates == null || candidates.isEmpty() || max <= 0) {
+            return List.of();
+        }
+        List<Exhibition> shuffled = new ArrayList<>(candidates);
+        Collections.shuffle(shuffled);
+        return shuffled.subList(0, Math.min(max, shuffled.size()));
     }
 }

@@ -19,6 +19,8 @@ public class PopularRecommendationService {
 
     @Transactional(readOnly = true)
     public List<RecommendationDto> getPopular(int days, double clickWeight, double bookmarkWeight) {
+        validateDays(days);
+
         LocalDate today = LocalDate.now();
         LocalDate fromDate = today.minusDays(days);
         LocalDate toDate = today;
@@ -43,6 +45,12 @@ public class PopularRecommendationService {
             if (e != null) ordered.add(e);
         }
         return ordered.stream().map(RecommendationDto::from).toList();
+    }
+
+    private static void validateDays(int days) {
+        if (days <= 0) {
+            throw new IllegalArgumentException("days는 1 이상이어야 합니다.");
+        }
     }
 
 }

@@ -7,10 +7,8 @@ import com.jeonlog.exhibition_recommender.recommendation.dto.InitialChoiceReques
 import com.jeonlog.exhibition_recommender.recommendation.dto.InitialExhibitionDto;
 import com.jeonlog.exhibition_recommender.recommendation.service.InitialRecommendationService;
 import com.jeonlog.exhibition_recommender.user.domain.User;
-import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +19,6 @@ import java.util.List;
 public class InitialRecommendationController {
 
     private final InitialRecommendationService initialService;
-    private final UserRepository userRepository;
 
     @GetMapping("/recommendations")
     public ApiResponse<List<InitialExhibitionDto>> listInitial() {
@@ -34,8 +31,6 @@ public class InitialRecommendationController {
             @CurrentUser User user,
             @Valid @RequestBody InitialChoiceRequest request
     ) {
-        System.out.println("인증된 사용자 이메일: " + user.getEmail());
-
         initialService.applyUserInitialChoices(user.getId(), request);
         return ApiResponse.ok("초기 선호 반영이 완료되었습니다.");
     }
