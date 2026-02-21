@@ -55,50 +55,47 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
             Pageable pageable
     );
 
-    // 전시추천: 진행 중 랜덤 보충
-    @Query(value = """
-        SELECT *
-        FROM exhibitions e
-        WHERE e.start_date <= :today AND e.end_date >= :today
-          AND e.id NOT IN (:excludeIds)
-        ORDER BY RAND()
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<Exhibition> pickActiveRandomExcluding(
+    @Query("""
+        SELECT e FROM Exhibition e
+        WHERE e.startDate <= :today AND e.endDate >= :today
+          AND e.id NOT IN :excludeIds
+        """)
+    List<Exhibition> findActiveExcluding(
             @Param("today") LocalDate today,
             @Param("excludeIds") Collection<Long> excludeIds,
-            @Param("limit") int limit
+            Pageable pageable
     );
 
-    // 전시추천: 임박 예정(오늘~+60일) 랜덤 보충
-    @Query(value = """
-        SELECT *
-        FROM exhibitions e
-        WHERE e.start_date > :today AND e.start_date <= :until
-          AND e.id NOT IN (:excludeIds)
-        ORDER BY RAND()
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<Exhibition> pickUpcomingRandomExcluding(
+    @Query("""
+        SELECT e FROM Exhibition e
+        WHERE e.startDate > :today AND e.startDate <= :until
+          AND e.id NOT IN :excludeIds
+        """)
+    List<Exhibition> findUpcomingExcluding(
             @Param("today") LocalDate today,
             @Param("until") LocalDate until,
             @Param("excludeIds") Collection<Long> excludeIds,
-            @Param("limit") int limit
+            Pageable pageable
     );
 
-    // 전시추천: 전 범위 랜덤 보충
-    @Query(value = """
-        SELECT *
-        FROM exhibitions e
-        WHERE e.end_date >= :today
-          AND e.id NOT IN (:excludeIds)
-        ORDER BY RAND()
-        LIMIT :limit
-        """, nativeQuery = true)
-    List<Exhibition> pickAnyRandomExcluding(
+    @Query("""
+        SELECT e FROM Exhibition e
+        WHERE e.endDate >= :today
+          AND e.id NOT IN :excludeIds
+        """)
+    List<Exhibition> findAnyOpenExcluding(
             @Param("today") LocalDate today,
             @Param("excludeIds") Collection<Long> excludeIds,
-            @Param("limit") int limit
+            Pageable pageable
+    );
+
+    @Query("""
+        SELECT e FROM Exhibition e
+        WHERE e.id NOT IN :excludeIds
+        """)
+    List<Exhibition> findAnyExcluding(
+            @Param("excludeIds") Collection<Long> excludeIds,
+            Pageable pageable
     );
 
     boolean existsByTitleIgnoreCase(String title);

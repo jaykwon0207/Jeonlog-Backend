@@ -26,11 +26,11 @@ public interface PopularByAgeRecommendationRepository extends JpaRepository<Exhi
         WHERE e.endDate >= :today
         GROUP BY e.id
         ORDER BY (
-            COUNT(ecl) * :clickWeight
-          + COUNT(b)  * :bookmarkWeight
+            COUNT(DISTINCT ecl.id) * :clickWeight
+          + COUNT(DISTINCT b.id)  * :bookmarkWeight
         ) DESC,
-        COUNT(b) DESC,
-        COUNT(ecl) DESC,
+        COUNT(DISTINCT b.id) DESC,
+        COUNT(DISTINCT ecl.id) DESC,
         e.id DESC
         """)
     List<Long> findTopPopularByAge(

@@ -67,25 +67,28 @@ public class ExhibitionRecordController {
     // 전시기록 전체 조회
     @GetMapping("/records")
     public ApiResponse<Page<ExhibitionRecordDto.RecordListResponse>> getAllRecords(
+            @CurrentUser User user,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ExhibitionRecordDto.RecordListResponse> records = exhibitionRecordService.getAllRecords(pageable);
+        Page<ExhibitionRecordDto.RecordListResponse> records = exhibitionRecordService.getAllRecords(pageable, user);
         return ApiResponse.ok(records);
     }
 
     @GetMapping("/records/{recordId}")
     public ApiResponse<ExhibitionRecordDto.RecordDetailResponse> getRecordDetail(
+            @CurrentUser User user,
             @PathVariable Long recordId
     ) {
-        return ApiResponse.ok(exhibitionRecordService.getRecordDetail(recordId));
+        return ApiResponse.ok(exhibitionRecordService.getRecordDetail(recordId, user));
     }
 
     @GetMapping("/users/{userId}/records")
     public ApiResponse<Page<ExhibitionRecordDto.RecordListResponse>> getUserRecords(
+            @CurrentUser User user,
             @PathVariable Long userId,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return ApiResponse.ok(exhibitionRecordService.getUserRecords(userId, pageable));
+        return ApiResponse.ok(exhibitionRecordService.getUserRecords(userId, pageable, user));
     }
 
 
@@ -145,10 +148,11 @@ public class ExhibitionRecordController {
 
     @GetMapping("/records/search")
     public Page<ExhibitionRecordDto.RecordListResponse> searchRecords(
+            @CurrentUser User user,
             @RequestParam(required = false) String query, // 'title', 'hashtag' 대신 'query'
             Pageable pageable) {
 
         // DTO 생성 로직 삭제, query 문자열을 서비스로 바로 전달
-        return exhibitionRecordService.searchRecords(query, pageable);
+        return exhibitionRecordService.searchRecords(query, pageable, user);
     }
 }

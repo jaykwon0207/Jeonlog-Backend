@@ -10,6 +10,7 @@ import com.jeonlog.exhibition_recommender.scrap.repository.RecordScrapRepository
 import com.jeonlog.exhibition_recommender.search.repository.SearchRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.FollowRepository;
+import com.jeonlog.exhibition_recommender.user.repository.UserBlockRepository;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.user.repository.UserVisitRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class UserWithdrawService {
     private final UserRepository userRepository;
 
     private final FollowRepository followRepository;
+    private final UserBlockRepository userBlockRepository;
 
     private final ExhibitionRecordRepository recordRepository;
     private final RecordLikeRepository recordLikeRepository;
@@ -44,6 +46,7 @@ public class UserWithdrawService {
 
         // 1️⃣ 팔로우 관계
         followRepository.deleteAllByFollowerOrFollowing(user, user);
+        userBlockRepository.deleteAllByBlockerOrBlocked(user, user);
 
         // 2️⃣ 유저가 누른 좋아요 / 스크랩
         recordLikeRepository.deleteAllByUser(user);

@@ -8,6 +8,7 @@ import com.jeonlog.exhibition_recommender.comment.repository.RecordCommentReposi
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
+import com.jeonlog.exhibition_recommender.user.repository.UserBlockRepository;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import com.jeonlog.exhibition_recommender.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +28,7 @@ public class RecordCommentService {
     private final RecordCommentRepository commentRepository;
     private final ExhibitionRecordRepository recordRepository;
     private final UserRepository userRepository;
+    private final UserBlockRepository userBlockRepository;
     private final NotificationService notificationService;
 
     //댓글 또는 대댓글 생성
@@ -33,6 +38,10 @@ public class RecordCommentService {
                 .orElseThrow(() -> new IllegalArgumentException("전시기록을 찾을 수 없습니다."));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if (userBlockRepository.existsRelationBetween(user.getId(), record.getUser().getId())) {
+            throw new IllegalArgumentException("차단 관계에서는 댓글을 작성할 수 없습니다.");
+        }
 
         RecordComment parentComment = null;
         if (request.getParentId() != null) {
@@ -64,10 +73,13 @@ public class RecordCommentService {
 
      //특정 전시기록의 모든 댓글 조회
      //(부모 댓글만 가져오고, 각 댓글에 연결된 replies는 DTO 변환 시 포함)
-    public List<RecordCommentResponse> getComments(Long recordId) {
+    public List<RecordCommentResponse> getComments(Long recordId, Long viewerId) {
+        Set<Long> excludedUserIds = getExcludedUserIds(viewerId);
+
         return commentRepository.findByRecordIdAndParentIsNullOrderByCreatedAtAsc(recordId)
                 .stream()
-                .map(RecordCommentResponse::from)
+                .map(comment -> toResponse(comment, excludedUserIds))
+                .filter(Objects::nonNull)
                 .toList();
     }
 
@@ -95,5 +107,33 @@ public class RecordCommentService {
         }
 
         commentRepository.delete(comment);
+    }
+
+    private RecordCommentResponse toResponse(RecordComment comment, Set<Long> excludedUserIds) {
+        if (excludedUserIds.contains(comment.getUser().getId())) {
+            return null;
+        }
+
+        List<RecordCommentResponse> replies = comment.getReplies().stream()
+                .map(reply -> toResponse(reply, excludedUserIds))
+                .filter(Objects::nonNull)
+                .toList();
+
+        return RecordCommentResponse.builder()
+                .id(comment.getId())
+                .content(comment.getContent())
+                .createdAt(comment.getCreatedAt())
+                .writerId(comment.getUser().getId())
+                .writerNickname(comment.getUser().getNickname())
+                .writerProfileImgUrl(comment.getUser().getProfileImageUrl())
+                .replies(replies)
+                .build();
+    }
+
+    private Set<Long> getExcludedUserIds(Long viewerId) {
+        Set<Long> excluded = new HashSet<>();
+        excluded.addAll(userBlockRepository.findBlockedUserIdsByBlockerId(viewerId));
+        excluded.addAll(userBlockRepository.findBlockerUserIdsByBlockedId(viewerId));
+        return excluded;
     }
 }
