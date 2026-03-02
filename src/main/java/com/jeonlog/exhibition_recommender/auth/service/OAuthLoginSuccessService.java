@@ -35,48 +35,32 @@ public class OAuthLoginSuccessService {
             String oauthId,
             String email,
             String name,
-            boolean ignored   // ❌ 더 이상 신뢰하지 않음
+            boolean ignored
     ) throws Exception {
 
         OauthProvider provider = OauthProvider.valueOf(providerStr);
+        Optional<User> existing = userRepository.findByOauthProviderAndOauthId(provider, oauthId);
 
-        Optional<User> userOpt =
-                userRepository.findByOauthProviderAndOauthId(provider, oauthId);
-
-        boolean isNewUser = userOpt.isEmpty();
-
-        User user = userOpt.orElseGet(() ->
-                userRepository.save(
-                        User.builder()
-                                .oauthProvider(provider)
-                                .oauthId(oauthId)
-                                .email(email)
-                                .name(name)
-                                .build()
-                )
-        );
-
-        if (isNewUser) {
-            Map<String, Object> temp = new HashMap<>();
-            temp.put("oauthProvider", provider.name());
-            temp.put("oauthId", oauthId);
-            temp.put("email", email);
-            temp.put("name", name);
-
-            String json = objectMapper.writeValueAsString(temp);
-            String base64 = Base64.getUrlEncoder().encodeToString(json.getBytes());
-
-            String tempToken =
-                    jwtTokenProvider.createTempToken(base64, 60 * 60 * 1000);
-
-            return new Result(true, null, null, tempToken);
+        if (existing.isPresent()) {
+            User user = existing.get();
+            return new Result(
+                    false,
+                    jwtTokenProvider.createAccessToken(user),
+                    jwtTokenProvider.createRefreshToken(user),
+                    null
+            );
         }
 
-        return new Result(
-                false,
-                jwtTokenProvider.createAccessToken(user),
-                jwtTokenProvider.createRefreshToken(user),
-                null
-        );
+        Map<String, Object> temp = new HashMap<>();
+        temp.put("oauthProvider", provider.name());
+        temp.put("oauthId", oauthId);
+        temp.put("email", email);
+        temp.put("name", name);
+
+        String json = objectMapper.writeValueAsString(temp);
+        String base64 = Base64.getUrlEncoder().encodeToString(json.getBytes());
+        String tempToken = jwtTokenProvider.createTempToken(base64, 60 * 60 * 1000);
+
+        return new Result(true, null, null, tempToken);
     }
 }
