@@ -23,7 +23,7 @@ public class BookmarkController {
     public ApiResponse<BookmarkResponse> add(
             @PathVariable Long exhibitionId,
             @CurrentUser User user) {
-        return ApiResponse.ok(service.add(exhibitionId, user.getEmail()));
+        return ApiResponse.ok(service.add(exhibitionId, user));
     }
 
     // 북마크 알림여부 변경글
@@ -32,7 +32,7 @@ public class BookmarkController {
             @PathVariable Long exhibitionId,
             @CurrentUser User user,
             @RequestBody BookmarkRequest req) {
-        return ApiResponse.ok(service.updateNotify(exhibitionId, user.getEmail(), req));
+        return ApiResponse.ok(service.updateNotify(exhibitionId, user, req));
     }
 
     // 북마크 삭제
@@ -40,7 +40,7 @@ public class BookmarkController {
     public ApiResponse<BookmarkResponse> remove(
             @PathVariable Long exhibitionId,
             @CurrentUser User user) {
-        return ApiResponse.ok(service.remove(exhibitionId, user.getEmail()));
+        return ApiResponse.ok(service.remove(exhibitionId, user));
     }
 
     // 전시 북마크 수
@@ -55,6 +55,6 @@ public class BookmarkController {
             @CurrentUser User user,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.listMyBookmarks(user.getEmail(), PageRequest.of(page, size)));
+        return ApiResponse.ok(service.listMyBookmarks(user, PageRequest.of(page, size)));
     }
 }

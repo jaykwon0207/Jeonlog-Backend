@@ -10,6 +10,7 @@ import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Base64;
@@ -41,12 +42,18 @@ public class AddInfoController {
                         .body(ApiResponse.error("DUPLICATE_NICKNAME", "이미 사용 중"));
             }
 
+            OauthProvider provider = OauthProvider.valueOf(dto.getOauthProvider());
+
             User user = userRepository
-                    .findByOauthProviderAndOauthId(
-                            OauthProvider.valueOf(dto.getOauthProvider()),
-                            dto.getOauthId()
-                    )
-                    .orElseThrow(() -> new IllegalStateException("user not found"));
+                    .findByOauthProviderAndOauthId(provider, dto.getOauthId())
+                    .orElseGet(() -> userRepository.save(
+                            User.builder()
+                                    .oauthProvider(provider)
+                                    .oauthId(dto.getOauthId())
+                                    .email(dto.getEmail())
+                                    .name(StringUtils.hasText(dto.getName()) ? dto.getName() : "User")
+                                    .build()
+                    ));
 
             user.completeOnboarding(
                     request.getGender(),

@@ -11,7 +11,6 @@ import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionReposi
 import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
 import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
-import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,14 +23,11 @@ public class BookmarkService {
 
     private final BookmarkRepository bookmarkRepository;
     private final ExhibitionRepository exhibitionRepository;
-    private final UserRepository userRepository;
     private final UserGenreRepository userGenreRepository;
 
     // 북마크 추가
     @Transactional
-    public BookmarkResponse add(Long exhibitionId, String email) {
-        User me = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+    public BookmarkResponse add(Long exhibitionId, User me) {
         Exhibition ex = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("전시 없음"));
 
@@ -56,9 +52,7 @@ public class BookmarkService {
 
     // 알림 상태 변경
     @Transactional
-    public BookmarkResponse updateNotify(Long exhibitionId, String email, BookmarkRequest req) {
-        User me = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+    public BookmarkResponse updateNotify(Long exhibitionId, User me, BookmarkRequest req) {
         Exhibition ex = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("전시 없음"));
 
@@ -72,9 +66,7 @@ public class BookmarkService {
 
     // 북마크 삭제
     @Transactional
-    public BookmarkResponse remove(Long exhibitionId, String email) {
-        User me = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+    public BookmarkResponse remove(Long exhibitionId, User me) {
         Exhibition ex = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("전시 없음"));
 
@@ -100,9 +92,7 @@ public class BookmarkService {
 
     // 내가 북마크한 전시 목록
     @Transactional(readOnly = true)
-    public Page<ExhibitionDto> listMyBookmarks(String email, Pageable pageable) {
-        User me = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+    public Page<ExhibitionDto> listMyBookmarks(User me, Pageable pageable) {
         return bookmarkRepository.findByUser(me, pageable)
                 .map(bm -> toExhibitionDto(bm.getExhibition()));
     }
