@@ -23,6 +23,7 @@ public class UserBlockService {
     private final UserBlockRepository userBlockRepository;
     private final FollowRepository followRepository;
     private final ExhibitionRecordRepository exhibitionRecordRepository;
+    private final DiscordUserBlockWebhookService discordUserBlockWebhookService;
 
     @Transactional
     public BlockActionResponse block(User blocker, Long blockedUserId) {
@@ -39,6 +40,8 @@ public class UserBlockService {
             // 차단 시 기존 팔로우 관계는 즉시 정리
             followRepository.deleteByFollowerAndFollowing(blocker, blocked);
             followRepository.deleteByFollowerAndFollowing(blocked, blocker);
+
+            discordUserBlockWebhookService.sendUserBlocked(blocker, blocked);
         }
 
         return BlockActionResponse.builder()

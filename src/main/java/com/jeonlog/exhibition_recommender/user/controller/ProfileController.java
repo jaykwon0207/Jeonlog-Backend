@@ -20,20 +20,20 @@ public class ProfileController { // ss
     // 팔로잉 목록
     @GetMapping("/followings")
     public ApiResponse<List<SimpleUserProfileDto>> getFollowings(@CurrentUser User user) {
-        return ApiResponse.ok(profileService.getFollowings(user.getEmail()));
+        return ApiResponse.ok(profileService.getFollowings(user));
     }
 
     // 팔로워 목록
     @GetMapping("/followers")
     public ApiResponse<List<SimpleUserProfileDto>> getFollowers(@CurrentUser User user) {
-        return ApiResponse.ok(profileService.getFollowers(user.getEmail()));
+        return ApiResponse.ok(profileService.getFollowers(user));
     }
 
     // 팔로우
     @PostMapping("/{targetId}/follow")
     public ApiResponse<String> follow(@CurrentUser User user,
                                       @PathVariable Long targetId) {
-        profileService.follow(user.getEmail(), targetId);
+        profileService.follow(user, targetId);
         return ApiResponse.ok("팔로우 했습니다.");
     }
 
@@ -41,7 +41,7 @@ public class ProfileController { // ss
     @DeleteMapping("/{targetId}/unfollow")
     public ApiResponse<String> unfollow(@CurrentUser User user,
                                         @PathVariable Long targetId) {
-        profileService.unfollow(user.getEmail(), targetId);
+        profileService.unfollow(user, targetId);
         return ApiResponse.ok("언팔로우 했습니다.");
     }
 
@@ -51,7 +51,7 @@ public class ProfileController { // ss
             @CurrentUser User user,
             @PathVariable Long userId
     ) {
-        return ApiResponse.ok(profileService.getUserProfile(user.getEmail(), userId));
+        return ApiResponse.ok(profileService.getUserProfile(user, userId));
     }
 
 
@@ -61,7 +61,7 @@ public class ProfileController { // ss
             @CurrentUser User user
     ) {
         return ApiResponse.ok(
-                profileService.getFollowings(user.getEmail())
+                profileService.getFollowings(user)
         );
     }
 
@@ -71,7 +71,7 @@ public class ProfileController { // ss
             @CurrentUser User user
     ) {
         return ApiResponse.ok(
-                profileService.getFollowers(user.getEmail())
+                profileService.getFollowers(user)
         );
     }
 
@@ -84,7 +84,7 @@ public class ProfileController { // ss
             @PathVariable Long userId
     ) {
         return ApiResponse.ok(
-                profileService.getFollowingsByUserId(user.getEmail(), userId)
+                profileService.getFollowingsByUserId(user, userId)
         );
     }
 
@@ -95,7 +95,7 @@ public class ProfileController { // ss
             @PathVariable Long userId
     ) {
         return ApiResponse.ok(
-                profileService.getFollowersByUserId(user.getEmail(), userId)
+                profileService.getFollowersByUserId(user, userId)
         );
     }
 }

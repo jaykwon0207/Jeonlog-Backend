@@ -58,6 +58,14 @@ public class User {
     @Column(nullable = false, length = 50)
     private Role role;
 
+    @Column(nullable = false)
+    private Integer moderationStrike;
+
+    private LocalDateTime suspendedUntil;
+
+    @Column(nullable = false)
+    private Boolean permanentlyBanned;
+
     @Formula("(SELECT COUNT(*) FROM follow f WHERE f.following_id = id)")
     private int followerCount;
 
@@ -69,6 +77,8 @@ public class User {
         this.createdAt = LocalDateTime.now();
         if (this.signature == null) this.signature = "jeonlog";
         if (this.role == null) this.role = Role.USER;
+        if (this.moderationStrike == null) this.moderationStrike = 0;
+        if (this.permanentlyBanned == null) this.permanentlyBanned = false;
     }
 
     public void update(String name) {
@@ -99,5 +109,30 @@ public class User {
         if (introduction != null) this.introduction = introduction;
         if (profileImageUrl != null) this.profileImageUrl = profileImageUrl;
         if (signature != null && !signature.isBlank()) this.signature = signature;
+    }
+
+    public int getModerationStrikeValue() {
+        return moderationStrike == null ? 0 : moderationStrike;
+    }
+
+    public void increaseModerationStrike() {
+        if (this.moderationStrike == null) {
+            this.moderationStrike = 0;
+        }
+        this.moderationStrike += 1;
+    }
+
+    public void warn() {
+        increaseModerationStrike();
+    }
+
+    public void suspendForDays(int days) {
+        increaseModerationStrike();
+        this.suspendedUntil = LocalDateTime.now().plusDays(days);
+    }
+
+    public void banPermanently() {
+        increaseModerationStrike();
+        this.permanentlyBanned = true;
     }
 }
