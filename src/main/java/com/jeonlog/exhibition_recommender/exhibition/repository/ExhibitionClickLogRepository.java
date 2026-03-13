@@ -15,6 +15,8 @@ import java.util.Optional;
 public interface ExhibitionClickLogRepository extends JpaRepository<ExhibitionClickLog,Long> {
     Optional<ExhibitionClickLog> findByUserAndExhibitionAndClickedDate(User user, Exhibition exhibition, LocalDate clickedDate);
 
+    void deleteAllByUser(User user);
+
 
 
     // 특정 전시회의 연령대별 클릭 수 (라벨: 10s/…/60s+)

@@ -29,4 +29,6 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
             ReportStatus status,
             ReportAction action
     );
+
+    void deleteAllByReporterOrReportedUser(User reporter, User reportedUser);
 }
