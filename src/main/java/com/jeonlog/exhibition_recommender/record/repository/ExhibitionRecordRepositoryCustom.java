@@ -12,7 +12,7 @@ public interface ExhibitionRecordRepositoryCustom {
     // 전시 제목 키워드와 해시태그 이름으로 전시 기록 동적 검색
     Page<ExhibitionRecord> search(String query, Pageable pageable);
 
-    Page<ExhibitionRecord> findAllExcludingUsers(Set<Long> excludedUserIds, Pageable pageable);
+    Page<ExhibitionRecord> findAllExcludingUsers(Long exhibitionId, Set<Long> excludedUserIds, Pageable pageable);
 
     Page<ExhibitionRecord> searchExcludingUsers(String query, Set<Long> excludedUserIds, Pageable pageable);
 

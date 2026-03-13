@@ -352,13 +352,13 @@ public class ExhibitionRecordService {
 
 
     @Transactional(readOnly = true)
-    public Page<ExhibitionRecordDto.RecordListResponse> getAllRecords(Pageable pageable, User viewer) {
+    public Page<ExhibitionRecordDto.RecordListResponse> getAllRecords(Pageable pageable, User viewer, Long exhibitionId) {
 
         // 1. Repository에서 전체 데이터 조회 (Page<ExhibitionRecord> 반환)
         // JPA 기본 메서드인 findAll()을 사용합니다.
         Set<Long> excludedUserIds = getExcludedUserIds(viewer.getId());
         Page<ExhibitionRecord> recordsPage =
-                exhibitionRecordRepository.findAllExcludingUsers(excludedUserIds, pageable);
+                exhibitionRecordRepository.findAllExcludingUsers(exhibitionId, excludedUserIds, pageable);
 
         // 2. Page<ExhibitionRecord> -> Page<RecordListResponse> DTO로 변환
         // (getRecordsByExhibition 메서드의 변환 로직과 완전히 동일합니다)

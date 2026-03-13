@@ -68,9 +68,11 @@ public class ExhibitionRecordController {
     @GetMapping("/records")
     public ApiResponse<Page<ExhibitionRecordDto.RecordListResponse>> getAllRecords(
             @CurrentUser User user,
+            @RequestParam(required = false) Long exhibitionId,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ExhibitionRecordDto.RecordListResponse> records = exhibitionRecordService.getAllRecords(pageable, user);
+        Page<ExhibitionRecordDto.RecordListResponse> records =
+                exhibitionRecordService.getAllRecords(pageable, user, exhibitionId);
         return ApiResponse.ok(records);
     }
 
