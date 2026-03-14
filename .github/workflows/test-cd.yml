@@ -59,7 +59,7 @@ jobs:
       - name: Deploy to Raspberry Pi
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: lyrica-pi.duckdns.org
+          host: 39.125.10.9
           username: seojeong
           key: ${{ secrets.SSH_PASSWORD }}
           port: 22
