@@ -1,0 +1,62 @@
+name: Backend-CD (Push & Deploy)
+
+on:
+  push:
+    branches: [ "test/cicd" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      # 서정님 compose 파일 구조에 맞춘 설정
+      CONFIG_DIR: "/home/seojeong/jeonlog/backend/config"
+      BASE_DIR: "/home/seojeong/jeonlog/backend/"
+      DOCKER_COMPOSE_FILE: "docker-compose.app.yml"
+      IMAGE_NAME: "jeonlog-backend" 
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 멀티스테이지 Dockerfile을 사용하여 ARM64 전용 이미지 생성
+      - name: Build and Push ARM Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:dev
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:dev-v${{ github.run_number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Raspberry Pi (ARM)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: lyrica-pi.duckdns.org
+          username: seojeong
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 2222
+          script: |
+
+            cd ${{ env.BASE_DIR }}
+            # 1. 최신 이미지 pull
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:dev
+            
+            # 2. 배포 스크립트 실행 (compose 파일과 env 경로 인자로 전달)
+            # 서버에 있는 deploy.sh가 이 인자들을 사용해 docker-compose up -d를 하도록 구성되어 있어야 함
+            bash deploy.sh ${{ env.DOCKER_COMPOSE_FILE }} ${{ env.CONFIG_DIR }}/.env
+            
+            # 3. 미사용 이미지 정리
+            docker image prune -f

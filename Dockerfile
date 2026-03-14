@@ -1,12 +1,15 @@
-# 1. 실행 환경 설정 (자바 21 기반, ARM 아키텍처 지원 이미지)
-FROM eclipse-temurin:21-jre-jammy
-
-# 2. 컨테이너 내부 작업 디렉토리 설정
+# [Stage 1: Build]
+FROM gradle:8.5-jdk21 AS build
 WORKDIR /app
+COPY . .
+# 권한 부여 및 빌드 (테스트 제외)
+RUN chmod +x gradlew
+RUN ./gradlew clean build -x test
 
-# 3. 빌드된 jar 파일을 컨테이너 내부로 복사
-# Gradle 빌드 시 생성되는 jar 파일의 이름을 확인해주세요 (보통 *-SNAPSHOT.jar)
-COPY build/libs/*[!plain].jar app.jar
+# [Stage 2: Run]
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+# 빌드 스테이지에서 생성된 jar만 복사
+COPY --from=build /app/build/libs/*[!plain].jar app.jar
 
-# 4. 앱 실행 명령어
 ENTRYPOINT ["java", "-jar", "app.jar"]
