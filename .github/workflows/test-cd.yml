@@ -61,7 +61,7 @@ jobs:
         with:
           host: lyrica-pi.duckdns.org
           username: seojeong
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.SSH_PASSWORD }}
           port: 22
           script: |
             cd /home/seojeong/jeonlog/backend/
