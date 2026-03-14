@@ -8,7 +8,9 @@ import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.user.domain.OauthProvider;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/oauth")
 @RequiredArgsConstructor
+@Slf4j
 public class AddInfoController {
 
     private final UserRepository userRepository;
@@ -69,9 +72,18 @@ public class AddInfoController {
 
             return ResponseEntity.ok(ApiResponse.ok(tokens));
 
-        } catch (Exception e) {
+        } catch (JwtException e) {
+            log.warn("[ADD-INFO] invalid temp jwt token: {}", e.getMessage());
             return ResponseEntity.status(400)
-                    .body(ApiResponse.error("INVALID_TEMP_TOKEN", "임시 토큰 오류"));
+                    .body(ApiResponse.error("INVALID_TEMP_TOKEN", "임시 토큰이 유효하지 않습니다."));
+        } catch (IllegalArgumentException e) {
+            log.warn("[ADD-INFO] invalid temp payload/provider: {}", e.getMessage());
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.error("INVALID_TEMP_PAYLOAD", "임시 토큰 데이터가 올바르지 않습니다."));
+        } catch (Exception e) {
+            log.error("[ADD-INFO] failed to complete signup", e);
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.error("ADD_INFO_FAILED", "온보딩 저장 중 오류가 발생했습니다."));
         }
     }
 
