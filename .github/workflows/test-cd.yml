@@ -61,7 +61,7 @@ jobs:
         with:
           host: 39.125.10.9
           username: seojeong
-          key: ${{ secrets.SSH_PASSWORD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
             cd /home/seojeong/jeonlog/backend/
