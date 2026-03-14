@@ -68,8 +68,11 @@ public class ExhibitionRecordRepositoryCustomImpl implements ExhibitionRecordRep
     }
 
     @Override
-    public Page<ExhibitionRecord> findAllExcludingUsers(Set<Long> excludedUserIds, Pageable pageable) {
+    public Page<ExhibitionRecord> findAllExcludingUsers(Long exhibitionId, Set<Long> excludedUserIds, Pageable pageable) {
         BooleanBuilder where = new BooleanBuilder();
+        if (exhibitionId != null) {
+            where.and(exhibitionRecord.exhibition.id.eq(exhibitionId));
+        }
         where.and(excludedUserFilter(excludedUserIds));
 
         JPAQuery<ExhibitionRecord> contentQuery = queryFactory

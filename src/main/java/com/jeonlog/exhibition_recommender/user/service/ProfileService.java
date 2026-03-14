@@ -29,8 +29,7 @@ public class ProfileService {
 
 
     // 내 팔로잉 목록
-    public List<SimpleUserProfileDto> getFollowings(String myEmail) {
-        User me = getUserByEmail(myEmail);
+    public List<SimpleUserProfileDto> getFollowings(User me) {
         Set<Long> excludedUserIds = getExcludedUserIds(me.getId());
 
         List<Follow> followings = followRepository.findByFollower(me);
@@ -45,8 +44,7 @@ public class ProfileService {
     }
 
     // 내 팔로워 목록
-    public List<SimpleUserProfileDto> getFollowers(String myEmail) {
-        User me = getUserByEmail(myEmail);
+    public List<SimpleUserProfileDto> getFollowers(User me) {
         Set<Long> excludedUserIds = getExcludedUserIds(me.getId());
 
         List<Long> myFollowingIds = followRepository.findFollowingIdsByFollower(me);
@@ -64,8 +62,7 @@ public class ProfileService {
 
 
     // 다른 유저 팔로잉 목록
-    public List<SimpleUserProfileDto> getFollowingsByUserId(String myEmail, Long userId) {
-        User me = getUserByEmail(myEmail);
+    public List<SimpleUserProfileDto> getFollowingsByUserId(User me, Long userId) {
         User targetUser = getUserById(userId);
         Set<Long> excludedUserIds = getExcludedUserIds(me.getId());
 
@@ -83,8 +80,7 @@ public class ProfileService {
     }
 
     // 다른 유저 팔로워 목록
-    public List<SimpleUserProfileDto> getFollowersByUserId(String myEmail, Long userId) {
-        User me = getUserByEmail(myEmail);
+    public List<SimpleUserProfileDto> getFollowersByUserId(User me, Long userId) {
         User targetUser = getUserById(userId);
         Set<Long> excludedUserIds = getExcludedUserIds(me.getId());
 
@@ -104,8 +100,7 @@ public class ProfileService {
 
     // 팔로우 / 언팔로우
     @Transactional
-    public void follow(String email, Long targetId) {
-        User me = getUserByEmail(email);
+    public void follow(User me, Long targetId) {
         User target = getUserById(targetId);
 
         if (me.equals(target)) {
@@ -129,16 +124,14 @@ public class ProfileService {
     }
 
     @Transactional
-    public void unfollow(String email, Long targetId) {
-        User me = getUserByEmail(email);
+    public void unfollow(User me, Long targetId) {
         User target = getUserById(targetId);
 
         followRepository.deleteByFollowerAndFollowing(me, target);
     }
 
     // 프로필 요약
-    public SimpleUserProfileDto getUserProfile(String myEmail, Long targetUserId) {
-        User me = getUserByEmail(myEmail);
+    public SimpleUserProfileDto getUserProfile(User me, Long targetUserId) {
         User target = getUserById(targetUserId);
 
         if (userBlockRepository.existsRelationBetween(me.getId(), target.getId())) {
@@ -163,11 +156,6 @@ public class ProfileService {
                 followerCount,
                 followingCount
         );
-    }
-
-    private User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("로그인 유저 없음"));
     }
 
     private User getUserById(Long userId) {

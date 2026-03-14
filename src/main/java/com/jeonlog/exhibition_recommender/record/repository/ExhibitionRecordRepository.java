@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,5 +42,6 @@ public interface ExhibitionRecordRepository
     void deleteAllByUser(User user);
 
     // ✅ 탈퇴 전 좋아요 삭제용 (ID만 필요할 때 대비)
-    List<Long> findIdsByUser(User user);
+    @Query("select r.id from ExhibitionRecord r where r.user = :user")
+    List<Long> findIdsByUser(@Param("user") User user);
 }

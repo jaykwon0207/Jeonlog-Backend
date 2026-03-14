@@ -7,5 +7,6 @@ import java.util.Optional;
 
 public interface UserGenreRepository extends JpaRepository<UserGenre, Long> {
     Optional<UserGenre> findByUserId(Long userId);
-}
 
+    void deleteByUserId(Long userId);
+}

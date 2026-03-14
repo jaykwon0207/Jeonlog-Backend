@@ -3,9 +3,14 @@ package com.jeonlog.exhibition_recommender.user.service;
 import com.jeonlog.exhibition_recommender.bookmark.repository.BookmarkRepository;
 import com.jeonlog.exhibition_recommender.bookmark.repository.UserBookmarkRepository;
 import com.jeonlog.exhibition_recommender.comment.repository.RecordCommentRepository;
+import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionClickLogRepository;
 import com.jeonlog.exhibition_recommender.like.repository.RecordLikeRepository;
+import com.jeonlog.exhibition_recommender.notification.repository.NotificationRepository;
+import com.jeonlog.exhibition_recommender.notification.repository.PushTokenRepository;
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
+import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
+import com.jeonlog.exhibition_recommender.report.repository.ReportRepository;
 import com.jeonlog.exhibition_recommender.scrap.repository.RecordScrapRepository;
 import com.jeonlog.exhibition_recommender.search.repository.SearchRepository;
 import com.jeonlog.exhibition_recommender.user.domain.User;
@@ -39,6 +44,11 @@ public class UserWithdrawService {
 
     private final SearchRepository searchRepository;
     private final UserVisitRepository userVisitRepository;
+    private final ExhibitionClickLogRepository exhibitionClickLogRepository;
+    private final ReportRepository reportRepository;
+    private final UserGenreRepository userGenreRepository;
+    private final PushTokenRepository pushTokenRepository;
+    private final NotificationRepository notificationRepository;
 
     public void withdraw(Long userId) {
         User user = userRepository.findById(userId)
@@ -63,7 +73,14 @@ public class UserWithdrawService {
         searchRepository.deleteAllByUser(user);
         userVisitRepository.deleteAllByUser(user);
 
-        // 6️⃣ 유저가 작성한 기록
+        // 6️⃣ 기타 유저 참조 데이터
+        exhibitionClickLogRepository.deleteAllByUser(user);
+        reportRepository.deleteAllByReporterOrReportedUser(user, user);
+        userGenreRepository.deleteByUserId(user.getId());
+        pushTokenRepository.deleteByUserId(user.getId());
+        notificationRepository.deleteAllByReceiverUserIdOrActorUserId(user.getId(), user.getId());
+
+        // 7️⃣ 유저가 작성한 기록
         List<ExhibitionRecord> records =
                 recordRepository.findAllByUserOrderByCreatedAtDesc(user);
 
@@ -77,7 +94,7 @@ public class UserWithdrawService {
             recordRepository.deleteAll(records);
         }
 
-        // 7️⃣ 최종 유저 삭제
+        // 8️⃣ 최종 유저 삭제
         userRepository.delete(user);
     }
 }

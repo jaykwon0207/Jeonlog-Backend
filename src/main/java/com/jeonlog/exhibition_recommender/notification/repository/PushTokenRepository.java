@@ -10,4 +10,6 @@ public interface PushTokenRepository extends JpaRepository<PushToken, Long> {
     Optional<PushToken> findByUserId(Long userId);
 
     List<PushToken> findAllByIsActiveTrue();
+
+    void deleteByUserId(Long userId);
 }
