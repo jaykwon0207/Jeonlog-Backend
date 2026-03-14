@@ -47,7 +47,7 @@ jobs:
           host: lyrica-pi.duckdns.org
           username: seojeong
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 2222
+          port: 22
           script: |
 
             cd ${{ env.BASE_DIR }}
