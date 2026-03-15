@@ -61,14 +61,24 @@ public class AppleTokenService {
                 HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 
         JsonNode json = objectMapper.readTree(response.body());
-        log.error("🔥 Apple token raw response = {}", json);
+        int statusCode = response.statusCode();
+        boolean hasIdToken = json.hasNonNull("id_token");
 
-        if (!json.has("id_token")) {
+        if (!hasIdToken) {
+            String error = json.hasNonNull("error") ? json.get("error").asText() : "unknown_error";
+            String errorDescription = json.hasNonNull("error_description")
+                    ? json.get("error_description").asText()
+                    : "no_description";
+            log.warn("Apple token exchange failed. status={}, error={}, description={}",
+                    statusCode, error, errorDescription);
             throw new IllegalStateException(
-                    "Apple token response has no id_token: " + json.toString()
+                    "Apple token response has no id_token. status=" + statusCode + ", error=" + error
             );
         }
 
+        if (log.isDebugEnabled()) {
+            log.debug("Apple token exchange success. status={}, hasIdToken={}", statusCode, hasIdToken);
+        }
 
         return json.get("id_token").asText();
     }
