@@ -62,6 +62,10 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/webjars/**",
                                 "/api/health",
+                                "/actuator/health",
+                                "/actuator/health/**",
+                                "/actuator/info",
+                                "/actuator/prometheus",
                                 "/api/users/check-nickname",
                                 "/api/users/search"
                         ).permitAll()
