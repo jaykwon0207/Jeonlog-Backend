@@ -28,8 +28,6 @@ JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
 
-        log.info("[JWT FILTER CHECK] uri={}", uri);
-
         return uri.startsWith("/login/oauth2/")   // 🔥 Google OAuth 콜백
                 || uri.startsWith("/oauth2/")
                 || uri.startsWith("/api/auth/")
