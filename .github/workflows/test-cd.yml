@@ -54,12 +54,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 3. 라즈베리 파이 배포 (SSH 포트 22번 확인!)
-      - name: Deploy to Raspberry Pi
+      - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ github.ref_name == 'main' && secrets.PROD_SERVER_IP || secrets.DEV_SERVER_IP }}
-          username: ${{ github.ref_name == 'main' && ubuntu || seojeong }}
+          username: ${{ github.ref_name == 'main' && 'ubuntu' || 'seojeong' }}
           key: ${{ github.ref_name == 'main' && secrets.PROD_KEY || secrets.DEV_KEY }}
           port: 22
           script: |
