@@ -5,6 +5,7 @@ import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,7 @@ public class ExhibitionEndingSoonScheduler {
 
     // 매일 11:00 (서울 기준)
     @Scheduled(cron = "0 0 11 * * *", zone = "Asia/Seoul")
+    @SchedulerLock(name = "exhibitionEndingSoonScheduler_run", lockAtMostFor = "PT30M", lockAtLeastFor = "PT1M")
     public void run() {
         LocalDate targetEndDate = LocalDate.now(ZoneId.of("Asia/Seoul")).plusDays(14);
 
