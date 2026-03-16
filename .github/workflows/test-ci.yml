@@ -2,7 +2,7 @@ name: Backend-CI (PR Verification)
 
 on:
   pull_request:
-    branches: [ "test/cicd" ] # 테스트 중이신 브랜치
+    branches: [ "main", "develop", "test/cicd" ] # 테스트 중이신 브랜치
 
 jobs:
   verify-arm-build:
