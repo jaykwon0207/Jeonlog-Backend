@@ -67,6 +67,10 @@ dependencies {
 	annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
 	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
 	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
+	// TestContainers
+	testImplementation 'org.testcontainers:junit-jupiter:1.19.8'
+	testImplementation 'org.testcontainers:mysql:1.19.8'
 }
 
 tasks.named('test') {
@@ -87,4 +91,38 @@ sourceSets {
 
 clean {
 	delete file(generated)
+}
+
+// Performance testing with k6
+task loadTest(type: Exec) {
+	description = 'Run k6 load tests'
+	group = 'verification'
+
+	// Check if k6 is available
+	doFirst {
+		if (!execurable('k6')) {
+			throw new GradleException("""
+				k6 is not installed or not in PATH. Please install k6 (https://k6.io/) to run load tests.
+				On macOS with Homebrew: brew install k6
+				""")
+		}
+	}
+
+	commandLine 'k6', 'run', '-q', 'performance-test/api-load-test.js'
+
+	// Allow overriding base URL and token via system properties or environment
+	// Users can set BASE_URL and ACCESS_TOKEN environment variables when running the task
+	// Example: BASE_URL=http://myhost:8080 ACCESS_TOKEN=token ./gradlew loadTest
+	environment = [
+		'BASE_URL': System.getenv('BASE_URL') ?: 'http://localhost:8080',
+		'ACCESS_TOKEN': System.getenv('ACCESS_TOKEN') ?: ''
+	]
+}
+
+/// Helper to check if an executable is available in PATH
+boolean execurable(String executableName) {
+	return exec {
+		commandLine 'which', executableName
+		ignoreExitValue true
+	}.exitValue == 0
 }
