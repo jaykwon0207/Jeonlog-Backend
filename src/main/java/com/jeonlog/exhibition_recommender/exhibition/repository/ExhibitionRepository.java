@@ -32,6 +32,7 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
           AND e.genre IN :genres
           AND e.exhibitionTheme IN :moods
           AND e.id NOT IN :excludeIds
+        ORDER BY e.endDate ASC, e.startDate DESC, e.id DESC
         """)
     List<Exhibition> findActiveByGenreInAndMoodInExcluding(
             @Param("today") LocalDate today,
@@ -47,6 +48,7 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
         WHERE e.startDate <= :today AND e.endDate >= :today
           AND e.genre IN :genres
           AND e.id NOT IN :excludeIds
+        ORDER BY e.endDate ASC, e.startDate DESC, e.id DESC
         """)
     List<Exhibition> findActiveByGenreInExcluding(
             @Param("today") LocalDate today,
@@ -59,6 +61,7 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
         SELECT e FROM Exhibition e
         WHERE e.startDate <= :today AND e.endDate >= :today
           AND e.id NOT IN :excludeIds
+        ORDER BY e.endDate ASC, e.startDate DESC, e.id DESC
         """)
     List<Exhibition> findActiveExcluding(
             @Param("today") LocalDate today,
@@ -70,6 +73,7 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
         SELECT e FROM Exhibition e
         WHERE e.startDate > :today AND e.startDate <= :until
           AND e.id NOT IN :excludeIds
+        ORDER BY e.startDate ASC, e.endDate ASC, e.id DESC
         """)
     List<Exhibition> findUpcomingExcluding(
             @Param("today") LocalDate today,
@@ -82,6 +86,7 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
         SELECT e FROM Exhibition e
         WHERE e.endDate >= :today
           AND e.id NOT IN :excludeIds
+        ORDER BY e.endDate ASC, e.startDate DESC, e.id DESC
         """)
     List<Exhibition> findAnyOpenExcluding(
             @Param("today") LocalDate today,
@@ -92,6 +97,7 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
     @Query("""
         SELECT e FROM Exhibition e
         WHERE e.id NOT IN :excludeIds
+        ORDER BY e.id DESC
         """)
     List<Exhibition> findAnyExcluding(
             @Param("excludeIds") Collection<Long> excludeIds,
