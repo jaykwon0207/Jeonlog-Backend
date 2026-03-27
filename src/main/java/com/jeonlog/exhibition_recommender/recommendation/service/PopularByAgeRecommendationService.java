@@ -19,6 +19,9 @@ import java.util.stream.Collectors;
 public class PopularByAgeRecommendationService {
 
     private final PopularByAgeRecommendationRepository repo;
+    private static final int MAX_DAYS = 365;
+    private static final double MIN_WEIGHT = 0.0;
+    private static final double MAX_WEIGHT = 10.0;
 
     @Transactional(readOnly = true)
     public List<RecommendationDto> getPopularByAgeGroup(
@@ -26,6 +29,7 @@ public class PopularByAgeRecommendationService {
             double clickWeight, double bookmarkWeight
     ) {
         validateDays(days);
+        validateWeights(clickWeight, bookmarkWeight);
 
         LocalDate today = LocalDate.now();
         LocalDate fromDate = today.minusDays(days);
@@ -65,6 +69,19 @@ public class PopularByAgeRecommendationService {
     private static void validateDays(int days) {
         if (days <= 0) {
             throw new IllegalArgumentException("days는 1 이상이어야 합니다.");
+        }
+        if (days > MAX_DAYS) {
+            throw new IllegalArgumentException("days는 365 이하여야 합니다.");
+        }
+    }
+
+    private static void validateWeights(double clickWeight, double bookmarkWeight) {
+        if (!Double.isFinite(clickWeight) || !Double.isFinite(bookmarkWeight)) {
+            throw new IllegalArgumentException("가중치는 유한한 숫자여야 합니다.");
+        }
+        if (clickWeight < MIN_WEIGHT || clickWeight > MAX_WEIGHT
+                || bookmarkWeight < MIN_WEIGHT || bookmarkWeight > MAX_WEIGHT) {
+            throw new IllegalArgumentException("가중치는 0.0 이상 10.0 이하여야 합니다.");
         }
     }
 

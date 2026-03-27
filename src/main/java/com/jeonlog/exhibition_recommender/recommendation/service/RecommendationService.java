@@ -7,6 +7,7 @@ import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionReposi
 import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
 import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,8 +25,16 @@ public class RecommendationService {
     @Transactional
     protected UserGenre getOrCreate(Long userId) {
         return userGenreRepository.findByUserId(userId).orElseGet(() ->
-                userGenreRepository.save(UserGenre.builder().userId(userId).build())
+                createWithRaceFallback(userId)
         );
+    }
+
+    private UserGenre createWithRaceFallback(Long userId) {
+        try {
+            return userGenreRepository.save(UserGenre.builder().userId(userId).build());
+        } catch (DataIntegrityViolationException ex) {
+            return userGenreRepository.findByUserId(userId).orElseThrow(() -> ex);
+        }
     }
 
     @Transactional
@@ -33,6 +42,7 @@ public class RecommendationService {
         LocalDate today = LocalDate.now();
 
         UserGenre ug = getOrCreate(userId);
+        Random fallbackRandom = deterministicRandom(userId, today);
 
         var ranking = ug.rankingForRecommendation();
         List<GenreType> topGenres = ranking.getTopGenres4();
@@ -69,7 +79,7 @@ public class RecommendationService {
             var candidates = exhibitionRepository.findActiveExcluding(
                     today, empty(picked), PageRequest.of(0, randomPoolSize(r))
             );
-            add(result, picked, pickRandom(candidates, r), r);
+            add(result, picked, pickRandom(candidates, r, fallbackRandom), r);
         }
 
         if (result.size() < 10) {
@@ -77,7 +87,7 @@ public class RecommendationService {
             var candidates = exhibitionRepository.findUpcomingExcluding(
                     today, today.plusDays(60), empty(picked), PageRequest.of(0, randomPoolSize(r))
             );
-            add(result, picked, pickRandom(candidates, r), r);
+            add(result, picked, pickRandom(candidates, r, fallbackRandom), r);
         }
 
         if (result.size() < 10) {
@@ -85,7 +95,7 @@ public class RecommendationService {
             var candidates = exhibitionRepository.findAnyOpenExcluding(
                     today, empty(picked), PageRequest.of(0, randomPoolSize(r))
             );
-            add(result, picked, pickRandom(candidates, r), r);
+            add(result, picked, pickRandom(candidates, r, fallbackRandom), r);
         }
 
         if (result.size() < 10) {
@@ -93,7 +103,7 @@ public class RecommendationService {
             var candidates = exhibitionRepository.findAnyExcluding(
                     empty(picked), PageRequest.of(0, randomPoolSize(r))
             );
-            add(result, picked, pickRandom(candidates, r), r);
+            add(result, picked, pickRandom(candidates, r, fallbackRandom), r);
         }
 
         return result;
@@ -119,12 +129,16 @@ public class RecommendationService {
         return Math.max(need * 5, 50);
     }
 
-    private static List<Exhibition> pickRandom(List<Exhibition> candidates, int max) {
+    private static List<Exhibition> pickRandom(List<Exhibition> candidates, int max, Random random) {
         if (candidates == null || candidates.isEmpty() || max <= 0) {
             return List.of();
         }
         List<Exhibition> shuffled = new ArrayList<>(candidates);
-        Collections.shuffle(shuffled);
+        Collections.shuffle(shuffled, random);
         return shuffled.subList(0, Math.min(max, shuffled.size()));
+    }
+
+    private static Random deterministicRandom(Long userId, LocalDate today) {
+        return new Random(Objects.hash(userId, today.toEpochDay()));
     }
 }

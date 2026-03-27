@@ -5,6 +5,8 @@ import com.jeonlog.exhibition_recommender.like.domain.RecordLike;
 import com.jeonlog.exhibition_recommender.like.dto.RecordLikeDto;
 import com.jeonlog.exhibition_recommender.like.repository.RecordLikeRepository;
 import com.jeonlog.exhibition_recommender.notification.service.NotificationService;
+import com.jeonlog.exhibition_recommender.recommendation.domain.UserGenre;
+import com.jeonlog.exhibition_recommender.recommendation.repository.UserGenreRepository;
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.domain.RecordMedia;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
@@ -24,6 +26,7 @@ public class RecordLikeService {
     private final RecordLikeRepository recordLikeRepository;
     private final ExhibitionRecordRepository exhibitionRecordRepository;
     private final NotificationService notificationService;
+    private final UserGenreRepository userGenreRepository;
 
     @Transactional
     public RecordLikeDto like(Long recordId, User user) {
@@ -39,6 +42,11 @@ public class RecordLikeService {
 
                     recordLikeRepository.save(newLike);
                     record.increaseLikeCount();
+
+                    if (record.getExhibition() != null) {
+                        UserGenre ug = getOrCreateUserGenre(user.getId());
+                        ug.addFromRecordLike(record.getExhibition().getGenre(), record.getExhibition().getExhibitionTheme());
+                    }
 
                     notificationService.notifyRecordLike(
                             record.getId(),
@@ -67,6 +75,12 @@ public class RecordLikeService {
             likedAt = like.getLikedAt();
             recordLikeRepository.delete(like);
             record.decreaseLikeCount();
+
+            if (record.getExhibition() != null) {
+                userGenreRepository.findByUserId(user.getId()).ifPresent(ug ->
+                        ug.revertRecordLike(record.getExhibition().getGenre(), record.getExhibition().getExhibitionTheme())
+                );
+            }
         }
 
         return toDto(record, likedAt, false);
@@ -102,5 +116,10 @@ public class RecordLikeService {
                 .thumbnailUrl(media.getThumbnailUrl())
                 .durationSeconds(media.getDurationSeconds())
                 .build();
+    }
+
+    private UserGenre getOrCreateUserGenre(Long userId) {
+        return userGenreRepository.findByUserId(userId)
+                .orElseGet(() -> userGenreRepository.save(UserGenre.builder().userId(userId).build()));
     }
 }
