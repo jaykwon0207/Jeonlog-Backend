@@ -7,6 +7,7 @@ import com.jeonlog.exhibition_recommender.notification.repository.NotificationRe
 import com.jeonlog.exhibition_recommender.notification.repository.PushTokenRepository;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
@@ -37,6 +39,7 @@ public class NotificationService {
 
         pt.updateToken(token, platform == null ? "FCM" : platform);
         pushTokenRepository.save(pt);
+        log.info("[NOTI] push_token_registered userId={} platform={}", userId, pt.getPlatform());
     }
 
     @Transactional(readOnly = true)
@@ -95,7 +98,10 @@ public class NotificationService {
 
     @Transactional
     public void notifyRecordLike(Long recordId, Long recordOwnerUserId, Long actorUserId, String actorNickname) {
-        if (recordOwnerUserId.equals(actorUserId)) return;
+        if (recordOwnerUserId.equals(actorUserId)) {
+            log.debug("[NOTI] skipped_self_notification type=RECORD_LIKE userId={} targetId={}", actorUserId, recordId);
+            return;
+        }
 
         String nick = normalizeNick(actorNickname);
         String title = "좋아요";
@@ -122,6 +128,13 @@ public class NotificationService {
         if (nick != null) data.put("actorNickname", nick);
         data.put("message", message);
         data.put("notificationId", saved.getId());
+        log.info(
+                "[NOTI] created type=RECORD_LIKE notificationId={} receiverUserId={} actorUserId={} targetId={}",
+                saved.getId(),
+                recordOwnerUserId,
+                actorUserId,
+                recordId
+        );
 
         sendPushIfPossible(recordOwnerUserId, title, message, data);
     }
@@ -132,7 +145,10 @@ public class NotificationService {
                                     Long actorUserId,
                                     String actorNickname,
                                     String commentPreview) {
-        if (recordOwnerUserId.equals(actorUserId)) return;
+        if (recordOwnerUserId.equals(actorUserId)) {
+            log.debug("[NOTI] skipped_self_notification type=RECORD_COMMENT userId={} targetId={}", actorUserId, recordId);
+            return;
+        }
 
         String nick = normalizeNick(actorNickname);
         String preview = makePreview(commentPreview, 40);
@@ -164,13 +180,23 @@ public class NotificationService {
         data.put("message", message);
         if (preview != null) data.put("commentPreview", preview);
         data.put("notificationId", saved.getId());
+        log.info(
+                "[NOTI] created type=RECORD_COMMENT notificationId={} receiverUserId={} actorUserId={} targetId={}",
+                saved.getId(),
+                recordOwnerUserId,
+                actorUserId,
+                recordId
+        );
 
         sendPushIfPossible(recordOwnerUserId, title, message, data);
     }
 
     @Transactional
     public void notifyFollow(Long followedUserId, Long actorUserId, String actorNickname) {
-        if (followedUserId.equals(actorUserId)) return;
+        if (followedUserId.equals(actorUserId)) {
+            log.debug("[NOTI] skipped_self_notification type=FOLLOW userId={} targetId={}", actorUserId, actorUserId);
+            return;
+        }
 
         String nick = normalizeNick(actorNickname);
         String title = "팔로우";
@@ -197,6 +223,13 @@ public class NotificationService {
         if (nick != null) data.put("actorNickname", nick);
         data.put("message", message);
         data.put("notificationId", saved.getId());
+        log.info(
+                "[NOTI] created type=FOLLOW notificationId={} receiverUserId={} actorUserId={} targetId={}",
+                saved.getId(),
+                followedUserId,
+                actorUserId,
+                actorUserId
+        );
 
         sendPushIfPossible(followedUserId, title, message, data);
     }
@@ -210,7 +243,15 @@ public class NotificationService {
             String exhibitionTitle
     ) {
         String dedupKey = "EXHIBITION_ENDING_SOON:" + receiverUserId + ":" + exhibitionId + ":" + endDateIso;
-        if (notificationRepository.existsByDedupKey(dedupKey)) return;
+        if (notificationRepository.existsByDedupKey(dedupKey)) {
+            log.debug(
+                    "[NOTI] skipped_dedup type=EXHIBITION_ENDING_SOON receiverUserId={} targetId={} dedupKey={}",
+                    receiverUserId,
+                    exhibitionId,
+                    dedupKey
+            );
+            return;
+        }
 
         String title = "전시 종료 알림";
         String exTitle = (exhibitionTitle == null || exhibitionTitle.isBlank()) ? "찜한 전시" : exhibitionTitle;
@@ -237,6 +278,12 @@ public class NotificationService {
         data.put("endDate", endDateIso);
         data.put("message", message);
         data.put("notificationId", saved.getId());
+        log.info(
+                "[NOTI] created type=EXHIBITION_ENDING_SOON notificationId={} receiverUserId={} targetId={}",
+                saved.getId(),
+                receiverUserId,
+                exhibitionId
+        );
 
         sendPushIfPossible(receiverUserId, title, message, data);
     }
@@ -250,7 +297,14 @@ public class NotificationService {
             List<String> imageUrls,
             boolean pushEnabled
     ) {
+        long startedAt = System.currentTimeMillis();
         List<Long> userIds = userRepository.findAllUserIds();
+        log.info(
+                "[NOTI] service_announcement_start announcementId={} receiverCount={} pushEnabled={}",
+                announcementId,
+                userIds.size(),
+                pushEnabled
+        );
 
         int chunkSize = 500;
         for (int i = 0; i < userIds.size(); i += chunkSize) {
@@ -272,14 +326,28 @@ public class NotificationService {
                     .toList();
 
             notificationRepository.saveAll(batch);
+            log.info(
+                    "[NOTI] service_announcement_chunk_saved announcementId={} chunkStart={} chunkSize={}",
+                    announcementId,
+                    i,
+                    chunk.size()
+            );
         }
 
-        if (!pushEnabled) return;
+        if (!pushEnabled) {
+            log.info(
+                    "[NOTI] service_announcement_completed announcementId={} durationMs={} pushSent=false",
+                    announcementId,
+                    System.currentTimeMillis() - startedAt
+            );
+            return;
+        }
 
         List<String> urls = (imageUrls == null) ? List.of() : imageUrls;
         if (urls.size() > 5) urls = urls.subList(0, 5);
 
         List<String> finalUrls = urls;
+        final int[] pushedCount = {0};
         pushTokenRepository.findAll().forEach(pt -> {
             if (!pt.isActive()) return;
 
@@ -290,15 +358,26 @@ public class NotificationService {
             if (!finalUrls.isEmpty()) data.put("imageUrls", String.join(",", finalUrls));
 
             fcmPushClient.send(pt.getToken(), title, body, data);
+            pushedCount[0]++;
         });
+        log.info(
+                "[NOTI] service_announcement_completed announcementId={} durationMs={} pushSent=true pushTargetCount={}",
+                announcementId,
+                System.currentTimeMillis() - startedAt,
+                pushedCount[0]
+        );
     }
 
     // 내부 유틸
 
     private void sendPushIfPossible(Long receiverUserId, String title, String pushBody, Map<String, Object> data) {
         pushTokenRepository.findByUserId(receiverUserId).ifPresent(pt -> {
-            if (!pt.isActive()) return;
+            if (!pt.isActive()) {
+                log.debug("[NOTI] push_skipped reason=inactive_token receiverUserId={}", receiverUserId);
+                return;
+            }
             fcmPushClient.send(pt.getToken(), title, pushBody, data);
+            log.debug("[NOTI] push_sent receiverUserId={} type={}", receiverUserId, data.get("type"));
         });
     }
 
