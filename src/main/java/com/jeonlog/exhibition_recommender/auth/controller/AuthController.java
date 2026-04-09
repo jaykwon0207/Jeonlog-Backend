@@ -8,6 +8,7 @@ import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -18,6 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -37,6 +39,7 @@ public class AuthController {
             @CookieValue(name = "refresh_token", required = false) String refreshCookie,
             @RequestBody(required = false) Map<String, String> body
     ) {
+        log.info("[AUTH] refresh_start endpoint=/api/auth/access-token");
 
         // 모바일 → body / 웹 → cookie
         String refreshToken = (body != null && body.get("refreshToken") != null)
@@ -44,6 +47,7 @@ public class AuthController {
                 : refreshCookie;
 
         if (refreshToken == null || refreshToken.isBlank()) {
+            log.warn("[AUTH] refresh_failed code=NO_REFRESH reason=missing_refresh_token endpoint=/api/auth/access-token");
             return ResponseEntity.status(401)
                     .body(ApiResponse.error("NO_REFRESH", "리프레시 토큰이 없습니다."));
         }
@@ -66,10 +70,14 @@ public class AuthController {
 
             String newAccessToken =
                     jwtTokenProvider.refreshAccessToken(refreshToken, user);
+            log.info("[AUTH] refresh_success userId={} provider={} endpoint=/api/auth/access-token",
+                    user.getId(),
+                    provider);
 
             return ResponseEntity.ok(ApiResponse.ok(newAccessToken));
 
         } catch (JwtException e) {
+            log.warn("[AUTH] refresh_failed code=INVALID_REFRESH reason={} endpoint=/api/auth/access-token", e.getMessage());
             return ResponseEntity.status(401)
                     .body(ApiResponse.error(
                             "INVALID_REFRESH",
@@ -93,17 +101,21 @@ public class AuthController {
     public ResponseEntity<ApiResponse<?>> reviewerLogin(
             @RequestBody ReviewerLoginRequest request
     ) {
+        log.info("[AUTH] reviewer_login_start endpoint=/api/auth/reviewer-login");
         if (!reviewLoginEnabled) {
+            log.warn("[AUTH] reviewer_login_failed code=NOT_FOUND reason=review_login_disabled");
             return ResponseEntity.status(404)
                     .body(ApiResponse.error("NOT_FOUND", "지원하지 않는 경로입니다."));
         }
 
         if (!StringUtils.hasText(reviewLoginCode)) {
+            log.warn("[AUTH] reviewer_login_failed code=REVIEW_LOGIN_NOT_CONFIGURED");
             return ResponseEntity.status(503)
                     .body(ApiResponse.error("REVIEW_LOGIN_NOT_CONFIGURED", "심사용 로그인 설정이 없습니다."));
         }
 
         if (request == null || !reviewLoginCode.equals(request.getReviewCode())) {
+            log.warn("[AUTH] reviewer_login_failed code=INVALID_REVIEW_CODE");
             return ResponseEntity.status(401)
                     .body(ApiResponse.error("INVALID_REVIEW_CODE", "심사용 코드가 올바르지 않습니다."));
         }
@@ -120,6 +132,9 @@ public class AuthController {
 
         String accessToken = jwtTokenProvider.createAccessToken(reviewer);
         String refreshToken = jwtTokenProvider.createRefreshToken(reviewer);
+        log.info("[AUTH] reviewer_login_success userId={} provider={} endpoint=/api/auth/reviewer-login",
+                reviewer.getId(),
+                reviewer.getOauthProvider());
 
         return ResponseEntity.ok(
                 ApiResponse.ok(Map.of(

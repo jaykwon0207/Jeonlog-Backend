@@ -4,16 +4,21 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class FcmPushClient {
 
     public void send(String fcmToken, String title, String body, Map<String, Object> data) {
-        if (fcmToken == null || fcmToken.isBlank()) return;
+        if (fcmToken == null || fcmToken.isBlank()) {
+            log.warn("[PUSH] send_failed reason=blank_token");
+            return;
+        }
 
         Message.Builder builder = Message.builder()
                 .setToken(fcmToken)
@@ -33,7 +38,19 @@ public class FcmPushClient {
         try {
             FirebaseMessaging.getInstance().send(builder.build());
         } catch (Exception ignored) {
-            // 토큰 만료/실패 처리하고 싶으면 여기서 pt 비활성화 로직 추가해도 됨
+            log.warn(
+                    "[PUSH] send_failed reason={} tokenLength={} tokenTail={}",
+                    ignored.getMessage(),
+                    fcmToken.length(),
+                    maskTokenTail(fcmToken)
+            );
         }
+    }
+
+    private String maskTokenTail(String token) {
+        int length = token.length();
+        int visibleLength = Math.min(6, length);
+        String tail = token.substring(length - visibleLength);
+        return "***" + tail;
     }
 }

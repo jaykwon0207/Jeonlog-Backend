@@ -22,6 +22,7 @@ import com.jeonlog.exhibition_recommender.user.domain.Role;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class ReportService {
 
     private final ReportRepository reportRepository;
@@ -45,6 +47,13 @@ public class ReportService {
 
     @Transactional
     public ReportCreateResponse create(User reporter, ReportCreateRequest request) {
+        log.info(
+                "[REPORT] create_start reporterUserId={} targetType={} targetId={} reason={}",
+                reporter.getId(),
+                request.getTargetType(),
+                request.getTargetId(),
+                request.getReason()
+        );
         validateReasonDetail(request.getReason(), request.getDetail());
 
         User reportedUser = resolveReportedUser(request.getTargetType(), request.getTargetId());
@@ -73,6 +82,14 @@ public class ReportService {
                         .detail(request.getDetail())
                         .build()
         );
+        log.info(
+                "[REPORT] created reportId={} reporterUserId={} reportedUserId={} targetType={} targetId={}",
+                report.getId(),
+                reporter.getId(),
+                reportedUser.getId(),
+                report.getTargetType(),
+                report.getTargetId()
+        );
 
         discordReportWebhookService.sendNewReport(report);
         return ReportCreateResponse.from(report);
@@ -93,6 +110,13 @@ public class ReportService {
 
     @Transactional
     public ReportAdminItemResponse act(User admin, Long reportId, AdminReportActionRequest request) {
+        log.info(
+                "[REPORT] action_start adminUserId={} reportId={} requestStatus={} requestAction={}",
+                admin.getId(),
+                reportId,
+                request.getStatus(),
+                request.getAction()
+        );
         validateAdmin(admin);
 
         Report report = reportRepository.findById(reportId)
@@ -106,6 +130,7 @@ public class ReportService {
 
         if (request.getStatus() == ReportStatus.IN_REVIEW) {
             report.review();
+            log.info("[REPORT] status_changed reportId={} status=IN_REVIEW", reportId);
         } else {
             ReportAction appliedAction = request.getAction();
             if (request.getStatus() == ReportStatus.RESOLVED) {
@@ -114,6 +139,12 @@ public class ReportService {
                 appliedAction = ReportAction.NONE;
             }
             report.resolve(request.getStatus(), appliedAction, request.getAdminMemo());
+            log.info(
+                    "[REPORT] resolved reportId={} status={} action={}",
+                    reportId,
+                    request.getStatus(),
+                    appliedAction
+            );
         }
         return ReportAdminItemResponse.from(report);
     }
@@ -214,6 +245,8 @@ public class ReportService {
                 recordScrapRepository.deleteAllByRecord(record);
                 recordMediaRepository.deleteAllByRecordId(record.getId());
                 exhibitionRecordRepository.delete(record);
+                log.info("[REPORT] action_applied reportId={} action=CONTENT_DELETED targetType=RECORD targetId={}",
+                        report.getId(), report.getTargetId());
                 yield ReportAction.CONTENT_DELETED;
             }
             case COMMENT -> {
@@ -223,6 +256,8 @@ public class ReportService {
                 RecordComment comment = recordCommentRepository.findById(report.getTargetId())
                         .orElseThrow(() -> new IllegalArgumentException("삭제할 댓글을 찾을 수 없습니다."));
                 recordCommentRepository.delete(comment);
+                log.info("[REPORT] action_applied reportId={} action=CONTENT_DELETED targetType=COMMENT targetId={}",
+                        report.getId(), report.getTargetId());
                 yield ReportAction.CONTENT_DELETED;
             }
             case USER -> applyUserProgressivePenalty(report.getReportedUser());
@@ -233,17 +268,21 @@ public class ReportService {
         int strike = reportedUser.getModerationStrikeValue();
         if (strike <= 0) {
             reportedUser.warn();
+            log.info("[REPORT] action_applied action=USER_WARNED reportedUserId={}", reportedUser.getId());
             return ReportAction.USER_WARNED;
         }
         if (strike == 1) {
             reportedUser.suspendForDays(7);
+            log.info("[REPORT] action_applied action=USER_SUSPENDED_7_DAYS reportedUserId={}", reportedUser.getId());
             return ReportAction.USER_SUSPENDED_7_DAYS;
         }
         if (strike == 2) {
             reportedUser.suspendForDays(30);
+            log.info("[REPORT] action_applied action=USER_SUSPENDED_30_DAYS reportedUserId={}", reportedUser.getId());
             return ReportAction.USER_SUSPENDED_30_DAYS;
         }
         reportedUser.banPermanently();
+        log.info("[REPORT] action_applied action=USER_BANNED_PERMANENTLY reportedUserId={}", reportedUser.getId());
         return ReportAction.USER_BANNED_PERMANENTLY;
     }
 }
