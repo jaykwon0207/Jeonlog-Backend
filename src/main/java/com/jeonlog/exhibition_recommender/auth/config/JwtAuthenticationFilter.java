@@ -47,8 +47,11 @@ JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String header = request.getHeader("Authorization");
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
 
         if (header == null || !header.startsWith("Bearer ")) {
+            log.debug("[AUTH] jwt_filter_skipped reason=missing_or_invalid_header uri={} method={}", uri, method);
             chain.doFilter(request, response);
             return;
         }
@@ -57,6 +60,7 @@ JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             if (!jwtTokenProvider.validateToken(token)) {
+                log.warn("[AUTH] jwt_filter_failed reason=invalid_token uri={} method={}", uri, method);
                 chain.doFilter(request, response);
                 return;
             }
@@ -65,6 +69,7 @@ JwtAuthenticationFilter extends OncePerRequestFilter {
             String[] parts = subject.split(":");
 
             if (parts.length != 2) {
+                log.warn("[AUTH] jwt_filter_failed reason=invalid_subject_format uri={} method={}", uri, method);
                 chain.doFilter(request, response);
                 return;
             }
@@ -77,6 +82,12 @@ JwtAuthenticationFilter extends OncePerRequestFilter {
                     .orElse(null);
 
             if (user == null) {
+                log.warn(
+                        "[AUTH] jwt_filter_failed reason=user_not_found provider={} uri={} method={}",
+                        provider,
+                        uri,
+                        method
+                );
                 chain.doFilter(request, response);
                 return;
             }
@@ -89,9 +100,16 @@ JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
 
             SecurityContextHolder.getContext().setAuthentication(auth);
+            log.debug(
+                    "[AUTH] jwt_filter_authenticated userId={} provider={} uri={} method={}",
+                    user.getId(),
+                    provider,
+                    uri,
+                    method
+            );
 
         } catch (Exception e) {
-            log.error("JWT filter error", e);
+            log.error("[AUTH] jwt_filter_error uri={} method={} reason={}", uri, method, e.getMessage(), e);
         }
 
         chain.doFilter(request, response);
