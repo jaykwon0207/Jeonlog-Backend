@@ -3,8 +3,6 @@ package com.jeonlog.exhibition_recommender.webhook.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jeonlog.exhibition_recommender.webhook.exception.NonRetryableWebhookException;
 import com.jeonlog.exhibition_recommender.webhook.exception.RetryableWebhookException;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -35,14 +33,10 @@ public class DiscordWebhookClient {
             .connectTimeout(Duration.ofSeconds(3))
             .build();
 
-    @Retry(name = "reportWebhookRetry")
-    @CircuitBreaker(name = "reportWebhookCircuitBreaker")
     public void sendReportWebhook(Long reportId, String webhookUrl, String message) {
         send("report", reportId, webhookUrl, message);
     }
 
-    @Retry(name = "blockWebhookRetry")
-    @CircuitBreaker(name = "blockWebhookCircuitBreaker")
     public void sendBlockWebhook(Long blockEventId, String webhookUrl, String message) {
         send("block", blockEventId, webhookUrl, message);
     }

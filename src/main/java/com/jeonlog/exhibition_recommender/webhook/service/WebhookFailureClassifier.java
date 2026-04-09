@@ -2,7 +2,6 @@ package com.jeonlog.exhibition_recommender.webhook.service;
 
 import com.jeonlog.exhibition_recommender.webhook.exception.NonRetryableWebhookException;
 import com.jeonlog.exhibition_recommender.webhook.exception.RetryableWebhookException;
-import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 
 import java.io.IOException;
 import java.net.http.HttpTimeoutException;
@@ -23,8 +22,7 @@ public final class WebhookFailureClassifier {
             }
             if (current instanceof RetryableWebhookException
                     || current instanceof IOException
-                    || current instanceof HttpTimeoutException
-                    || current instanceof CallNotPermittedException) {
+                    || current instanceof HttpTimeoutException) {
                 return true;
             }
             current = current.getCause();
