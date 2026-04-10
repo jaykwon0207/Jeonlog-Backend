@@ -5,8 +5,10 @@ import com.jeonlog.exhibition_recommender.auth.dto.NaverMobileLoginRequest;
 import com.jeonlog.exhibition_recommender.auth.service.MobileOAuthProfileService;
 import com.jeonlog.exhibition_recommender.auth.service.OAuthLoginSuccessService;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
+import com.jeonlog.exhibition_recommender.common.logging.TraceIdFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +24,11 @@ import java.util.Map;
 @Slf4j
 public class MobileOAuthController {
 
+    private static final String GOOGLE_LOGIN_FAILED_CODE = "GOOGLE_LOGIN_FAILED";
+    private static final String NAVER_LOGIN_FAILED_CODE = "NAVER_LOGIN_FAILED";
+    private static final String GOOGLE_LOGIN_FAILED_MESSAGE = "구글 로그인 처리에 실패했습니다.";
+    private static final String NAVER_LOGIN_FAILED_MESSAGE = "네이버 로그인 처리에 실패했습니다.";
+
     private final MobileOAuthProfileService mobileOAuthProfileService;
     private final OAuthLoginSuccessService successService;
 
@@ -32,9 +39,13 @@ public class MobileOAuthController {
         log.info("[AUTH] mobile_login_start provider=GOOGLE endpoint=/api/auth/google/mobile");
         try {
             if (request == null || !StringUtils.hasText(request.getType()) || !"success".equalsIgnoreCase(request.getType())) {
-                log.warn("[AUTH] mobile_login_failed provider=GOOGLE reason=invalid_google_sdk_response");
+                log.warn(
+                        "[AUTH] mobile_login_failed code={} traceId={} provider=GOOGLE reason=invalid_google_sdk_response",
+                        GOOGLE_LOGIN_FAILED_CODE,
+                        traceId()
+                );
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("GOOGLE_LOGIN_FAILED", "invalid google sdk response"));
+                        .body(ApiResponse.error(GOOGLE_LOGIN_FAILED_CODE, GOOGLE_LOGIN_FAILED_MESSAGE));
             }
 
             String idToken = request != null && request.getData() != null
@@ -54,9 +65,14 @@ public class MobileOAuthController {
 
             return ResponseEntity.ok(ApiResponse.ok(toPayload(result)));
         } catch (Exception e) {
-            log.warn("[AUTH] mobile_login_failed provider=GOOGLE reason={}", e.getMessage());
+            log.warn(
+                    "[AUTH] mobile_login_failed code={} traceId={} provider=GOOGLE reason={}",
+                    GOOGLE_LOGIN_FAILED_CODE,
+                    traceId(),
+                    e.getMessage()
+            );
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("GOOGLE_LOGIN_FAILED", e.getMessage()));
+                    .body(ApiResponse.error(GOOGLE_LOGIN_FAILED_CODE, GOOGLE_LOGIN_FAILED_MESSAGE));
         }
     }
 
@@ -67,9 +83,13 @@ public class MobileOAuthController {
         log.info("[AUTH] mobile_login_start provider=NAVER endpoint=/api/auth/naver/mobile");
         try {
             if (request == null || !Boolean.TRUE.equals(request.getIsSuccess())) {
-                log.warn("[AUTH] mobile_login_failed provider=NAVER reason=invalid_naver_sdk_response");
+                log.warn(
+                        "[AUTH] mobile_login_failed code={} traceId={} provider=NAVER reason=invalid_naver_sdk_response",
+                        NAVER_LOGIN_FAILED_CODE,
+                        traceId()
+                );
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("NAVER_LOGIN_FAILED", "invalid naver sdk response"));
+                        .body(ApiResponse.error(NAVER_LOGIN_FAILED_CODE, NAVER_LOGIN_FAILED_MESSAGE));
             }
 
             String accessToken = request != null && request.getSuccessResponse() != null
@@ -89,9 +109,14 @@ public class MobileOAuthController {
 
             return ResponseEntity.ok(ApiResponse.ok(toPayload(result)));
         } catch (Exception e) {
-            log.warn("[AUTH] mobile_login_failed provider=NAVER reason={}", e.getMessage());
+            log.warn(
+                    "[AUTH] mobile_login_failed code={} traceId={} provider=NAVER reason={}",
+                    NAVER_LOGIN_FAILED_CODE,
+                    traceId(),
+                    e.getMessage()
+            );
             return ResponseEntity.badRequest()
-                    .body(ApiResponse.error("NAVER_LOGIN_FAILED", e.getMessage()));
+                    .body(ApiResponse.error(NAVER_LOGIN_FAILED_CODE, NAVER_LOGIN_FAILED_MESSAGE));
         }
     }
 
@@ -108,5 +133,9 @@ public class MobileOAuthController {
                 "refreshToken", result.refreshToken(),
                 "newUser", false
         );
+    }
+
+    private String traceId() {
+        return MDC.get(TraceIdFilter.TRACE_ID_KEY);
     }
 }
