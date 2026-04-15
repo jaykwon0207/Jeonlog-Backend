@@ -1,4 +1,4 @@
-name: Build and Push to ECR
+name: Build, Push and Deploy
 
 on:
   push:
@@ -13,6 +13,8 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    outputs:
+      image_url: ${{ steps.build.outputs.image_url }}
 
     steps:
       - name: Checkout
@@ -50,6 +52,7 @@ jobs:
           fi
 
       - name: Build and push
+        id: build
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: jeonlog-app
@@ -57,5 +60,60 @@ jobs:
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          echo "image_url=$REGISTRY/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "### Pushed Image" >> $GITHUB_STEP_SUMMARY
           echo "\`$REGISTRY/$REPOSITORY:$IMAGE_TAG\`" >> $GITHUB_STEP_SUMMARY
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::488675216847:role/github-actions-ecr-role
+          aws-region: ap-northeast-2
+
+      - name: Update SSM Parameter (이미지 URL 저장)
+        run: |
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            PARAM="/jeonlog/prod/ecr-image-url"
+          else
+            PARAM="/jeonlog/dev/ecr-image-url"
+          fi
+          aws ssm put-parameter \
+            --name "$PARAM" \
+            --value "${{ needs.build-and-push.outputs.image_url }}" \
+            --type String \
+            --overwrite
+
+      - name: Deploy to dev (SSM Run Command)
+        if: github.ref_name != 'main'
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=jeonlog-dev-server" \
+                      "Name=instance-state-name,Values=running" \
+            --query 'Reservations[0].Instances[0].InstanceId' \
+            --output text)
+          if [ "$INSTANCE_ID" = "None" ] || [ -z "$INSTANCE_ID" ]; then
+            echo "Dev instance not running, skipping deploy"
+            exit 0
+          fi
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=["/usr/local/bin/deploy.sh"]' \
+            --query 'Command.CommandId' \
+            --output text)
+          echo "SSM Command ID: $COMMAND_ID"
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$INSTANCE_ID"
+
+      - name: Deploy to prod (Instance Refresh)
+        if: github.ref_name == 'main'
+        run: |
+          aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name jeonlog-prod-asg \
+            --preferences '{"MinHealthyPercentage": 50, "InstanceWarmup": 120}'
