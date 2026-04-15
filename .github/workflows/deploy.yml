@@ -1,0 +1,61 @@
+name: Build and Push to ECR
+
+on:
+  push:
+    branches:
+      - develop  # dev-<sha> 태그로 push
+      - main     # prod-<sha> 태그로 push
+
+permissions:
+  id-token: write  # OIDC 인증 필수
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Build JAR
+        run: |
+          chmod +x gradlew
+          ./gradlew clean bootJar -x test
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::488675216847:role/github-actions-ecr-role
+          aws-region: ap-northeast-2
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        id: tag
+        run: |
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            echo "tag=prod-${{ github.sha }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=dev-${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: jeonlog-app
+          IMAGE_TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          echo "### Pushed Image" >> $GITHUB_STEP_SUMMARY
+          echo "\`$REGISTRY/$REPOSITORY:$IMAGE_TAG\`" >> $GITHUB_STEP_SUMMARY

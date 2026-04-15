@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64 eclipse-temurin:21-jre-jammy
+FROM --platform=linux/amd64 eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
