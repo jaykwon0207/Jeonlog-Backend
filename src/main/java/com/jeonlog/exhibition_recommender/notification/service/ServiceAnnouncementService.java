@@ -3,7 +3,10 @@ package com.jeonlog.exhibition_recommender.notification.service;
 import com.jeonlog.exhibition_recommender.notification.domain.ServiceAnnouncement;
 import com.jeonlog.exhibition_recommender.notification.dto.ServiceAnnouncementCreateRequest;
 import com.jeonlog.exhibition_recommender.notification.repository.ServiceAnnouncementRepository;
+import com.jeonlog.exhibition_recommender.user.domain.Role;
+import com.jeonlog.exhibition_recommender.user.domain.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +20,11 @@ public class ServiceAnnouncementService {
     private final NotificationService notificationService;
 
     @Transactional
-    public Long createAndBroadcast(ServiceAnnouncementCreateRequest req) {
+    public Long createAndBroadcast(User user, ServiceAnnouncementCreateRequest req) {
+        if (user.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("관리자 권한이 필요합니다.");
+        }
+
         ServiceAnnouncement saved = serviceAnnouncementRepository.save(
                 ServiceAnnouncement.builder()
                         .title(req.getTitle())
