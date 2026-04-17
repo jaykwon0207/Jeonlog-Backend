@@ -1,10 +1,12 @@
 package com.jeonlog.exhibition_recommender.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jeonlog.exhibition_recommender.auth.config.JwtAuthenticationFilter;
 import com.jeonlog.exhibition_recommender.auth.config.JwtTokenProvider;
 import com.jeonlog.exhibition_recommender.auth.config.ProviderAwareAuthorizationRequestResolver;
 import com.jeonlog.exhibition_recommender.auth.handler.OAuth2JwtSuccessHandler;
 import com.jeonlog.exhibition_recommender.auth.service.CustomOAuth2UserService;
+import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,7 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     private final ProviderAwareAuthorizationRequestResolver providerAwareAuthorizationRequestResolver;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
@@ -70,6 +73,7 @@ public class SecurityConfig {
                                 "/api/users/search"
                         ).permitAll()
 
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -80,6 +84,15 @@ public class SecurityConfig {
                             response.setStatus(401);
                             response.setContentType("application/json;charset=UTF-8");
                             response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(403);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write(
+                                    objectMapper.writeValueAsString(
+                                            ApiResponse.error("FORBIDDEN", "관리자 권한이 필요합니다.")
+                                    )
+                            );
                         })
                 )
 
