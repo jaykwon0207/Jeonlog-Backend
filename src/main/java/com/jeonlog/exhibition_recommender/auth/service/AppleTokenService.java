@@ -34,22 +34,27 @@ public class AppleTokenService {
             throw new IllegalStateException("APPLE_PRIVATE_KEY not found in environment");
         }
 
-        // Base64 → PEM 복원
-        String privateKeyPem = new String(
-                Base64.getDecoder().decode(privateKeyBase64),
-                StandardCharsets.UTF_8
-        );
+        // PEM 직접 입력 또는 Base64 인코딩된 PEM 모두 지원
+        String privateKeyPem;
+        if (privateKeyBase64.contains("-----BEGIN")) {
+            privateKeyPem = privateKeyBase64.replace("\\n", "\n");
+        } else {
+            privateKeyPem = new String(
+                    Base64.getDecoder().decode(privateKeyBase64),
+                    StandardCharsets.UTF_8
+            );
+        }
 
         // client_secret(JWT) 생성
         String clientSecret = AppleJwtUtil.createClientSecret(
                 clientId, teamId, keyId, privateKeyPem
         );
 
+        // 네이티브 앱 플로우에서는 redirect_uri 미포함
         String body = "grant_type=authorization_code"
                 + "&code=" + authorizationCode
                 + "&client_id=" + clientId
-                + "&client_secret=" + clientSecret
-                + "&redirect_uri=" + redirectUri;
+                + "&client_secret=" + clientSecret;
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("https://appleid.apple.com/auth/token"))
