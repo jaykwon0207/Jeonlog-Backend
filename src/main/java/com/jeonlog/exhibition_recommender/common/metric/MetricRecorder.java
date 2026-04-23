@@ -38,7 +38,7 @@ public class MetricRecorder {
             LocalDate today = LocalDate.now();
             int hour = LocalDateTime.now().getHour();
             redis.opsForValue().setBit(MetricKeys.dau(today), userId, true);
-            redis.opsForHash().increment(MetricKeys.hourDist(today), String.valueOf(hour), 1);
+            redis.opsForHash().increment(MetricKeys.hourDist(today), String.format("%02d", hour), 1);
         } catch (Exception e) {
             log.warn("[METRIC] recordActiveUser failed userId={} reason={}", userId, e.getMessage());
         }
