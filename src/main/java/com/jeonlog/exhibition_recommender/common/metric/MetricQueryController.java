@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -17,12 +18,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MetricQueryController {
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     private final MetricQueryService queryService;
 
     @GetMapping("/dau")
     public ApiResponse<Long> dau(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        LocalDate target = date != null ? date : LocalDate.now();
+        LocalDate target = date != null ? date : LocalDate.now(KST);
         return ApiResponse.ok(queryService.dau(target));
     }
 
@@ -43,7 +46,7 @@ public class MetricQueryController {
     @GetMapping("/hour-distribution")
     public ApiResponse<Map<Integer, Long>> hourDistribution(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        LocalDate target = date != null ? date : LocalDate.now();
+        LocalDate target = date != null ? date : LocalDate.now(KST);
         return ApiResponse.ok(queryService.hourDistribution(target));
     }
 
@@ -53,7 +56,7 @@ public class MetricQueryController {
             @RequestParam String type,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(defaultValue = "10") int limit) {
-        LocalDate target = date != null ? date : LocalDate.now();
+        LocalDate target = date != null ? date : LocalDate.now(KST);
         return ApiResponse.ok(queryService.topRank(action, type, target, limit));
     }
 
