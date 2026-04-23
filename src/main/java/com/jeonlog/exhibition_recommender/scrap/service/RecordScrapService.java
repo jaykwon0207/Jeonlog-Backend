@@ -1,5 +1,7 @@
 package com.jeonlog.exhibition_recommender.scrap.service;
 
+import com.jeonlog.exhibition_recommender.common.metric.Action;
+import com.jeonlog.exhibition_recommender.common.metric.CountView;
 import com.jeonlog.exhibition_recommender.record.domain.ExhibitionRecord;
 import com.jeonlog.exhibition_recommender.record.repository.ExhibitionRecordRepository;
 import com.jeonlog.exhibition_recommender.scrap.domain.RecordScrap;
@@ -64,6 +66,8 @@ public class RecordScrapService {
      // 토글 + 개수 조회를 한 번에 처리하는 편의 메서드
 
     @Transactional
+    @CountView(type = "record", idExpr = "#recordId", action = Action.SAVE,
+            condition = "#result.scrapped")
     public RecordScrapResponseDto toggleScrapWithCount(Long recordId, User user) {
         boolean scrapped = toggleScrap(recordId, user);
         long count = countScraps(recordId);

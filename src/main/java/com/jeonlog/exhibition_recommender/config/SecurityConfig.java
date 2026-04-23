@@ -67,7 +67,8 @@ public class SecurityConfig {
                                 "/actuator/info",
                                 "/actuator/prometheus",
                                 "/api/users/check-nickname",
-                                "/api/users/search"
+                                "/api/users/search",
+                                "/api/metrics/**"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
