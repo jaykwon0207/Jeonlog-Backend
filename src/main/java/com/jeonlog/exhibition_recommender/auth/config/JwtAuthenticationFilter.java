@@ -32,6 +32,7 @@ JwtAuthenticationFilter extends OncePerRequestFilter {
                 || uri.startsWith("/oauth2/")
                 || uri.startsWith("/api/auth/")
                 || uri.startsWith("/api/oauth/")
+                || uri.startsWith("/api/metrics/")
                 || uri.startsWith("/error")
                 || uri.startsWith("/swagger")
                 || uri.startsWith("/v3/api-docs")
