@@ -16,6 +16,7 @@ import software.amazon.awssdk.awscore.exception.AwsServiceException;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+    private static final String INTERNAL_ERROR_MESSAGE = "서버 내부 오류가 발생했습니다.";
 
     // 장소 없음
     @ExceptionHandler(VenueNotFoundException.class)
@@ -90,7 +91,6 @@ public class GlobalExceptionHandler {
                 e
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("INTERNAL_ERROR",
-                        e.getClass().getSimpleName() + ": " + e.getMessage()));
+                .body(ApiResponse.error("INTERNAL_ERROR", INTERNAL_ERROR_MESSAGE));
     }
 }
