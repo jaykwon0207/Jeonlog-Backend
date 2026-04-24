@@ -104,12 +104,21 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
             Pageable pageable
     );
 
+    List<Exhibition> findByEndDateGreaterThanEqual(LocalDate today);
+
     boolean existsByTitleIgnoreCase(String title);
     boolean existsByTitleContainingIgnoreCase(String titlePart);
 
     // 전시 정보 조회 시 venue 정보도 함께 조회
     @Query("SELECT e FROM Exhibition e JOIN FETCH e.venue")
     List<Exhibition> findAllWithVenue();
+
+    @Query("""
+        SELECT e FROM Exhibition e
+        JOIN FETCH e.venue
+        WHERE e.endDate >= :today
+        """)
+    List<Exhibition> findAllWithVenueByEndDateGreaterThanEqual(@Param("today") LocalDate today);
 
     // 전시 종료 2주전 알림을 위해 추가
     List<Exhibition> findByEndDate(LocalDate endDate);
