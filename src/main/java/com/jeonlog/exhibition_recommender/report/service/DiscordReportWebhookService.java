@@ -1,35 +1,34 @@
 package com.jeonlog.exhibition_recommender.report.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jeonlog.exhibition_recommender.report.domain.Report;
 import com.jeonlog.exhibition_recommender.report.domain.ReportReason;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.jeonlog.exhibition_recommender.webhook.domain.WebhookEventType;
+import com.jeonlog.exhibition_recommender.webhook.service.DiscordWebhookClient;
+import com.jeonlog.exhibition_recommender.webhook.service.WebhookDeliveryService;
+import com.jeonlog.exhibition_recommender.webhook.service.WebhookFailureClassifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class DiscordReportWebhookService {
 
-    private final ObjectMapper objectMapper;
+    private static final Logger log = LoggerFactory.getLogger(DiscordReportWebhookService.class);
+
+    private final DiscordWebhookClient discordWebhookClient;
+    private final WebhookDeliveryService webhookDeliveryService;
+
+    public DiscordReportWebhookService(
+            DiscordWebhookClient discordWebhookClient,
+            WebhookDeliveryService webhookDeliveryService
+    ) {
+        this.discordWebhookClient = discordWebhookClient;
+        this.webhookDeliveryService = webhookDeliveryService;
+    }
 
     @Value("${moderation.discord.report-webhook-url:${moderation.discord.webhook-url:}}")
     private String webhookUrl;
-
-    private final HttpClient client = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(3))
-            .build();
 
     public void sendNewReport(Report report) {
         if (webhookUrl == null || webhookUrl.isBlank()) {
@@ -59,24 +58,22 @@ public class DiscordReportWebhookService {
                 report.getCreatedAt()
         );
 
-        Map<String, String> payload = new HashMap<>();
-        payload.put("content", message);
-
         try {
-            String json = objectMapper.writeValueAsString(payload);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(webhookUrl))
-                    .timeout(Duration.ofSeconds(3))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
-                    .build();
-
-            HttpResponse<Void> response = client.send(request, HttpResponse.BodyHandlers.discarding());
-            if (response.statusCode() >= 300) {
-                log.warn("[REPORT_WEBHOOK] failed reportId={}, status={}", report.getId(), response.statusCode());
-            }
+            discordWebhookClient.sendReportWebhook(report.getId(), webhookUrl, message);
         } catch (Exception e) {
-            log.warn("[REPORT_WEBHOOK] failed reportId={}, reason={}", report.getId(), e.getMessage());
+            webhookDeliveryService.recordFailure(
+                    WebhookEventType.REPORT_CREATED,
+                    report.getId(),
+                    webhookUrl,
+                    message,
+                    e
+            );
+            log.warn(
+                    "[REPORT_WEBHOOK] failed reportId={}, retryable={}, reason={}",
+                    report.getId(),
+                    WebhookFailureClassifier.isRetryable(e),
+                    WebhookFailureClassifier.reason(e)
+            );
         }
     }
 
