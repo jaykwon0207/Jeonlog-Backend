@@ -12,7 +12,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import java.time.Duration;
 import java.util.UUID;
 
-@Profile("prod")  // 🔥 local에서는 S3Service 생성되지 않음!
+@Profile({"dev", "prod"})
 @Service
 @RequiredArgsConstructor
 public class S3Service {

@@ -1,5 +1,7 @@
 package com.jeonlog.exhibition_recommender.exhibition.service;
 
+import com.jeonlog.exhibition_recommender.common.metric.Action;
+import com.jeonlog.exhibition_recommender.common.metric.CountView;
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.exhibition.domain.ExhibitionClickLog;
 import com.jeonlog.exhibition_recommender.exhibition.dto.CategoryCountDto;
@@ -26,6 +28,7 @@ public class ExhibitionClickLogService {
     private final ExhibitionClickLogRepository clickLogRepository;
 
     @Transactional
+    @CountView(type = "exhibition", idExpr = "#exhibitionId", action = Action.VIEW)
     public SavedClick saveClick(Long exhibitionId, User user, ExhibitionClickLogDto dto) {
         Exhibition exhibition = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 전시를 찾을 수 없습니다."));

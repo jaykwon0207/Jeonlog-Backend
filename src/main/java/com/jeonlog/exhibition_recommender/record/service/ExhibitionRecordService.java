@@ -1,5 +1,7 @@
 package com.jeonlog.exhibition_recommender.record.service;
 
+import com.jeonlog.exhibition_recommender.common.metric.Action;
+import com.jeonlog.exhibition_recommender.common.metric.CountView;
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.record.domain.Hashtag;
 import com.jeonlog.exhibition_recommender.record.domain.MediaType;
@@ -52,6 +54,7 @@ public class ExhibitionRecordService {
     private final UserBlockRepository userBlockRepository;
 
     @Transactional
+    @CountView(type = "exhibition", idExpr = "#exhibitionId", action = Action.CREATE)
     public Long addRecord(Long exhibitionId, User user, CreateRequest req) {
         Exhibition exhibition = exhibitionRepository.findById(exhibitionId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 전시가 존재하지 않습니다."));

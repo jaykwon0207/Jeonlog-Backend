@@ -9,7 +9,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
-@Profile("prod") // 🔥 local에서는 AwsConfig를 아예 사용하지 않도록 제한
+@Profile({"dev", "prod"})
 @Configuration
 public class AwsConfig {
 
