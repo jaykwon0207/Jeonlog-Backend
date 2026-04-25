@@ -2,12 +2,14 @@ package com.jeonlog.exhibition_recommender.auth.controller;
 
 import com.jeonlog.exhibition_recommender.auth.dto.GoogleMobileLoginRequest;
 import com.jeonlog.exhibition_recommender.auth.dto.NaverMobileLoginRequest;
+import com.jeonlog.exhibition_recommender.auth.exception.NaverProfileException;
 import com.jeonlog.exhibition_recommender.auth.service.MobileOAuthProfileService;
 import com.jeonlog.exhibition_recommender.auth.service.OAuthLoginSuccessService;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.common.logging.TraceIdFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -82,19 +84,25 @@ public class MobileOAuthController {
     ) {
         log.info("[AUTH] mobile_login_start provider=NAVER endpoint=/api/auth/naver/mobile");
         try {
-            if (request == null || !Boolean.TRUE.equals(request.getIsSuccess())) {
-                log.warn(
-                        "[AUTH] mobile_login_failed code={} traceId={} provider=NAVER reason=invalid_naver_sdk_response",
-                        NAVER_LOGIN_FAILED_CODE,
-                        traceId()
-                );
-                return ResponseEntity.badRequest()
-                        .body(ApiResponse.error(NAVER_LOGIN_FAILED_CODE, NAVER_LOGIN_FAILED_MESSAGE));
+            if (request == null) {
+                return badNaverRequest("NAVER_LOGIN_REQUEST_MISSING", false, false);
             }
 
-            String accessToken = request != null && request.getSuccessResponse() != null
-                    ? request.getSuccessResponse().getAccessToken()
-                    : null;
+            if (!Boolean.TRUE.equals(request.getIsSuccess())) {
+                boolean hasSuccessResponse = request.getSuccessResponse() != null;
+                boolean hasAccessToken = hasSuccessResponse
+                        && StringUtils.hasText(request.getSuccessResponse().getAccessToken());
+                return badNaverRequest("NAVER_LOGIN_NOT_SUCCESS", hasSuccessResponse, hasAccessToken);
+            }
+
+            if (request.getSuccessResponse() == null) {
+                return badNaverRequest("NAVER_LOGIN_SUCCESS_RESPONSE_MISSING", false, false);
+            }
+
+            String accessToken = request.getSuccessResponse().getAccessToken();
+            if (!StringUtils.hasText(accessToken)) {
+                return badNaverRequest("NAVER_LOGIN_ACCESS_TOKEN_MISSING", true, false);
+            }
 
             var naver = mobileOAuthProfileService.fetchNaverProfile(accessToken);
 
@@ -108,16 +116,53 @@ public class MobileOAuthController {
             log.info("[AUTH] mobile_login_success provider=NAVER newUser={}", result.newUser());
 
             return ResponseEntity.ok(ApiResponse.ok(toPayload(result)));
-        } catch (Exception e) {
+        } catch (NaverProfileException e) {
+            HttpStatus status = e.isUpstream() ? HttpStatus.BAD_GATEWAY : HttpStatus.BAD_REQUEST;
             log.warn(
-                    "[AUTH] mobile_login_failed code={} traceId={} provider=NAVER reason={}",
+                    "[AUTH] mobile_login_failed provider=NAVER reasonCode={} status={} hasSuccessResponse={} hasAccessToken={}",
+                    e.getCode(),
+                    status.value(),
+                    request != null && request.getSuccessResponse() != null,
+                    request != null
+                            && request.getSuccessResponse() != null
+                            && StringUtils.hasText(request.getSuccessResponse().getAccessToken())
+            );
+            return ResponseEntity.status(status)
+                    .body(ApiResponse.error(e.getCode(), e.getMessage()));
+        } catch (Exception e) {
+            boolean hasSuccessResponse = request != null && request.getSuccessResponse() != null;
+            boolean hasAccessToken = hasSuccessResponse
+                    && StringUtils.hasText(request.getSuccessResponse().getAccessToken());
+            log.warn(
+                    "[AUTH] mobile_login_failed code={} traceId={} provider=NAVER reasonCode=NAVER_LOGIN_FAILED status={} hasSuccessResponse={} hasAccessToken={} reason={}",
                     NAVER_LOGIN_FAILED_CODE,
                     traceId(),
+                    HttpStatus.BAD_REQUEST.value(),
+                    hasSuccessResponse,
+                    hasAccessToken,
                     e.getMessage()
             );
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(NAVER_LOGIN_FAILED_CODE, NAVER_LOGIN_FAILED_MESSAGE));
         }
+    }
+
+    private ResponseEntity<ApiResponse<?>> badNaverRequest(
+            String reasonCode,
+            boolean hasSuccessResponse,
+            boolean hasAccessToken
+    ) {
+        log.warn(
+                "[AUTH] mobile_login_failed code={} traceId={} provider=NAVER reasonCode={} status={} hasSuccessResponse={} hasAccessToken={}",
+                NAVER_LOGIN_FAILED_CODE,
+                traceId(),
+                reasonCode,
+                HttpStatus.BAD_REQUEST.value(),
+                hasSuccessResponse,
+                hasAccessToken
+        );
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error(reasonCode, reasonCode));
     }
 
     private Map<String, Object> toPayload(OAuthLoginSuccessService.Result result) {

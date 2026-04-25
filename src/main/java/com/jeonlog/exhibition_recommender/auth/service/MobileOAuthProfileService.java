@@ -1,10 +1,13 @@
 package com.jeonlog.exhibition_recommender.auth.service;
 
+import com.jeonlog.exhibition_recommender.auth.exception.NaverProfileException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Instant;
@@ -69,24 +72,29 @@ public class MobileOAuthProfileService {
 
     public NaverProfile fetchNaverProfile(String accessToken) {
         if (!StringUtils.hasText(accessToken)) {
-            throw new IllegalArgumentException("NAVER_ACCESS_TOKEN_REQUIRED");
+            throw NaverProfileException.badRequest("NAVER_ACCESS_TOKEN_REQUIRED", "NAVER_ACCESS_TOKEN_REQUIRED");
         }
 
-        Map<String, Object> raw = webClient.get()
-                .uri("https://openapi.naver.com/v1/nid/me")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
-                .retrieve()
-                .bodyToMono(Map.class)
-                .block();
+        Map<String, Object> raw;
+        try {
+            raw = webClient.get()
+                    .uri("https://openapi.naver.com/v1/nid/me")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+        } catch (WebClientResponseException | WebClientRequestException e) {
+            throw NaverProfileException.upstream("NAVER_PROFILE_UPSTREAM_ERROR", "NAVER_PROFILE_UPSTREAM_ERROR");
+        }
 
         if (raw == null) {
-            throw new IllegalStateException("NAVER_PROFILE_EMPTY");
+            throw NaverProfileException.upstream("NAVER_PROFILE_EMPTY", "NAVER_PROFILE_EMPTY");
         }
 
         String resultCode = asString(raw.get("resultcode"));
         Object responseObj = raw.get("response");
         if (!"00".equals(resultCode) || !(responseObj instanceof Map<?, ?> responseMap)) {
-            throw new IllegalArgumentException("NAVER_PROFILE_FETCH_FAILED");
+            throw NaverProfileException.upstream("NAVER_PROFILE_FETCH_FAILED", "NAVER_PROFILE_FETCH_FAILED");
         }
 
         String id = asString(responseMap.get("id"));
@@ -94,7 +102,7 @@ public class MobileOAuthProfileService {
         String name = asString(responseMap.get("name"));
 
         if (!StringUtils.hasText(id)) {
-            throw new IllegalArgumentException("NAVER_ID_MISSING");
+            throw NaverProfileException.upstream("NAVER_ID_MISSING", "NAVER_ID_MISSING");
         }
 
         return new NaverProfile(id, email, name);
