@@ -1,34 +1,33 @@
 package com.jeonlog.exhibition_recommender.user.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jeonlog.exhibition_recommender.user.domain.User;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import com.jeonlog.exhibition_recommender.webhook.domain.WebhookEventType;
+import com.jeonlog.exhibition_recommender.webhook.service.DiscordWebhookClient;
+import com.jeonlog.exhibition_recommender.webhook.service.WebhookDeliveryService;
+import com.jeonlog.exhibition_recommender.webhook.service.WebhookFailureClassifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class DiscordUserBlockWebhookService {
 
-    private final ObjectMapper objectMapper;
+    private static final Logger log = LoggerFactory.getLogger(DiscordUserBlockWebhookService.class);
+
+    private final DiscordWebhookClient discordWebhookClient;
+    private final WebhookDeliveryService webhookDeliveryService;
+
+    public DiscordUserBlockWebhookService(
+            DiscordWebhookClient discordWebhookClient,
+            WebhookDeliveryService webhookDeliveryService
+    ) {
+        this.discordWebhookClient = discordWebhookClient;
+        this.webhookDeliveryService = webhookDeliveryService;
+    }
 
     @Value("${block.discord.webhook-url:${moderation.discord.block-webhook-url:${moderation.discord.webhook-url:}}}")
     private String webhookUrl;
-
-    private final HttpClient client = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(3))
-            .build();
 
     public void sendUserBlocked(User blocker, User blocked) {
         if (webhookUrl == null || webhookUrl.isBlank()) {
@@ -47,26 +46,23 @@ public class DiscordUserBlockWebhookService {
                 safe(blocked.getNickname())
         );
 
-        Map<String, String> payload = new HashMap<>();
-        payload.put("content", message);
-
         try {
-            String json = objectMapper.writeValueAsString(payload);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(webhookUrl))
-                    .timeout(Duration.ofSeconds(3))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
-                    .build();
-
-            HttpResponse<Void> response = client.send(request, HttpResponse.BodyHandlers.discarding());
-            if (response.statusCode() >= 300) {
-                log.warn("[BLOCK_WEBHOOK] failed blockerId={}, blockedId={}, status={}",
-                        blocker.getId(), blocked.getId(), response.statusCode());
-            }
+            discordWebhookClient.sendBlockWebhook(blocked.getId(), webhookUrl, message);
         } catch (Exception e) {
-            log.warn("[BLOCK_WEBHOOK] failed blockerId={}, blockedId={}, reason={}",
-                    blocker.getId(), blocked.getId(), e.getMessage());
+            webhookDeliveryService.recordFailure(
+                    WebhookEventType.USER_BLOCKED,
+                    blocked.getId(),
+                    webhookUrl,
+                    message,
+                    e
+            );
+            log.warn(
+                    "[BLOCK_WEBHOOK] failed blockerId={}, blockedId={}, retryable={}, reason={}",
+                    blocker.getId(),
+                    blocked.getId(),
+                    WebhookFailureClassifier.isRetryable(e),
+                    WebhookFailureClassifier.reason(e)
+            );
         }
     }
 
