@@ -1,5 +1,7 @@
 package com.jeonlog.exhibition_recommender.search.service;
 
+import com.jeonlog.exhibition_recommender.common.metric.Action;
+import com.jeonlog.exhibition_recommender.common.metric.CountView;
 import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
@@ -33,6 +35,7 @@ public class ExhibitionService {
     }
 
     // 전시 상세 조회
+    @CountView(type = "exhibition", idExpr = "#id", action = Action.VIEW)
     public ExhibitionDetailResponseDto getExhibitionDetailById(Long id) {
         Exhibition exhibition = exhibitionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("해당 전시가 존재하지 않습니다."));
