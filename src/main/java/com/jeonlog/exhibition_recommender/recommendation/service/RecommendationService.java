@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -39,7 +40,7 @@ public class RecommendationService {
 
     @Transactional
     public List<Exhibition> recommend(Long userId) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
 
         UserGenre ug = getOrCreate(userId);
         Random fallbackRandom = deterministicRandom(userId, today);
@@ -94,14 +95,6 @@ public class RecommendationService {
             int r = 10 - result.size();
             var candidates = exhibitionRepository.findAnyOpenExcluding(
                     today, empty(picked), PageRequest.of(0, randomPoolSize(r))
-            );
-            add(result, picked, pickRandom(candidates, r, fallbackRandom), r);
-        }
-
-        if (result.size() < 10) {
-            int r = 10 - result.size();
-            var candidates = exhibitionRepository.findAnyExcluding(
-                    empty(picked), PageRequest.of(0, randomPoolSize(r))
             );
             add(result, picked, pickRandom(candidates, r, fallbackRandom), r);
         }

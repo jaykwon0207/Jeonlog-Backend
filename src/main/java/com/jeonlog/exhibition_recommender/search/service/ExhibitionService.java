@@ -11,6 +11,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,14 +24,16 @@ public class ExhibitionService {
 
     // 전체 전시 목록 조회 (간단 응답용)
     public List<ExhibitionResponseDto> getAllExhibitions() {
-        return exhibitionRepository.findAll().stream()
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        return exhibitionRepository.findByEndDateGreaterThanEqual(today).stream()
                 .map(ExhibitionResponseDto::from)
                 .collect(Collectors.toList());
     }
 
     // 전체 전시 목록 상세 조회 (Venue join 포함)
     public List<ExhibitionResponseDto> getAllExhibitionsDetails() {
-        return exhibitionRepository.findAllWithVenue().stream()
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        return exhibitionRepository.findAllWithVenueByEndDateGreaterThanEqual(today).stream()
                 .map(ExhibitionResponseDto::from)
                 .collect(Collectors.toList());
     }
@@ -59,7 +63,8 @@ public class ExhibitionService {
 
         // 3) 현재 구조: 전체 전시를 메모리에서 필터링
         //    (데이터 많아지면 DB 검색으로 바꾸는 게 정석)
-        List<Exhibition> exhibitions = exhibitionRepository.findAll();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        List<Exhibition> exhibitions = exhibitionRepository.findByEndDateGreaterThanEqual(today);
 
         // 4) filter 존재 여부
         boolean hasFilter = filter != null && !filter.isEmpty();
