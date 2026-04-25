@@ -21,4 +21,8 @@ public final class MetricKeys {
     public static String hourDist(LocalDate date) {
         return "hour_dist:" + date;
     }
+
+    public static String onlineUsers() {
+        return "online_users";
+    }
 }
