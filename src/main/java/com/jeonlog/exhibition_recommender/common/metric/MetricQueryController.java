@@ -67,4 +67,9 @@ public class MetricQueryController {
             @RequestParam String id) {
         return ApiResponse.ok(queryService.counter(action, type, id));
     }
+
+    @GetMapping("/online")
+    public ApiResponse<Long> online() {
+        return ApiResponse.ok(queryService.onlineUserCount());
+    }
 }

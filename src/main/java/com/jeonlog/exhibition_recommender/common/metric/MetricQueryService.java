@@ -77,6 +77,44 @@ public class MetricQueryService {
         return list;
     }
 
+    /**
+     * endDate 기준 최근 7일치 일별 ZSET 을 합산해 Top N 을 반환.
+     * 슬라이딩 윈도우(예: 오늘이 endDate면 6일 전 ~ 오늘) 형태.
+     */
+    public List<RankEntry> weeklyTopRank(Action action, String type, LocalDate endDate, int limit) {
+        String baseKey = MetricKeys.rank(action, type, endDate);
+        List<String> otherKeys = new ArrayList<>();
+        for (int i = 1; i < 7; i++) {
+            otherKeys.add(MetricKeys.rank(action, type, endDate.minusDays(i)));
+        }
+
+        String tmpKey = "rank:weekly:tmp:" + UUID.randomUUID();
+        try {
+            redis.opsForZSet().unionAndStore(baseKey, otherKeys, tmpKey);
+            Set<ZSetOperations.TypedTuple<String>> tuples = redis.opsForZSet()
+                    .reverseRangeWithScores(tmpKey, 0, limit - 1);
+            if (tuples == null) return List.of();
+            List<RankEntry> list = new ArrayList<>();
+            for (ZSetOperations.TypedTuple<String> t : tuples) {
+                list.add(new RankEntry(t.getValue(),
+                        t.getScore() == null ? 0L : t.getScore().longValue()));
+            }
+            return list;
+        } finally {
+            redis.delete(tmpKey);
+        }
+    }
+
+    /**
+     * 5분 이내 활동(하트비트)이 있는 유니크 유저 수.
+     * 청소(stale 제거)는 OnlineUserCleanupScheduler 가 분당 1회 수행하므로
+     * 여기서는 ZCARD 만 반환한다.
+     */
+    public long onlineUserCount() {
+        Long count = redis.opsForZSet().zCard(MetricKeys.onlineUsers());
+        return count == null ? 0L : count;
+    }
+
     public Map<Integer, Long> hourDistribution(LocalDate date) {
         Map<Object, Object> raw = redis.opsForHash().entries(MetricKeys.hourDist(date));
         Map<Integer, Long> result = new LinkedHashMap<>();

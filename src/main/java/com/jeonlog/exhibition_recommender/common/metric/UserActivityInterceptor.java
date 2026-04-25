@@ -20,6 +20,7 @@ public class UserActivityInterceptor implements HandlerInterceptor {
         Long userId = currentUserId();
         if (userId != null) {
             recorder.recordActiveUser(userId);
+            recorder.recordHeartbeat(userId);
         }
         return true;
     }
