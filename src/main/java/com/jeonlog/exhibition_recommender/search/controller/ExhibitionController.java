@@ -2,17 +2,17 @@ package com.jeonlog.exhibition_recommender.search.controller;
 
 import com.jeonlog.exhibition_recommender.auth.annotation.CurrentUser;
 import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
-import com.jeonlog.exhibition_recommender.exhibition.domain.Exhibition;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
-import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
 import com.jeonlog.exhibition_recommender.search.dto.KeywordRankDto;
 import com.jeonlog.exhibition_recommender.search.service.ExhibitionService;
 import com.jeonlog.exhibition_recommender.search.service.SearchService;
+import com.jeonlog.exhibition_recommender.user.domain.Role;
 import com.jeonlog.exhibition_recommender.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 
@@ -26,7 +26,6 @@ public class ExhibitionController {
 
     private final ExhibitionService exhibitionService;
     private final SearchService searchService;
-    private final ExhibitionRepository exhibitionRepository;
 
     // ✅ 1. 전체 전시 목록 조회
     @GetMapping
@@ -89,14 +88,13 @@ public class ExhibitionController {
             @RequestParam String posterUrl,
             @CurrentUser User user
     ) {
-        Exhibition exhibition = exhibitionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 전시를 찾을 수 없습니다."));
-
-        exhibition.updatePosterUrl(posterUrl);
-        exhibitionRepository.save(exhibition); // 바로 리포지토리랑 연결됨
+        if (user == null || user.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("관리자 권한이 필요합니다.");
+        }
+        exhibitionService.updatePosterUrl(id, posterUrl, user);
 
         log.info("✅ [포스터 업데이트] userId={} exhibitionId={} url={}",
-                user != null ? user.getId() : "anonymous", id, posterUrl);
+                user.getId(), id, posterUrl);
 
         return ApiResponse.ok(null);
     }

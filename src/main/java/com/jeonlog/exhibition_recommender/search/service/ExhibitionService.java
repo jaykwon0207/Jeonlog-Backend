@@ -7,9 +7,13 @@ import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailRespons
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
 import com.jeonlog.exhibition_recommender.exhibition.repository.ExhibitionRepository;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
+import com.jeonlog.exhibition_recommender.user.domain.Role;
+import com.jeonlog.exhibition_recommender.user.domain.User;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -74,6 +78,15 @@ public class ExhibitionService {
                 .filter(e -> matchByPhrase(e, phrase, filter, hasFilter))
                 .map(this::toSearchResponseDto)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void updatePosterUrl(Long exhibitionId, String posterUrl, User user) {
+        validateAdmin(user);
+        Exhibition exhibition = exhibitionRepository.findById(exhibitionId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 전시를 찾을 수 없습니다."));
+        exhibition.updatePosterUrl(posterUrl);
+        exhibitionRepository.save(exhibition);
     }
 
     // phrase 매칭 로직(핵심)
@@ -193,5 +206,11 @@ public class ExhibitionService {
                 .replaceAll("[^a-zA-Z0-9가-힣\\s]", "")
                 .trim()
                 .replaceAll("\\s+", " ");
+    }
+
+    private void validateAdmin(User user) {
+        if (user == null || user.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("관리자 권한이 필요합니다.");
+        }
     }
 }
