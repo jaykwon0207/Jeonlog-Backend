@@ -11,9 +11,12 @@ import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
+
+import java.time.format.DateTimeParseException;
 
 @RestControllerAdvice
 @Slf4j
@@ -67,6 +70,14 @@ public class GlobalExceptionHandler {
         logClientError(INVALID_ARGUMENT_CODE, request, e);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(INVALID_ARGUMENT_CODE, INVALID_ARGUMENT_MESSAGE));
+    }
+
+    @ExceptionHandler({DateTimeParseException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(Exception e, HttpServletRequest request) {
+        log.warn("[ERROR] invalid_argument_type endpoint={} method={} reason={}",
+                request.getRequestURI(), request.getMethod(), e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("INVALID_ARGUMENT", "요청 파라미터 형식이 올바르지 않습니다."));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
