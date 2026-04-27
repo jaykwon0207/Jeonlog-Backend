@@ -16,6 +16,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionDetailResponseDto;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Slf4j
@@ -76,9 +78,22 @@ public class ExhibitionController {
             @RequestParam(required = false) String to,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        java.time.LocalDateTime fromDt = from == null || from.isBlank() ? null : java.time.LocalDateTime.parse(from);
-        java.time.LocalDateTime toDt = to == null || to.isBlank() ? null : java.time.LocalDateTime.parse(to);
+        LocalDateTime fromDt = parseOptionalDateTime(from, "from");
+        LocalDateTime toDt = parseOptionalDateTime(to, "to");
         return ApiResponse.ok(searchService.getTopKeywords(fromDt, toDt, limit));
+    }
+
+    private LocalDateTime parseOptionalDateTime(String raw, String paramName) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(raw);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException(
+                    paramName + "는 ISO-8601 LocalDateTime 형식이어야 합니다. 예: 2026-04-27T10:30:00"
+            );
+        }
     }
 
     // ✅ 7. 포스터 URL 업데이트 (S3 업로드 후 DB 반영)
