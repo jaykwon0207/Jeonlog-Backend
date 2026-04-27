@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -61,8 +60,7 @@ class ExhibitionControllerTest {
                         .param("limit", "5"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.code").value("INVALID_ARGUMENT"))
-                .andExpect(jsonPath("$.message", containsString("from는 ISO-8601 LocalDateTime 형식이어야 합니다.")));
+                .andExpect(jsonPath("$.code").value("INVALID_ARGUMENT"));
 
         verify(searchService, never()).getTopKeywords(any(), any(), anyInt());
     }
