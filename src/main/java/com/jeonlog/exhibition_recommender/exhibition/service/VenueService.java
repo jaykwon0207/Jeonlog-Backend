@@ -33,13 +33,23 @@ public class VenueService {
 
     public Page<VenueListResponseDto> getAllVenues(Pageable pageable) {
         Page<Venue> venues = venueRepository.findAll(pageable);
-        
-        return venues.map(venue -> {
-            Optional<VenuePhoto> cover = venuePhotoRepository
-                    .findFirstByVenue_IdAndIsCoverTrueOrderBySortOrderAscIdAsc(venue.getId());
-            String coverUrl = cover.map(VenuePhoto::getImageUrl).orElse(null);
-            return VenueListResponseDto.from(venue, coverUrl);
-        });
+
+        return venues.map(this::toVenueListResponse);
+    }
+
+    public Page<VenueListResponseDto> searchVenues(String query, Pageable pageable) {
+        if (query == null || query.isBlank()) {
+            throw new IllegalArgumentException("검색어를 입력해주세요.");
+        }
+
+        String normalizedQuery = query.trim();
+        Page<Venue> venues = venueRepository.findByNameContainingIgnoreCaseOrAddressContainingIgnoreCase(
+                normalizedQuery,
+                normalizedQuery,
+                pageable
+        );
+
+        return venues.map(this::toVenueListResponse);
     }
 
     public VenueDetailResponseDto getVenueDetail(Long id) {
@@ -98,5 +108,12 @@ public class VenueService {
             case UPCOMING -> Sort.by(Sort.Direction.ASC,  "startDate");
         };
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+    }
+
+    private VenueListResponseDto toVenueListResponse(Venue venue) {
+        Optional<VenuePhoto> cover = venuePhotoRepository
+                .findFirstByVenue_IdAndIsCoverTrueOrderBySortOrderAscIdAsc(venue.getId());
+        String coverUrl = cover.map(VenuePhoto::getImageUrl).orElse(null);
+        return VenueListResponseDto.from(venue, coverUrl);
     }
 }
