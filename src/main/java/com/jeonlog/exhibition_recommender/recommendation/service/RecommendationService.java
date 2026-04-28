@@ -20,6 +20,10 @@ import java.util.*;
 @RequiredArgsConstructor
 public class RecommendationService {
 
+    private static final int TARGET_COUNT = 10;
+    private static final int MIN_COUNT = 7;
+    private static final int[] MIN_FILL_POOL_SIZES = {50, 100, 200};
+
     private final UserGenreRepository userGenreRepository;
     private final ExhibitionRepository exhibitionRepository;
 
@@ -53,7 +57,7 @@ public class RecommendationService {
         List<Exhibition> result = new ArrayList<>();
         Set<Long> picked = new HashSet<>();
 
-        for (int i = 0; i < pickCounts.length && result.size() < 10; i++) {
+        for (int i = 0; i < pickCounts.length && result.size() < TARGET_COUNT; i++) {
             int need = pickCounts[i];
             GenreType g = i < topGenres.size() ? topGenres.get(i) : null;
             ExhibitionTheme m = i < topMoods.size() ? topMoods.get(i) : null;
@@ -75,31 +79,69 @@ public class RecommendationService {
             }
         }
 
-        if (result.size() < 10) {
-            int r = 10 - result.size();
+        if (result.size() < TARGET_COUNT) {
+            int r = TARGET_COUNT - result.size();
             var candidates = exhibitionRepository.findActiveExcluding(
                     today, empty(picked), PageRequest.of(0, randomPoolSize(r))
             );
             add(result, picked, pickRandom(candidates, r, fallbackRandom), r);
         }
 
-        if (result.size() < 10) {
-            int r = 10 - result.size();
+        if (result.size() < TARGET_COUNT) {
+            int r = TARGET_COUNT - result.size();
             var candidates = exhibitionRepository.findUpcomingExcluding(
                     today, today.plusDays(60), empty(picked), PageRequest.of(0, randomPoolSize(r))
             );
             add(result, picked, pickRandom(candidates, r, fallbackRandom), r);
         }
 
-        if (result.size() < 10) {
-            int r = 10 - result.size();
+        if (result.size() < TARGET_COUNT) {
+            int r = TARGET_COUNT - result.size();
             var candidates = exhibitionRepository.findAnyOpenExcluding(
                     today, empty(picked), PageRequest.of(0, randomPoolSize(r))
             );
             add(result, picked, pickRandom(candidates, r, fallbackRandom), r);
         }
 
+        if (result.size() < TARGET_COUNT) {
+            int r = TARGET_COUNT - result.size();
+            var candidates = exhibitionRepository.findAnyExcluding(
+                    empty(picked), PageRequest.of(0, randomPoolSize(r))
+            );
+            add(result, picked, pickRandom(candidates, r, fallbackRandom), r);
+        }
+
+        fillToMinimumCount(result, picked, fallbackRandom);
+
         return result;
+    }
+
+    private void fillToMinimumCount(List<Exhibition> result, Set<Long> picked, Random random) {
+        if (result.size() >= MIN_COUNT) {
+            return;
+        }
+
+        for (int poolSize : MIN_FILL_POOL_SIZES) {
+            int needForMinimum = MIN_COUNT - result.size();
+            if (needForMinimum <= 0) {
+                return;
+            }
+
+            int capByTarget = TARGET_COUNT - result.size();
+            if (capByTarget <= 0) {
+                return;
+            }
+
+            int need = Math.min(needForMinimum, capByTarget);
+            var candidates = exhibitionRepository.findAnyExcluding(
+                    empty(picked), PageRequest.of(0, poolSize)
+            );
+            int before = result.size();
+            add(result, picked, pickRandom(candidates, need, random), need);
+            if (result.size() == before) {
+                continue;
+            }
+        }
     }
 
     private static int add(List<Exhibition> dst, Set<Long> seen, List<Exhibition> src, int max) {
