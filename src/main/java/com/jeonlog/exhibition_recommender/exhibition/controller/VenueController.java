@@ -31,6 +31,16 @@ public class VenueController {
         return ResponseEntity.ok(ApiResponse.ok(venues));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<Page<VenueListResponseDto>>> searchVenues(
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        Page<VenueListResponseDto> venues = venueService.searchVenues(query, PageRequest.of(page, size));
+        return ResponseEntity.ok(ApiResponse.ok(venues));
+    }
+
     @GetMapping("/{id}") // 전시회 조회
     public ResponseEntity<ApiResponse<VenueDetailResponseDto>> getVenue(@PathVariable Long id) {
         VenueDetailResponseDto venue = venueService.getVenueDetail(id);
