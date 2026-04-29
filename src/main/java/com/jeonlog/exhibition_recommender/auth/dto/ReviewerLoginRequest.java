@@ -7,4 +7,12 @@ import lombok.Setter;
 @Setter
 public class ReviewerLoginRequest {
     private String reviewCode;
+    private String password;
+
+    public String getEffectiveReviewCode() {
+        if (reviewCode != null && !reviewCode.isBlank()) {
+            return reviewCode;
+        }
+        return password;
+    }
 }
