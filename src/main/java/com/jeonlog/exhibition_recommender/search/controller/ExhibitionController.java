@@ -5,6 +5,7 @@ import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.exhibition.dto.ExhibitionResponseDto;
 import com.jeonlog.exhibition_recommender.search.dto.ExhibitionSearchResponseDto;
 import com.jeonlog.exhibition_recommender.search.dto.KeywordRankDto;
+import com.jeonlog.exhibition_recommender.search.dto.RecommendedKeywordDto;
 import com.jeonlog.exhibition_recommender.search.service.ExhibitionService;
 import com.jeonlog.exhibition_recommender.search.service.SearchService;
 import com.jeonlog.exhibition_recommender.user.domain.Role;
@@ -81,6 +82,14 @@ public class ExhibitionController {
         LocalDateTime fromDt = parseOptionalDateTime(from, "from");
         LocalDateTime toDt = parseOptionalDateTime(to, "to");
         return ApiResponse.ok(searchService.getTopKeywords(fromDt, toDt, limit));
+    }
+
+    @GetMapping("/search/recommend-keywords")
+    public ApiResponse<List<RecommendedKeywordDto>> getRecommendedKeywords(
+            @CurrentUser User user,
+            @RequestParam(defaultValue = "8") int limit
+    ) {
+        return ApiResponse.ok(searchService.getRecommendedKeywords(user.getId(), limit));
     }
 
     private LocalDateTime parseOptionalDateTime(String raw, String paramName) {
