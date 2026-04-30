@@ -10,6 +10,7 @@ import com.jeonlog.exhibition_recommender.common.api.ApiResponse;
 import com.jeonlog.exhibition_recommender.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -35,6 +36,9 @@ public class SecurityConfig {
     private final ProviderAwareAuthorizationRequestResolver providerAwareAuthorizationRequestResolver;
     private final ObjectMapper objectMapper;
 
+    @Value("${security.dev.permit-all:false}")
+    private boolean devPermitAll;
+
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(jwtTokenProvider, userRepository);
@@ -51,33 +55,36 @@ public class SecurityConfig {
                 )
 
                 // ✅ 권한 설정
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/",
-                                "/favicon.ico",
-                                "/error",
-                                "/oauth2/**",
-                                "/api/oauth/**",
-                                "/api/auth/**",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**",
-                                "/swagger-ui.html",
-                                "/webjars/**",
-                                "/api/health",
-                                "/actuator/health",
-                                "/actuator/health/**",
-                                "/actuator/info",
-                                "/actuator/prometheus",
-                                "/api/users/check-nickname",
-                                "/api/users/search",
-                                "/api/metrics/**"
-                        ).permitAll()
-
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(
+                                    "/",
+                                    "/favicon.ico",
+                                    "/error",
+                                    "/oauth2/**",
+                                    "/api/oauth/**",
+                                    "/api/auth/**",
+                                    "/swagger-ui/**",
+                                    "/v3/api-docs/**",
+                                    "/swagger-resources/**",
+                                    "/swagger-ui.html",
+                                    "/webjars/**",
+                                    "/api/health",
+                                    "/actuator/health",
+                                    "/actuator/health/**",
+                                    "/actuator/info",
+                                    "/actuator/prometheus",
+                                    "/api/users/check-nickname",
+                                    "/api/users/search",
+                                    "/api/metrics/**"
+                            ).permitAll()
+                            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
+                    if (devPermitAll) {
+                        auth.anyRequest().permitAll();
+                    } else {
+                        auth.anyRequest().authenticated();
+                    }
+                })
 
                 // ✅ 인증 실패 시 401 (JWT 보호 API용)
                 .exceptionHandling(exception -> exception
