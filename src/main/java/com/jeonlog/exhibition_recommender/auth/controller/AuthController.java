@@ -114,8 +114,7 @@ public class AuthController {
                     .body(ApiResponse.error("REVIEW_LOGIN_NOT_CONFIGURED", "심사용 로그인 설정이 없습니다."));
         }
 
-        String reviewCode = request != null ? request.getEffectiveReviewCode() : null;
-        if (!reviewLoginCode.equals(reviewCode)) {
+        if (request == null || !reviewLoginCode.equals(request.getReviewCode())) {
             log.warn("[AUTH] reviewer_login_failed code=INVALID_REVIEW_CODE");
             return ResponseEntity.status(401)
                     .body(ApiResponse.error("INVALID_REVIEW_CODE", "심사용 코드가 올바르지 않습니다."));

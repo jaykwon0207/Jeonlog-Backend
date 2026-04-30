@@ -58,23 +58,6 @@ class AuthControllerIntegrationTest extends MySqlContainerTestSupport {
     }
 
     @Test
-    void reviewerLogin_withPasswordField_returnsAccessAndRefreshTokens() throws Exception {
-        mockMvc.perform(post("/api/auth/reviewer-login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "email": "reviewer@example.com",
-                                  "password": "REVIEW-CODE-1234"
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.accessToken").isString())
-                .andExpect(jsonPath("$.data.refreshToken").isString())
-                .andExpect(jsonPath("$.data.reviewer").value(true));
-    }
-
-    @Test
     void issueAccessToken_withoutRefreshToken_returnsUnauthorized() throws Exception {
         mockMvc.perform(post("/api/auth/access-token")
                         .contentType(MediaType.APPLICATION_JSON)

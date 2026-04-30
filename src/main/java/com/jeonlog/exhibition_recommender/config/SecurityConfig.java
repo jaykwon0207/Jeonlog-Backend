@@ -140,8 +140,7 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:8081",
                 "https://jeonlog.com",
-                "https://api.jeonlog.com",
-                "https://dev.jeonlog.com"
+                "https://api.jeonlog.com"
         ));
 
         config.setAllowedMethods(
